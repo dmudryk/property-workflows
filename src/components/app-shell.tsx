@@ -25,6 +25,9 @@ export function AppShell({
                 <Link href="/runs" className="underline-offset-4 hover:underline">
                   Runs
                 </Link>
+                <Link href="/templates" className="underline-offset-4 hover:underline">
+                  Templates
+                </Link>
               </nav>
             ) : null}
           </div>

@@ -13,14 +13,16 @@ import {
   requiredLabel,
   staffLabel,
 } from "@/lib/runs/rules";
+import { requireActor } from "@/lib/auth/actor";
+import { templateVersionLabel } from "@/lib/templates/format";
 import { markDone } from "../actions";
-import { requireActor } from "../actor";
 import { RUN_ERRORS, messageFor } from "../messages";
 
 // Сторінка запуску: прогрес «N of M done» (AC-TASK-05), задачі групами за секціями (AC-TASK-12) з email виконавця
 // (AC-TASK-11), статусом (AC-TASK-08) і позначкою «required»/«optional» (AC-TASK-15). «Mark as done» — лише тому, хто
 // може позначити задачу (AC-TASK-18); остання обов'язкова — з підтвердженням (AC-TASK-04, AC-TASK-16). Права перевіряє
 // й база, відмова — повідомлення AC-TASK-03. Запуск, якого користувач не бачить (RLS), — «Run not found» (AC-TASK-10).
+// Версія шаблону, з якої створено запуск, — «Template version N» (AC-EDITOR-06).
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error, confirm } = await searchParams;
@@ -29,7 +31,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
   const { data: run } = await supabase
     .from("runs")
-    .select("id, case_name, template_name, status, manager_id")
+    .select("id, case_name, template_name, template_version, status, manager_id")
     .eq("id", id)
     .maybeSingle();
   if (!run) {
@@ -78,6 +80,9 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         <h1 className="text-2xl font-semibold">{run.case_name}</h1>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
           <span>{run.template_name}</span>
+          <span data-testid="template-version" className="tabular-nums">
+            {templateVersionLabel(run.template_version)}
+          </span>
           <StatusBadge data-testid="run-status" kind={run.status === "completed" ? "completed" : "in_progress"} />
           <span>
             Run manager: <span data-testid="run-manager">{staffLabel(people.get(run.manager_id))}</span>

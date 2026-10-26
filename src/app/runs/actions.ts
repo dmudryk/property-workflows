@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MSG_EMPTY_CASE_NAME, needsConfirmation, validateCaseName } from "@/lib/runs/rules";
-import { requireActor } from "./actor";
+import { requireActor } from "@/lib/auth/actor";
 
 // Запуск шаблону для випадку (AC-RUN-01…09). Правила — src/lib/runs/rules.ts; запис — одна функція Postgres
 // public.launch_run (design.md, D5), тож запуск і всі його задачі створюються в одній транзакції.
