@@ -16,6 +16,25 @@ export function countTasks(content: TemplateContent): number {
   return content.sections.reduce((sum, section) => sum + section.tasks.length, 0);
 }
 
+// Підсумок змісту для чипів на сторінках шаблону й запуску: «2 sections», «5 tasks», «3 required · 2 optional».
+export function summarizeContent(content: TemplateContent): {
+  sections: number;
+  sectionNames: string[];
+  tasks: number;
+  required: number;
+  optional: number;
+} {
+  const tasks = content.sections.flatMap((section) => section.tasks);
+  const required = tasks.filter((task) => task.required).length;
+  return {
+    sections: content.sections.length,
+    sectionNames: content.sections.map((section) => section.name),
+    tasks: tasks.length,
+    required,
+    optional: tasks.length - required,
+  };
+}
+
 // AC-EDITOR-04: версію можна зберегти, лише якщо є хоча б одна обов'язкова задача.
 export function hasRequiredTask(content: TemplateContent): boolean {
   return content.sections.some((section) => section.tasks.some((task) => task.required));

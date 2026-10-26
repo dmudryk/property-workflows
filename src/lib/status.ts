@@ -13,6 +13,15 @@ export const STATUS_TONES = {
 
 export type StatusKind = keyof typeof STATUS_TONES;
 
+// Насичений колір статусу для заповнення (смуга прогресу) — колір тексту бейджа того самого статусу.
+export const STATUS_FILLS: Record<StatusKind, string> = {
+  to_do: "bg-status-todo-foreground",
+  in_progress: "bg-status-progress-foreground",
+  done: "bg-status-done-foreground",
+  completed: "bg-status-done-foreground",
+  unpublished: "bg-status-unpublished-foreground",
+};
+
 export const MSG_UNPUBLISHED_CHANGES = "Unpublished changes";
 
 export function statusLabel(kind: StatusKind): string {

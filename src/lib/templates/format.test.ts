@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { formatKyivDateTime, templateVersionLabel, versionLabel } from "./format";
+import { countLabel, formatKyivDateTime, templateVersionLabel, versionLabel } from "./format";
+
+describe("шаблон: кількість у чипах", () => {
+  it("однина для 1, множина для решти", () => {
+    expect(countLabel(1, "task")).toBe("1 task");
+    expect(countLabel(5, "task")).toBe("5 tasks");
+    expect(countLabel(0, "section")).toBe("0 sections");
+  });
+});
 
 describe("template-editor: версії", () => {
   it("AC-EDITOR-05: дата й час збереження — за Києвом, DD.MM.YYYY HH:MM", () => {

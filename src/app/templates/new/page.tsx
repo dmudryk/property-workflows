@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { NotEnoughRights } from "@/components/not-enough-rights";
+import { SubmitButton } from "@/components/submit-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,9 +37,9 @@ export default async function NewTemplatePage({ searchParams }: PageProps<"/temp
               <Label htmlFor="name">Template name</Label>
               <Input id="name" name="name" placeholder="Tenant move-in" required />
             </div>
-            <Button type="submit" size="lg" className="self-start">
+            <SubmitButton size="lg" pendingLabel="Creating…" className="self-start">
               Create
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
       </Card>

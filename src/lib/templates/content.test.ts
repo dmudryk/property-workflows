@@ -7,6 +7,7 @@ import {
   moveTask,
   parseContent,
   renameTask,
+  summarizeContent,
   type TemplateContent,
 } from "./content";
 import { TEMPLATE_ERRORS, templateErrorCode, templateErrorMessage } from "./errors";
@@ -32,6 +33,19 @@ const tenantMoveIn: TemplateContent = {
     },
   ],
 };
+
+describe("шаблон: підсумок змісту для чипів", () => {
+  it("рахує секції, задачі, обов'язкові й необов'язкові; назви секцій — по порядку", () => {
+    expect(summarizeContent(tenantMoveIn)).toEqual({
+      sections: 2,
+      sectionNames: ["Before move-in", "Move-in day"],
+      tasks: 5,
+      required: 3,
+      optional: 2,
+    });
+    expect(summarizeContent({ sections: [] })).toEqual({ sections: 0, sectionNames: [], tasks: 0, required: 0, optional: 0 });
+  });
+});
 
 describe("template-editor: операції редактора", () => {
   it("AC-EDITOR-01: шоста задача «Sign handover act» у секції «Move-in day» — 6 задач", () => {

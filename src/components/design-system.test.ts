@@ -18,6 +18,11 @@ vi.mock("@/lib/auth/actor", () => ({
   }),
 }));
 
+// Статичний імпорт картинки входу: у Next.js — об'єкт із розмірами й blurDataURL; Vitest дає лише шлях.
+vi.mock("@/app/login/login-hero.jpg", () => ({
+  default: { src: "/login-hero.jpg", width: 1200, height: 1490, blurDataURL: "data:image/jpeg;base64,AA==" },
+}));
+
 beforeEach(() => {
   runs.rows = [];
 });
@@ -31,9 +36,10 @@ describe("design-system", () => {
 
     const inProgress = renderToStaticMarkup(createElement(StatusBadge, { kind: runStatusKind("in_progress") }));
     const completed = renderToStaticMarkup(createElement(StatusBadge, { kind: runStatusKind("completed") }));
-    // Колір і слово — в одному елементі бейджа.
-    expect(inProgress).toMatch(/<span[^>]*class="[^"]*bg-status-progress[^"]*"[^>]*>in progress<\/span>/);
-    expect(completed).toMatch(/<span[^>]*class="[^"]*bg-status-done[^"]*"[^>]*>completed<\/span>/);
+    // Колір і слово — в одному елементі бейджа (перед словом — лише крапка того самого кольору, aria-hidden).
+    const DOT = String.raw`(?:<span aria-hidden="true"[^>]*><\/span>)?`;
+    expect(inProgress).toMatch(new RegExp(`<span[^>]*class="[^"]*bg-status-progress[^"]*"[^>]*>${DOT}in progress</span>`));
+    expect(completed).toMatch(new RegExp(`<span[^>]*class="[^"]*bg-status-done[^"]*"[^>]*>${DOT}completed</span>`));
   });
 
   it("AC-DSYS-03: сторінка входу (src/app/login/page.tsx) — у тій самій розкладці AppShell, з формою входу й без даних", async () => {
