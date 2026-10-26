@@ -28,8 +28,8 @@ AC-EDITOR-08, AC-EDITOR-09, AC-DSYS-02
       вибір стану — чиста функція (U3)
 - [x] 2.2 Тести: статуси «in progress»/«completed» — ті самі слова й токени кольору на списку й сторінці запуску;
       сторінка входу в `AppShell` без даних; відвідувач без входу не читає запуски (тест бази) і потрапляє на `/login`
-- [ ] 2.3 Архітектурне правило «запис лише через функції бази» (`scripts/check-writes-via-rpc.mjs`, третій job у
+- [x] 2.3 Архітектурне правило «запис лише через функції бази» (`scripts/check-writes-via-rpc.mjs`, третій job у
       `.github/workflows/architecture.yml`) і доказ, що воно ловить порушення (червоний прогін, потім revert)
-- [ ] 2.4 Скріни за ролями (`docs/img/ws7-role-*`), рядки `docs/conformance.md`; archive `impl-ws7-templates`
+- [x] 2.4 Скріни за ролями (`docs/img/ws7-role-*`), рядки `docs/conformance.md`; archive `impl-ws7-templates`
 
 Done when: AC-DSYS-01, AC-DSYS-03, AC-DSYS-04
