@@ -66,7 +66,8 @@ export function AppShell({
             </form>
           </div>
         </aside>
-        <div className="flex min-w-0 flex-[999_1_35rem] flex-col">{content}</div>
+        {/* Колонка вмісту — контейнер (cqw): смуга на всю її ширину, як-от смуга збереження редактора. */}
+        <div className="@container/content flex min-w-0 flex-[999_1_35rem] flex-col">{content}</div>
       </div>
     </div>
   );

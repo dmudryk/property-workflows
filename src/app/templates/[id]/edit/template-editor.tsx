@@ -144,7 +144,7 @@ export function TemplateEditor({
   let taskNumber = 0;
 
   return (
-    <main className="flex flex-col gap-6">
+    <main className="flex flex-1 flex-col gap-6">
       <PageHeader
         back={{ href: `/templates/${templateId}`, label: "Back to the template" }}
         title={name}
@@ -278,35 +278,39 @@ export function TemplateEditor({
         Add section
       </Button>
 
-      {/* Смугу збереження видно завжди: стан змін, автозбереження, результат «Save version» і помилка — поруч із дією. */}
-      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 shadow-[0_-6px_12px_-8px_color-mix(in_oklch,var(--color-foreground)_25%,transparent)] sm:-mx-6 sm:px-6">
-        {error ? (
-          <Alert variant="destructive">
-            <AlertDescription className="text-destructive">{error}</AlertDescription>
-          </Alert>
-        ) : null}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-            {unpublished ? (
-              <StatusBadge data-testid="unpublished" kind="unpublished" />
-            ) : (
-              <span className="inline-flex items-center gap-2 text-muted-foreground">
-                <span aria-hidden className="size-2 rounded-full bg-status-todo-foreground" />
-                No changes yet
+      {/* Смугу збереження видно завжди: стан змін, автозбереження, результат «Save version» і помилка — поруч із дією.
+          Тло — на всю ширину колонки вмісту (100cqw від центру main) і до низу сторінки (mt-auto, -mb-8 — нижній
+          відступ контейнера); вміст смуги — у тій самій ширині, що й картки. */}
+      <div className="sticky bottom-0 z-10 mt-auto -mb-8 ml-[calc(50%-50cqw)] w-[100cqw] border-t bg-background shadow-[0_-6px_12px_-8px_color-mix(in_oklch,var(--color-foreground)_25%,transparent)]">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-3 sm:px-6">
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription className="text-destructive">{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              {unpublished ? (
+                <StatusBadge data-testid="unpublished" kind="unpublished" />
+              ) : (
+                <span className="inline-flex items-center gap-2 text-muted-foreground">
+                  <span aria-hidden className="size-2 rounded-full bg-status-todo-foreground" />
+                  No changes yet
+                </span>
+              )}
+              <span aria-live="polite" className="text-muted-foreground">
+                {notice ?? (saveState === "saving" ? "Saving…" : saveState === "saved" ? "All changes kept" : "")}
               </span>
-            )}
-            <span aria-live="polite" className="text-muted-foreground">
-              {notice ?? (saveState === "saving" ? "Saving…" : saveState === "saved" ? "All changes kept" : "")}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href={`/templates/${templateId}`} className={cn(buttonVariants({ variant: "outline", size: "xl" }))}>
-              Close editor
-            </Link>
-            <Button size="xl" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
-              {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
-              {publishing ? "Saving version…" : "Save version"}
-            </Button>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link href={`/templates/${templateId}`} className={cn(buttonVariants({ variant: "outline", size: "xl" }))}>
+                Close editor
+              </Link>
+              <Button size="xl" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
+                {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+                {publishing ? "Saving version…" : "Save version"}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
