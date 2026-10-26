@@ -18,5 +18,15 @@
     "email": "manager.c@example.test",
     "full_name": "Менеджер C (демо)",
     "role": "manager"
+  },
+  {
+    "email": "pm-admin@example.test",
+    "full_name": "PM Адміністратор",
+    "role": "admin"
+  },
+  {
+    "email": "pm-manager@example.test",
+    "full_name": "PM Менеджер",
+    "role": "manager"
   }
 ]
