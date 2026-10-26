@@ -1,15 +1,16 @@
 import Link from "next/link";
+import { FormSelect } from "@/components/form-select";
+import { SubmitButton } from "@/components/submit-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { requireActor } from "@/lib/auth/actor";
 import { staffLabel } from "@/lib/runs/rules";
 import { parseContent } from "@/lib/templates/content";
 import { launchRun } from "../actions";
 import { LAUNCH_ERRORS, messageFor } from "../messages";
+import { TemplatePicker } from "./template-picker";
 
 // Запуск шаблону для випадку (AC-RUN-01…09): шаблон → назва випадку → виконавці задач (за замовчуванням — менеджер
 // запуску, тобто «me»). Запускаємо лише поточну версію: шаблони без збереженої версії сюди не потрапляють, а
@@ -33,6 +34,11 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
 
   const { data: staff } = selected ? await supabase.rpc("list_staff") : { data: null };
   const others = (staff ?? []).filter((member) => member.id !== actor?.id);
+  // Порожнє значення (null) — менеджер запуску (AC-RUN-08, AC-RUN-09).
+  const assignees = [
+    { value: null, label: "Me (run manager)" },
+    ...others.map((member) => ({ value: member.id, label: staffLabel(member) })),
+  ];
 
   const errorAlert = message ? (
     <Alert variant="destructive">
@@ -51,24 +57,10 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
 
       <Card>
         <CardContent>
-          <form method="get" className="flex flex-wrap items-end gap-3">
-            <div className="flex min-w-60 flex-1 flex-col gap-2">
-              <Label htmlFor="template">Template</Label>
-              <NativeSelect id="template" name="template" defaultValue={templateId} className="w-full">
-                <NativeSelectOption value="" disabled>
-                  Choose a template
-                </NativeSelectOption>
-                {(templates ?? []).map((t) => (
-                  <NativeSelectOption key={t.id} value={t.id}>
-                    {t.name}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-            <Button type="submit" variant="outline">
-              Select
-            </Button>
-          </form>
+          <TemplatePicker
+            templates={(templates ?? []).map((t) => ({ id: t.id, name: t.name }))}
+            selectedId={selected ? templateId : ""}
+          />
         </CardContent>
       </Card>
 
@@ -94,21 +86,19 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
                       <span className="text-muted-foreground">{task.sectionName} · </span>
                       {task.name}
                     </Label>
-                    <NativeSelect id={`assignee-${task.id}`} name={`assignee:${task.id}`} defaultValue="">
-                      <NativeSelectOption value="">Me (run manager)</NativeSelectOption>
-                      {others.map((member) => (
-                        <NativeSelectOption key={member.id} value={member.id}>
-                          {staffLabel(member)}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
+                    <FormSelect
+                      id={`assignee-${task.id}`}
+                      name={`assignee:${task.id}`}
+                      items={assignees}
+                      className="sm:w-64"
+                    />
                   </div>
                 ))}
               </fieldset>
 
-              <Button type="submit" size="lg" className="self-start">
+              <SubmitButton size="lg" pendingLabel="Launching…" className="self-start">
                 Launch
-              </Button>
+              </SubmitButton>
             </form>
           </CardContent>
         </Card>

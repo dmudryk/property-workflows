@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
+import { Logo } from "@/components/logo";
+import { SubmitButton } from "@/components/submit-button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,15 +15,15 @@ const ERRORS: Record<string, string> = {
   invalid: "The email or password is not correct.",
 };
 
-// Вхід — у тій самій розкладці AppShell (AC-DSYS-03): картка з ілюстрацією зліва (з md) і формою справа; на телефоні —
-// лише форма. Ілюстрація декоративна (порожній alt); підпис на ній — токени illustration (DESIGN.md, розділ 2).
+// Вхід — у тій самій розкладці AppShell (AC-DSYS-03): картка з ілюстрацією зліва (з md) і логотипом та формою справа;
+// на телефоні — лише логотип і форма. Ілюстрація декоративна (порожній alt); підпис на ній — токени illustration.
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error } = await searchParams;
   const message = typeof error === "string" && Object.hasOwn(ERRORS, error) ? ERRORS[error] : undefined;
 
   return (
     <AppShell>
-      <main className="flex flex-1 items-start justify-center sm:items-center">
+      <main className="flex flex-1 items-center justify-center">
         <Card className="w-full max-w-sm gap-0 py-0 md:grid md:max-w-none md:grid-cols-2">
           <div className="relative hidden min-h-[32rem] bg-illustration md:block">
             <Image
@@ -40,6 +41,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             </div>
           </div>
           <div className="flex flex-col justify-center gap-6 p-6 sm:p-10">
+            <Logo />
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-semibold">Sign in</h1>
               <p className="text-sm text-muted-foreground">Welcome back. Enter your email and password to continue.</p>
@@ -58,9 +60,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" autoComplete="current-password" required />
               </div>
-              <Button type="submit" size="lg">
+              <SubmitButton size="lg" pendingLabel="Signing in…">
                 Sign in
-              </Button>
+              </SubmitButton>
             </form>
           </div>
         </Card>

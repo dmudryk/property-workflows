@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ROW_LINK_ROW, RowLink } from "@/components/row-link";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -36,11 +37,9 @@ export default async function RunsPage() {
             </TableHeader>
             <TableBody>
               {runs.map((run) => (
-                <TableRow key={run.id} data-testid="run-row">
+                <TableRow key={run.id} data-testid="run-row" className={ROW_LINK_ROW}>
                   <TableCell className="whitespace-normal">
-                    <Link href={`/runs/${run.id}`} className="font-medium underline-offset-4 hover:underline">
-                      {run.case_name}
-                    </Link>
+                    <RowLink href={`/runs/${run.id}`}>{run.case_name}</RowLink>
                     <span className="block text-sm text-muted-foreground sm:hidden">{run.template_name}</span>
                   </TableCell>
                   <TableCell className="hidden text-muted-foreground sm:table-cell">{run.template_name}</TableCell>

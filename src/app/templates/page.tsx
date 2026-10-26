@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ROW_LINK_ROW, RowLink } from "@/components/row-link";
 import { StatusBadge } from "@/components/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -39,11 +40,9 @@ export default async function TemplatesPage() {
             </TableHeader>
             <TableBody>
               {rows.map((tpl) => (
-                <TableRow key={tpl.id} data-testid="template-row">
+                <TableRow key={tpl.id} data-testid="template-row" className={ROW_LINK_ROW}>
                   <TableCell className="whitespace-normal">
-                    <Link href={`/templates/${tpl.id}`} className="font-medium underline-offset-4 hover:underline">
-                      {tpl.name}
-                    </Link>
+                    <RowLink href={`/templates/${tpl.id}`}>{tpl.name}</RowLink>
                   </TableCell>
                   <TableCell className="tabular-nums">{versionLabel(tpl.current_version)}</TableCell>
                   {admin ? (

@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { StatusBadge } from "@/components/status-badge";
@@ -229,8 +230,9 @@ export function TemplateEditor({
         >
           Add section
         </Button>
-        <Button size="lg" disabled={!unpublished || publishing} onClick={saveVersion}>
-          Save version
+        <Button size="lg" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
+          {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+          {publishing ? "Saving version…" : "Save version"}
         </Button>
       </div>
 
