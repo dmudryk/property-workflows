@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { newestFirst, progressLabel, runStatusLabel } from "@/lib/runs/rules";
+import { StatusBadge } from "@/components/status-badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { newestFirst, progressLabel } from "@/lib/runs/rules";
 import { requireActor } from "./actor";
 
 // Список запусків: у кожному рядку — випадок, шаблон, статус і прогрес «N of M done» (AC-TASK-09, AC-TASK-13,
@@ -13,32 +16,47 @@ export default async function RunsPage() {
   const runs = newestFirst((rows ?? []).map((r) => ({ ...r, createdAt: r.created_at })));
 
   return (
-    <main className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+    <main className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Runs</h1>
-        <Link href="/runs/new" className="rounded bg-foreground px-4 py-2 text-sm font-medium text-background">
+        <Link href="/runs/new" className={buttonVariants({ size: "lg" })}>
           Launch a template
         </Link>
       </div>
-      {runs && runs.length > 0 ? (
-        <ul className="flex flex-col divide-y divide-zinc-200 rounded border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
-          {runs.map((run) => (
-            <li key={run.id} data-testid="run-row">
-              <Link href={`/runs/${run.id}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                <span className="font-medium">{run.case_name}</span>
-                <span className="text-sm text-zinc-500">{run.template_name}</span>
-                <span data-testid="run-status" className="text-sm">
-                  {runStatusLabel(run.status)}
-                </span>
-                <span data-testid="run-progress" className="text-sm font-medium">
-                  {progressLabel(run.run_tasks ?? [])}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {runs.length > 0 ? (
+        <div className="rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Case</TableHead>
+                <TableHead className="hidden sm:table-cell">Template</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Progress</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {runs.map((run) => (
+                <TableRow key={run.id} data-testid="run-row">
+                  <TableCell className="whitespace-normal">
+                    <Link href={`/runs/${run.id}`} className="font-medium underline-offset-4 hover:underline">
+                      {run.case_name}
+                    </Link>
+                    <span className="block text-sm text-muted-foreground sm:hidden">{run.template_name}</span>
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
+                  <TableCell>
+                    <StatusBadge data-testid="run-status" kind={run.status === "completed" ? "completed" : "in_progress"} />
+                  </TableCell>
+                  <TableCell data-testid="run-progress" className="text-right font-medium tabular-nums">
+                    {progressLabel(run.run_tasks ?? [])}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : (
-        <p className="text-sm text-zinc-500">No runs yet.</p>
+        <p className="text-base text-muted-foreground">No runs yet.</p>
       )}
     </main>
   );
