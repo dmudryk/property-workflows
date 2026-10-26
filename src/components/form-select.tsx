@@ -7,10 +7,13 @@ export type FormSelectItem = { value: string | null; label: string };
 
 // Випадний список у вигляді дизайн-системи (DESIGN.md, розділ 5) замість системного <select>. Значення йде у форму
 // прихованим полем name; пункт зі значенням null надсилає порожній рядок (наприклад, «Me (run manager)»).
+// value задано (null — нічого не вибрано) — список керований; інакше — некерований із defaultValue, і defaultValue
+// після першого показу не змінюють (Base UI попереджає про зміну початкового значення некерованого Select).
 export function FormSelect({
   id,
   name,
   items,
+  value,
   defaultValue = null,
   placeholder,
   disabled,
@@ -20,6 +23,7 @@ export function FormSelect({
   id: string;
   name?: string;
   items: FormSelectItem[];
+  value?: string | null;
   defaultValue?: string | null;
   placeholder?: string;
   disabled?: boolean;
@@ -31,7 +35,7 @@ export function FormSelect({
       id={id}
       name={name}
       items={items}
-      defaultValue={defaultValue}
+      {...(value === undefined ? { defaultValue } : { value })}
       disabled={disabled}
       onValueChange={(value) => onValueChange?.(value)}
     >
