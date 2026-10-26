@@ -204,9 +204,7 @@ declare
   v_uid uuid := (select auth.uid());
   v_content jsonb;
 begin
-  if v_uid is null or (select private.current_app_role()) is distinct from 'admin' then
-    raise exception 'NOT_ALLOWED' using errcode = '42501';
-  end if;
+  -- MUTATION: перевірку ролі тимчасово прибрано (AC-EDITOR-08)
   if not exists (select 1 from public.templates as t where t.id = p_template_id) then
     raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
   end if;
