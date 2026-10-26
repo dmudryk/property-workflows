@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { MSG_CANNOT_UNDO, MSG_RUN_NOT_FOUND, canMarkDone, needsConfirmation, staffLabel } from "@/lib/runs/rules";
 import { requireActor } from "@/lib/auth/actor";
+import { runStatusKind, taskStatusKind } from "@/lib/status";
 import { templateVersionLabel } from "@/lib/templates/format";
 import { markDone } from "../actions";
 import { RUN_ERRORS, messageFor } from "../messages";
@@ -55,7 +56,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     name: t.name,
     required: t.required,
     position: t.position,
-    status: t.status === "done" ? "done" : "to_do",
+    status: taskStatusKind(t.status),
     assigneeLabel: staffLabel(people.get(t.assignee_id)),
     canMark: actor ? canMarkDone(actor, { managerId: run.manager_id }, { assigneeId: t.assignee_id }) : false,
   }));
@@ -74,7 +75,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
         <span data-testid="template-version" className="tabular-nums">
           {templateVersionLabel(run.template_version)}
         </span>
-        <StatusBadge data-testid="run-status" kind={run.status === "completed" ? "completed" : "in_progress"} />
+        <StatusBadge data-testid="run-status" kind={runStatusKind(run.status)} />
         <span>
           Run manager: <span data-testid="run-manager">{staffLabel(people.get(run.manager_id))}</span>
         </span>

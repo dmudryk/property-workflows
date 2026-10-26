@@ -32,3 +32,15 @@ jobs:
         with:
           node-version: 24
       - run: node scripts/check-server-boundary.mjs
+
+  writes-via-rpc:
+    name: "Запис лише через функції бази"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # ADR 0001, 0002: код застосунку пише в таблиці лише через supabase.rpc(…) до функцій private.*.
+      - run: node scripts/check-writes-via-rpc.mjs

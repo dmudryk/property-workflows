@@ -252,4 +252,22 @@ describe("design-system", () => {
     expect((await template(TENANT_MOVE_IN)).current_version).toBe(1);
     expect(await draft(TENANT_MOVE_IN)).toBeNull();
   }, 60_000);
+
+  it("AC-DSYS-03: відвідувач без входу не читає запуск і його задачі — дані запуску не показано", async () => {
+    const [{ run_id }] = await t.asUser<{ run_id: string }>(
+      MANAGER_A,
+      "select public.launch_run($1, 'Apartment 12, move-in', '{}'::jsonb) as run_id",
+      [TENANT_MOVE_IN],
+    );
+
+    await expect(t.asAnon("select case_name from public.runs where id = $1", [run_id])).rejects.toThrow(
+      /permission denied/,
+    );
+    await expect(t.asAnon("select name from public.run_tasks where run_id = $1", [run_id])).rejects.toThrow(
+      /permission denied/,
+    );
+
+    const [run] = await t.asService<{ case_name: string }>("select case_name from public.runs where id = $1", [run_id]);
+    expect(run.case_name).toBe("Apartment 12, move-in"); // запуск на місці, просто не для відвідувача
+  }, 60_000);
 });

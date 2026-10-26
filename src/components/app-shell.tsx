@@ -20,13 +20,19 @@ export function AppShell({
   const content = (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">{children}</div>
   );
-  if (!user) return <div className="flex flex-1 flex-col">{content}</div>;
+  if (!user) {
+    return (
+      <div data-testid="app-shell" className="flex flex-1 flex-col">
+        {content}
+      </div>
+    );
+  }
 
   const initial = (user.email ?? "?").charAt(0).toUpperCase();
 
   // Обгортка — контейнер для запитів @min-[50rem], рядок усередині: над вмістом панель лише своєї висоти (content-start).
   return (
-    <div className="@container flex flex-1 flex-col">
+    <div data-testid="app-shell" className="@container flex flex-1 flex-col">
       <div className="flex flex-1 flex-wrap @max-[50rem]:content-start">
         <aside className="flex min-w-0 flex-[1_1_15rem] flex-col gap-6 border-b bg-muted p-4 @min-[50rem]:border-r @min-[50rem]:border-b-0 @min-[50rem]:py-6">
           <Link
