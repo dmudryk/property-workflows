@@ -47,6 +47,56 @@ describe("check-writes-via-rpc", () => {
     expect(out).toContain("src/app/templates/actions.ts:7  [direct-write]  .delete");
   });
 
+  it("запис після .from(змінна) і через запит, збережений у змінну, — порушення", () => {
+    const dir = project({
+      "src/lib/indirect.ts": [
+        "export async function bad(supabase, tableName, data) {",
+        "  await supabase.from(tableName).insert(data);",
+        '  const query = supabase.from("templates");',
+        "  await query.update({ current_version: 2 });",
+        '  await query.eq("id", "x").delete();',
+        "}",
+      ].join("\n"),
+    });
+    const { code, out } = runScript("check-writes-via-rpc.mjs", dir);
+    expect(code).toBe(1);
+    expect(out).toContain("src/lib/indirect.ts:2  [direct-write]  .insert");
+    expect(out).toContain("src/lib/indirect.ts:4  [direct-write]  .update");
+    expect(out).toContain("src/lib/indirect.ts:5  [direct-write]  .delete");
+  });
+
+  it("«//» усередині рядка не ховає запис після нього", () => {
+    const dir = project({
+      "src/lib/slashes.ts": [
+        "export async function bad(supabase, id) {",
+        '  const path = "a//b"; await supabase.from("templates").delete().eq("id", id);',
+        '  const url = `https://example.test/${id}`; await supabase.from("templates").update({ name: url });',
+        "}",
+      ].join("\n"),
+    });
+    const { code, out } = runScript("check-writes-via-rpc.mjs", dir);
+    expect(code).toBe(1);
+    expect(out).toContain("src/lib/slashes.ts:2  [direct-write]  .delete");
+    expect(out).toContain("src/lib/slashes.ts:3  [direct-write]  .update");
+  });
+
+  it("Array.from, результат запиту в змінній і текст у рядку — не порушення", () => {
+    const dir = project({
+      "src/lib/not-writes.ts": [
+        "export async function ok(supabase, cache) {",
+        "  Array.from(cache.keys()).forEach((key) => cache.delete(key));",
+        '  const res = await supabase.from("templates").select("id");',
+        '  if (res.error) cache.delete("templates");',
+        '  const hint = "use supabase.from(\\"templates\\").insert(…) only in tests";',
+        "  return hint;",
+        "}",
+      ].join("\n"),
+    });
+    const { code, out } = runScript("check-writes-via-rpc.mjs", dir);
+    expect(out).toContain("OK");
+    expect(code).toBe(0);
+  });
+
   it("rpc, select, Set.delete, коментарі й тести — не порушення; writes-ok — виняток", () => {
     const dir = project({
       "src/lib/ok.ts": [

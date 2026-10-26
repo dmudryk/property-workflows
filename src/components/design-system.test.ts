@@ -1,12 +1,26 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
-import { isPublicPath } from "@/lib/auth/public-paths";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import LoginPage from "@/app/login/page";
+import RunsPage from "@/app/runs/page";
 import { LAUNCH_HREF, LINK_LAUNCH_TEMPLATE, MSG_NO_RUNS, runsListView } from "@/lib/runs/list-view";
 import { runStatusKind } from "@/lib/status";
-import { AppShell } from "./app-shell";
 import { EmptyState } from "./empty-state";
 import { StatusBadge } from "./status-badge";
+
+// Сторінка /runs читає запуски через requireActor(); у тесті — менеджер, якому RLS віддає лише рядки з `runs.rows`.
+const runs = vi.hoisted(() => ({ rows: [] as unknown[] }));
+vi.mock("@/lib/auth/actor", () => ({
+  requireActor: async () => ({
+    supabase: { from: () => ({ select: async () => ({ data: runs.rows, error: null }) }) },
+    actor: { id: "manager-b", role: "manager" },
+    email: "manager.b@example.test",
+  }),
+}));
+
+beforeEach(() => {
+  runs.rows = [];
+});
 
 // Стани дизайн-системи (openspec/specs/design-system): спільні компоненти, які беруть усі сторінки.
 describe("design-system", () => {
@@ -22,15 +36,18 @@ describe("design-system", () => {
     expect(completed).toMatch(/<span[^>]*class="[^"]*bg-status-done[^"]*"[^>]*>completed<\/span>/);
   });
 
-  it("AC-DSYS-03: сторінка входу — у тій самій розкладці (AppShell), без даних користувача; сторінка запуску не публічна", () => {
-    expect(isPublicPath("/runs/acde19d4-83ed-432b-a9e0-c75e12ab2d1e")).toBe(false); // proxy веде на /login
-    const login = renderToStaticMarkup(
-      createElement(AppShell, null, createElement("main", null, createElement("h1", null, "Sign in"))),
+  it("AC-DSYS-03: сторінка входу (src/app/login/page.tsx) — у тій самій розкладці AppShell, з формою входу й без даних", async () => {
+    const html = renderToStaticMarkup(
+      await LoginPage({ params: Promise.resolve({}), searchParams: Promise.resolve({}) }),
     );
-    expect(login).toContain("Property Workflows");
-    expect(login).toContain("Sign in");
-    expect(login).not.toContain("Sign out");
-    expect(login).not.toContain('data-testid="user-email"');
+    expect(html).toContain('data-testid="app-shell"');
+    expect(html).toMatch(/<input[^>]*name="email"/);
+    expect(html).toMatch(/<input[^>]*name="password"/);
+    // Без даних користувача й запуску: ні email і ролі в шапці, ні виходу, ні прогресу чи менеджера запуску.
+    expect(html).not.toContain('data-testid="user-email"');
+    expect(html).not.toContain("Sign out");
+    expect(html).not.toContain("Run manager");
+    expect(html).not.toMatch(/\d+ of \d+ done/);
   });
 
   it("AC-DSYS-04: без запусків — «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці", () => {
@@ -42,5 +59,24 @@ describe("design-system", () => {
     expect(html).toContain("No runs yet. Launch a template to start one.");
     expect(html).toMatch(/<a[^>]*href="\/runs\/new"[^>]*>Launch a template<\/a>/);
     expect(html).not.toContain("<table");
+  });
+
+  it("AC-DSYS-04: сторінка /runs менеджера без запусків — повідомлення й посилання «Launch a template», без таблиці", async () => {
+    const html = renderToStaticMarkup(await RunsPage());
+    expect(html).toContain(MSG_NO_RUNS);
+    expect(html).toMatch(/<a[^>]*href="\/runs\/new"[^>]*>Launch a template<\/a>/);
+    expect(html).toContain('data-testid="empty-state"');
+    expect(html).not.toContain("<table");
+  });
+
+  it("сторінка /runs із запусками — таблиця без порожнього стану", async () => {
+    runs.rows = [
+      { id: "r1", case_name: "Apartment 12, move-in", template_name: "Tenant move-in", status: "in_progress", created_at: "2026-10-20T10:00:00Z", run_tasks: [{ status: "done" }, { status: "to_do" }] },
+    ];
+    const html = renderToStaticMarkup(await RunsPage());
+    expect(html).toContain("<table");
+    expect(html).toContain("Apartment 12, move-in");
+    expect(html).toContain("1 of 2 done");
+    expect(html).not.toContain(MSG_NO_RUNS);
   });
 });
