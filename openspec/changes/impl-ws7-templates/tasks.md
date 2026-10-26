@@ -15,7 +15,7 @@
       автозбереженням), `/templates/[id]/versions`; дії `createTemplate`, `saveDraft`, `publishVersion`; `/runs/new` —
       поточна версія; `/runs/[id]` — «Template version N» (U1–U3)
 - [x] 1.6 Тести бази `tests/db/templates.test.ts` на AC-EDITOR-01…09 і AC-DSYS-02 (відмова й незмінні дані)
-- [ ] 1.7 Мутаційна перевірка: таблиця «AC → що прибрали → який тест упав» для кожного відмовного AC; червоні прогони
+- [x] 1.7 Мутаційна перевірка: таблиця «AC → що прибрали → який тест упав» для кожного відмовного AC; червоні прогони
       CI для AC-EDITOR-08 і AC-EDITOR-07, потім revert
 - [x] 1.8 ADR `docs/decisions/0002-…` про модель версій і незбережених змін; рядки `docs/conformance.md`
 
