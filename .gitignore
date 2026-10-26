@@ -38,6 +38,9 @@ yarn-error.log*
 # зірочка ловить і denylist.local.txt.txt, якщо Провідник Windows приховав розширення
 /product/denylist.local*
 
+# тестові акаунти з паролями — лише локально; у git — зашифрований accounts.zip (схема курсу WS7)
+/accounts.txt
+
 # vercel
 .vercel
 
