@@ -16,11 +16,12 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ className }: { className?: string }) {
+// size="lg" — на картці входу, де логотип — головний елемент над формою.
+export function Logo({ size = "default", className }: { size?: "default" | "lg"; className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <LogoMark className="size-8 shrink-0" />
-      <span className="text-lg font-semibold">Stepline</span>
+    <span className={cn("inline-flex items-center", size === "lg" ? "gap-3" : "gap-2", className)}>
+      <LogoMark className={cn("shrink-0", size === "lg" ? "size-11" : "size-8")} />
+      <span className={cn("font-semibold", size === "lg" ? "text-2xl" : "text-lg")}>Stepline</span>
     </span>
   );
 }

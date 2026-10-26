@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             </div>
           </div>
           <div className="flex flex-col justify-center gap-6 p-6 sm:p-10">
-            <Logo />
+            <Logo size="lg" className="self-center" />
             <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-semibold">Sign in</h1>
               <p className="text-sm text-muted-foreground">Welcome back. Enter your email and password to continue.</p>

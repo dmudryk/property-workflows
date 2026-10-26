@@ -141,7 +141,7 @@
 | `Badge` | через `StatusBadge` (`src/components/status-badge.tsx`) | статус — завжди слово + колір токена `status-*`; один і той самий статус однаковий на всіх сторінках |
 | `Alert` | `default`, `destructive` | помилка дії (`destructive`) над формою; текст — дослівно з AC |
 | `Dialog` | — | підтвердження незворотної дії з текстом «This cannot be undone» |
-| `Logo` (`src/components/logo.tsx`) | `Logo` (значок + назва), `LogoMark` (лише значок) | угорі бічної панелі `AppShell` і над формою входу; значок — SVG: контур кольором тексту, позначка — `brand`; favicon — той самий значок на білій плитці (`src/app/favicon.ico`) |
+| `Logo` (`src/components/logo.tsx`) | `Logo` (значок + назва; `size="lg"` — більший), `LogoMark` (лише значок) | угорі бічної панелі `AppShell` і над формою входу (`size="lg"`, по центру); значок — SVG: контур кольором тексту, позначка — `brand`; favicon — той самий значок на білій плитці (`src/app/favicon.ico`) |
 
 ## 6. Стани
 
