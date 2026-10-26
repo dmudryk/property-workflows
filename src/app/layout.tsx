@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Property Workflows",
-  description: "Templates, runs and tasks of a property management agency",
+  title: "Stepline",
+  description: "Workflow templates, runs and tasks — step by step",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

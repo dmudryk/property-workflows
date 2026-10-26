@@ -36,6 +36,9 @@
   --color-status-done-foreground: var(--status-done-foreground);
   --color-status-unpublished: var(--status-unpublished);
   --color-status-unpublished-foreground: var(--status-unpublished-foreground);
+  --color-brand: var(--brand);
+  --color-illustration: var(--illustration);
+  --color-illustration-foreground: var(--illustration-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -50,7 +53,7 @@
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 0.75rem;
   --tracking-normal: -0.01em;
   --background: oklch(1 0 0);
   --foreground: oklch(0.2226 0.0753 255.7444);
@@ -78,6 +81,10 @@
   --status-done-foreground: oklch(0.42 0.12 150);
   --status-unpublished: oklch(0.94 0.1 92);
   --status-unpublished-foreground: oklch(0.43 0.09 65);
+  --brand: oklch(0.7336 0.1843 52.938);
+  /* ілюстрація входу світла в обох темах, тож її тло й текст на ній у темній темі не змінюються */
+  --illustration: oklch(0.967 0.004 95);
+  --illustration-foreground: oklch(0.2226 0.0753 255.7444);
   --elevation-xs: 0px 4px 10px 0px hsl(0 0% 0% / 0.03);
   --elevation-sm: 0px 4px 10px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
   --elevation-md: 0px 4px 10px 0px hsl(0 0% 0% / 0.05), 0px 2px 4px -1px hsl(0 0% 0% / 0.05);
@@ -112,6 +119,7 @@
     --status-done-foreground: oklch(0.88 0.09 150);
     --status-unpublished: oklch(0.33 0.06 85);
     --status-unpublished-foreground: oklch(0.93 0.09 95);
+    --brand: oklch(0.7222 0.1875 48.4986);
     --elevation-xs: 0px 4px 15px 0px hsl(0 0% 0% / 0.2);
     --elevation-sm: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 1px 2px -1px hsl(0 0% 0% / 0.4);
     --elevation-md: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 2px 4px -1px hsl(0 0% 0% / 0.4);

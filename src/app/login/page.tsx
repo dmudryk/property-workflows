@@ -1,10 +1,12 @@
+import Image from "next/image";
 import { AppShell } from "@/components/app-shell";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login } from "./actions";
+import hero from "./login-hero.jpg";
 
 // Тексти — спокійні, без звинувачень (DESIGN.md, розділ 1); помилка входу не підказує, чи існує email.
 const ERRORS: Record<string, string> = {
@@ -12,6 +14,8 @@ const ERRORS: Record<string, string> = {
   invalid: "The email or password is not correct.",
 };
 
+// Вхід — у тій самій розкладці AppShell (AC-DSYS-03): картка з ілюстрацією зліва (з md) і формою справа; на телефоні —
+// лише форма. Ілюстрація декоративна (порожній alt); підпис на ній — токени illustration (DESIGN.md, розділ 2).
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error } = await searchParams;
   const message = typeof error === "string" && Object.hasOwn(ERRORS, error) ? ERRORS[error] : undefined;
@@ -19,13 +23,27 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <AppShell>
       <main className="flex flex-1 items-start justify-center sm:items-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>
+        <Card className="w-full max-w-sm gap-0 py-0 md:grid md:max-w-none md:grid-cols-2">
+          <div className="relative hidden min-h-[32rem] bg-illustration md:block">
+            <Image
+              src={hero}
+              alt=""
+              fill
+              preload
+              placeholder="blur"
+              sizes="(min-width: 768px) 28rem, 1px"
+              className="object-cover object-top"
+            />
+            <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-8 text-illustration-foreground">
+              <p className="text-lg font-semibold">Every workflow, one step at a time.</p>
+              <p className="text-sm">Templates, runs and tasks in one place.</p>
+            </div>
+          </div>
+          <div className="flex flex-col justify-center gap-6 p-6 sm:p-10">
+            <div className="flex flex-col gap-1">
               <h1 className="text-2xl font-semibold">Sign in</h1>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              <p className="text-sm text-muted-foreground">Welcome back. Enter your email and password to continue.</p>
+            </div>
             <form action={login} className="flex flex-col gap-4">
               {message ? (
                 <Alert variant="destructive">
@@ -44,7 +62,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 Sign in
               </Button>
             </form>
-          </CardContent>
+          </div>
         </Card>
       </main>
     </AppShell>

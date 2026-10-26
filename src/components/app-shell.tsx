@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
+import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-// Одна розкладка для всіх сторінок, зокрема для входу (DESIGN.md, розділ 4): шапка з назвою застосунку, а для
+// Одна розкладка для всіх сторінок, зокрема для входу (DESIGN.md, розділ 4): шапка з логотипом застосунку, а для
 // користувача, який увійшов, — навігація, email, роль і вихід. Вміст сторінки — у тому самому контейнері.
 export function AppShell({
   user,
@@ -17,8 +18,8 @@ export function AppShell({
       <header className="border-b bg-card">
         <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-base font-semibold">
-              Property Workflows
+            <Link href="/">
+              <Logo />
             </Link>
             {user ? (
               <nav aria-label="Main" className="flex gap-4 text-sm">
