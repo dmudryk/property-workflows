@@ -49,6 +49,7 @@
   --shadow-xs: var(--elevation-xs);
   --shadow-sm: var(--elevation-sm);
   --shadow-md: var(--elevation-md);
+  --shadow-up: var(--elevation-up);
   --shadow-lg: var(--elevation-lg);
 }
 
@@ -89,6 +90,8 @@
   --elevation-sm: 0px 4px 10px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
   --elevation-md: 0px 4px 10px 0px hsl(0 0% 0% / 0.05), 0px 2px 4px -1px hsl(0 0% 0% / 0.05);
   --elevation-lg: 0px 4px 10px 0px hsl(0 0% 0% / 0.05), 0px 4px 6px -1px hsl(0 0% 0% / 0.05);
+  /* тінь угору — для липкої смуги внизу сторінки (смуга збереження редактора) */
+  --elevation-up: 0px -6px 12px -8px hsl(0 0% 0% / 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -127,6 +130,7 @@
     --elevation-sm: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 1px 2px -1px hsl(0 0% 0% / 0.4);
     --elevation-md: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 2px 4px -1px hsl(0 0% 0% / 0.4);
     --elevation-lg: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 4px 6px -1px hsl(0 0% 0% / 0.4);
+    --elevation-up: 0px -6px 12px -8px hsl(0 0% 0% / 0.5);
   }
 }
 

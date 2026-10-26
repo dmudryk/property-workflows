@@ -92,6 +92,7 @@ export function LaunchForm({
                   id="case_name"
                   name="case_name"
                   placeholder="Apartment 12, move-in"
+                  aria-required="true"
                   aria-describedby="case_name-hint"
                   className="h-11"
                   onChange={(e) => setCaseName(e.target.value)}

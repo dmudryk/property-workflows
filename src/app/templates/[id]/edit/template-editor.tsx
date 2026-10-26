@@ -281,7 +281,7 @@ export function TemplateEditor({
       {/* Смугу збереження видно завжди: стан змін, автозбереження, результат «Save version» і помилка — поруч із дією.
           Тло — на всю ширину колонки вмісту (100cqw від центру main) і до низу сторінки (mt-auto, -mb-8 — нижній
           відступ контейнера); вміст смуги — у тій самій ширині, що й картки. */}
-      <div className="sticky bottom-0 z-10 mt-auto -mb-8 ml-[calc(50%-50cqw)] w-[100cqw] border-t bg-background shadow-[0_-6px_12px_-8px_color-mix(in_oklch,var(--color-foreground)_25%,transparent)]">
+      <div className="sticky bottom-0 z-10 mt-auto -mb-8 ml-[calc(50%-50cqw)] w-[100cqw] border-t bg-background shadow-up">
         <div className="mx-auto flex max-w-4xl flex-col gap-3 px-4 py-3 sm:px-6">
           {error ? (
             <Alert variant="destructive">
@@ -290,7 +290,8 @@ export function TemplateEditor({
           ) : null}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-              {unpublished ? (
+              {/* Правка вже є, навіть якщо автозбереження ще йде або впало (помилка — в Alert вище). */}
+              {unpublished || saveState === "saving" || saveState === "error" ? (
                 <StatusBadge data-testid="unpublished" kind="unpublished" />
               ) : (
                 <span className="inline-flex items-center gap-2 text-muted-foreground">
