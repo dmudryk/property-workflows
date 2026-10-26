@@ -1,4 +1,5 @@
 import type { RunStatus } from "@/lib/runs/rules";
+import { matchesSearch } from "@/lib/search";
 
 // Список запусків (/runs): фільтр за статусом і пошук за назвою випадку працюють на клієнті над уже прочитаними
 // рядками — які запуски видно, як і раніше, вирішує база (RLS).
@@ -29,14 +30,11 @@ export function countByStatus(runs: readonly Pick<RunListItem, "status">[]): Rec
   return { all: runs.length, in_progress: inProgress, completed: runs.length - inProgress };
 }
 
-// Пошук — підрядок назви випадку без урахування регістру; пробіли на краях запиту не враховуються.
+// Пошук — за назвою випадку (matchesSearch).
 export function filterRuns<T extends Pick<RunListItem, "status" | "caseName">>(
   runs: readonly T[],
   filter: RunFilter,
   query: string,
 ): T[] {
-  const needle = query.trim().toLocaleLowerCase();
-  return runs.filter(
-    (r) => (filter === "all" || r.status === filter) && (!needle || r.caseName.toLocaleLowerCase().includes(needle)),
-  );
+  return runs.filter((r) => (filter === "all" || r.status === filter) && matchesSearch(r.caseName, query));
 }
