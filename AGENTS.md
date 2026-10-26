@@ -20,7 +20,7 @@ merge. Вимоги пише PM людською мовою у своєму ре
 ## Стек і версії (не оновлювати без ADR)
 
 Node 24.x · Next.js 16.4 (App Router, `src/`, без Cache Components) · React 19.3 · TypeScript ^5 · ESLint ^9 ·
-Tailwind 4 · `@supabase/supabase-js` 2.117 + `@supabase/ssr` 0.12 · Supabase CLI 2.120 (devDependency) ·
+Tailwind 4 · shadcn/ui 4.22.1 (Base UI, `src/components/ui`) · `@supabase/supabase-js` 2.117 + `@supabase/ssr` 0.12 · Supabase CLI 2.120 (devDependency) ·
 OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версії) · Vitest 5 · Vercel Hobby.
 Не «оновлюй усе до latest»: TypeScript 7 і ESLint 10 цей шаблон не перевіряв.
 
@@ -29,6 +29,8 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 - `npm run dev` · `npm run build` (має показати `ƒ Proxy (Middleware)`) · `npm run lint` (0 warnings)
 - `npm run typecheck` (`next typegen && tsc --noEmit`) · `npm test` (Vitest)
 - `npm run spec:validate` · `npm run spec:check` · `npm run ac:coverage`
+- `npm run check:design` (лише токени) · `npm run check:boundary` (секретний ключ лише на сервері) — у CI окремий
+  workflow `architecture.yml`
 - `node scripts/check-migration-order.mjs` — нова міграція новіша за `origin/main`, застосовані не змінено (у CI — `db-check`)
 - `npx supabase migration new <назва>` → SQL → PR. Застосовує міграції у вашу базу ЛИШЕ CI (`db-deploy` після merge у `main`)
 - Типи БД: готовий `database.types.ts` — у Summary прогону job `db-check` (Docker не потрібен); або `npm run db:types`
@@ -60,6 +62,18 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
   не рахує їх як покриття AC, доки e2e не запускає окремий крок CI — тоді фільтр у `scripts/lib/test-titles.mjs`
   розширюють разом із цим кроком), нові перевірки — окремим workflow у `.github/workflows/`. Jobs `spec`, `app`,
   `conformance`, `db-check`, `db-deploy` у `ci.yml` не перейменовуй і не видаляй: на їхніх назвах тримається ruleset.
+
+## Дизайн-система
+
+- Правила вигляду — `DESIGN.md`. Кольори — лише семантичні утиліти з токенів (`bg-primary`, `text-muted-foreground`,
+  `border-input`, `bg-status-progress`…); жодних hex, `bg-[#…]`, сирих палітр (`zinc-500`, `bg-white`) і кольорів в
+  inline style.
+- Компоненти — лише з `@/components/ui` (shadcn/ui 4.22.1 на Base UI, змінюються в цій теці); спільні блоки сторінок —
+  `src/components/` (`AppShell`, `StatusBadge`). Нових кольорів у компонентах не вигадуй; статус — лише `StatusBadge`.
+- Новий токен: `DESIGN.md` → `:root` і темна тема (`@media (prefers-color-scheme: dark)`) у `src/app/globals.css` →
+  `--color-<назва>` у `@theme inline`. Блоку `.dark` і `@custom-variant dark` немає — `shadcn add` може їх повернути,
+  прибирай.
+- Перевірка: `npm run check:design` (CI: `.github/workflows/architecture.yml`).
 
 ## Процес і ролі
 
