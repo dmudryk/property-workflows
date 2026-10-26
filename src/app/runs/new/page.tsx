@@ -57,7 +57,9 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
 
       <Card>
         <CardContent>
+          {/* key: після переходу на інший шаблон список створюється заново зі своїм defaultValue (некерований Select). */}
           <TemplatePicker
+            key={selected ? templateId : ""}
             templates={(templates ?? []).map((t) => ({ id: t.id, name: t.name }))}
             selectedId={selected ? templateId : ""}
           />
