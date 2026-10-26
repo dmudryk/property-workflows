@@ -24,9 +24,9 @@ AC-EDITOR-08, AC-EDITOR-09, AC-DSYS-02
 
 ## 2. Стани дизайн-системи (PR «Реалізація» `task/design-states`)
 
-- [ ] 2.1 `/runs`: порожній стан «No runs yet. Launch a template to start one.» + «Launch a template», без таблиці;
+- [x] 2.1 `/runs`: порожній стан «No runs yet. Launch a template to start one.» + «Launch a template», без таблиці;
       вибір стану — чиста функція (U3)
-- [ ] 2.2 Тести: статуси «in progress»/«completed» — ті самі слова й токени кольору на списку й сторінці запуску;
+- [x] 2.2 Тести: статуси «in progress»/«completed» — ті самі слова й токени кольору на списку й сторінці запуску;
       сторінка входу в `AppShell` без даних; відвідувач без входу не читає запуски (тест бази) і потрапляє на `/login`
 - [ ] 2.3 Архітектурне правило «запис лише через функції бази» (`scripts/check-writes-via-rpc.mjs`, третій job у
       `.github/workflows/architecture.yml`) і доказ, що воно ловить порушення (червоний прогін, потім revert)
