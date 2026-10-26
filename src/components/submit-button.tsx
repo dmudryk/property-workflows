@@ -18,7 +18,7 @@ export function SubmitButton({
     <Button type="submit" disabled={pending || disabled} aria-busy={pending} {...props}>
       {pending ? (
         <>
-          <Loader2Icon className="animate-spin" aria-hidden />
+          <Loader2Icon className="motion-safe:animate-spin" aria-hidden />
           {pendingLabel}
         </>
       ) : (

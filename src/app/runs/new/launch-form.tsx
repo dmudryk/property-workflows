@@ -2,7 +2,7 @@
 
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Chip } from "@/components/chip";
 import { FormSelect, type FormSelectItem } from "@/components/form-select";
 import { NumberBadge } from "@/components/number-badge";
@@ -21,7 +21,8 @@ type LaunchSection = { id: string; name: string; tasks: { id: string; name: stri
 
 // Форма запуску (AC-RUN-01…09) у дві колонки: ліворуч — три кроки (шаблон, випадок, виконавці за секціями),
 // праворуч — підсумок із кнопкою запуску. Поля й дія ті самі: template_id, case_name, assignee:<id задачі>
-// (порожнє — менеджер запуску) → launchRun. Стан тут лише для підсумку: назва випадку й кількість задач «на мені».
+// (порожнє — менеджер запуску) → launchRun. Стан тут — для підсумку (назва випадку й кількість задач «на мені») і
+// для перемикання шаблону (поки воно триває, запуск вимкнено).
 export function LaunchForm({
   templates,
   selectedId,
@@ -39,6 +40,8 @@ export function LaunchForm({
 }) {
   const [caseName, setCaseName] = useState("");
   const [picks, setPicks] = useState<Record<string, string | null>>({});
+  // Перемикання шаблону: до кінця переходу форма ще тримає задачі й template_id попереднього — запуск вимкнено.
+  const [switching, startSwitch] = useTransition();
   const tasks = sections.flatMap((section) => section.tasks);
   const ready = Boolean(selectedId) && tasks.length > 0;
   const mine = tasks.filter((task) => (picks[task.id] ?? null) === null).length;
@@ -63,7 +66,12 @@ export function LaunchForm({
         ) : null}
 
         <StepCard step={1} title="Template">
-          <TemplatePicker templates={templates} selectedId={selectedId} />
+          <TemplatePicker
+            templates={templates}
+            selectedId={selectedId}
+            pending={switching}
+            startTransition={startSwitch}
+          />
           {selectedId ? (
             <div className="flex flex-wrap gap-2">
               <Chip>{countLabel(tasks.length, "task")}</Chip>
@@ -143,7 +151,7 @@ export function LaunchForm({
           <SummaryRow term="Assigned to you">{ready ? `${mine} of ${tasks.length}` : "—"}</SummaryRow>
         </dl>
         <div className="flex flex-col gap-3">
-          <SubmitButton size="xl" pendingLabel="Launching…" disabled={!ready} className="w-full">
+          <SubmitButton size="xl" pendingLabel="Launching…" disabled={!ready || switching} className="w-full">
             Launch run
             <ArrowRightIcon data-icon="inline-end" aria-hidden />
           </SubmitButton>

@@ -2,22 +2,26 @@
 
 import { Loader2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, type TransitionStartFunction } from "react";
 import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
 
 // Вибір шаблону для запуску: одразу відкриває його задачі (?template=…), поки сторінка вантажиться — індикатор.
 // Список керований: значення — вибраний шаблон зі сторінки (null — ще не вибрано); поки триває перехід, список уже
-// показує новий вибір (useOptimistic), а після переходу — знову значення сторінки.
+// показує новий вибір (useOptimistic), а після переходу — знову значення сторінки. Перехід (pending, startTransition)
+// належить формі запуску: поки він триває, форма ще має задачі й template_id попереднього шаблону, тож запуск вимкнено.
 export function TemplatePicker({
   templates,
   selectedId,
+  pending,
+  startTransition,
 }: {
   templates: { id: string; name: string }[];
   selectedId: string;
+  pending: boolean;
+  startTransition: TransitionStartFunction;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
   const [value, setValue] = useOptimistic<string | null>(selectedId || null);
 
   return (
@@ -43,7 +47,7 @@ export function TemplatePicker({
       <p aria-live="polite" className="flex items-center gap-2 text-sm text-muted-foreground empty:hidden">
         {pending ? (
           <>
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
+            <Loader2Icon className="size-4 motion-safe:animate-spin" aria-hidden />
             Loading tasks…
           </>
         ) : null}

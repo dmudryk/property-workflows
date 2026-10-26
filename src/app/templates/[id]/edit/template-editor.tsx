@@ -307,7 +307,7 @@ export function TemplateEditor({
                 Close editor
               </Link>
               <Button size="xl" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
-                {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+                {publishing ? <Loader2Icon className="motion-safe:animate-spin" aria-hidden /> : null}
                 {publishing ? "Saving version…" : "Save version"}
               </Button>
             </div>

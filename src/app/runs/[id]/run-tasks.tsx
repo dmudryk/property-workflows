@@ -83,7 +83,7 @@ export function RunTasks({
                     </span>
                     {task.status !== saved.get(task.id) ? (
                       <span role="status" className="text-muted-foreground">
-                        <Loader2Icon className="size-4 animate-spin" aria-hidden />
+                        <Loader2Icon className="size-4 motion-safe:animate-spin" aria-hidden />
                         <span className="sr-only">Saving</span>
                       </span>
                     ) : null}
