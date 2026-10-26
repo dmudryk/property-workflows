@@ -5,35 +5,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { requireActor } from "@/lib/auth/actor";
 import { staffLabel } from "@/lib/runs/rules";
+import { parseContent } from "@/lib/templates/content";
 import { launchRun } from "../actions";
-import { requireActor } from "../actor";
 import { LAUNCH_ERRORS, messageFor } from "../messages";
 
 // Запуск шаблону для випадку (AC-RUN-01…09): шаблон → назва випадку → виконавці задач (за замовчуванням — менеджер
-// запуску, тобто «me»).
+// запуску, тобто «me»). Запускаємо лише поточну версію: шаблони без збереженої версії сюди не потрапляють, а
+// секції й задачі — зі змісту поточної версії (impl-ws7-templates/design.md, R4; AC-EDITOR-06).
 export default async function NewRunPage({ searchParams }: PageProps<"/runs/new">) {
   const { supabase, actor } = await requireActor();
   const { template, error } = await searchParams;
   const templateId = typeof template === "string" ? template : "";
   const message = messageFor(LAUNCH_ERRORS, error);
 
-  const { data: templates } = await supabase.from("templates").select("id, name").order("name");
+  const { data: templates } = await supabase
+    .from("templates")
+    .select("id, name, current_content")
+    .not("current_version", "is", null)
+    .order("name");
 
-  const { data: tasks } = templateId
-    ? await supabase
-        .from("template_tasks")
-        .select("id, name, required, position, template_sections(name, position)")
-        .eq("template_id", templateId)
-    : { data: null };
-
-  const { data: staff } = templateId ? await supabase.rpc("list_staff") : { data: null };
-  const others = (staff ?? []).filter((member) => member.id !== actor?.id);
-
-  const sorted = (tasks ?? []).toSorted(
-    (a, b) =>
-      (a.template_sections?.position ?? 0) - (b.template_sections?.position ?? 0) || a.position - b.position,
+  const selected = (templates ?? []).find((t) => t.id === templateId);
+  const sorted = (parseContent(selected?.current_content)?.sections ?? []).flatMap((section) =>
+    section.tasks.map((task) => ({ ...task, sectionName: section.name })),
   );
+
+  const { data: staff } = selected ? await supabase.rpc("list_staff") : { data: null };
+  const others = (staff ?? []).filter((member) => member.id !== actor?.id);
 
   const errorAlert = message ? (
     <Alert variant="destructive">
@@ -73,7 +72,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
         </CardContent>
       </Card>
 
-      {templateId && sorted.length > 0 ? (
+      {selected && sorted.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>Case and assignees</CardTitle>
@@ -92,7 +91,7 @@ export default async function NewRunPage({ searchParams }: PageProps<"/runs/new"
                 {sorted.map((task) => (
                   <div key={task.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <Label htmlFor={`assignee-${task.id}`} className="font-normal">
-                      <span className="text-muted-foreground">{task.template_sections?.name} · </span>
+                      <span className="text-muted-foreground">{task.sectionName} · </span>
                       {task.name}
                     </Label>
                     <NativeSelect id={`assignee-${task.id}`} name={`assignee:${task.id}`} defaultValue="">

@@ -4,6 +4,8 @@ import type { Actor } from "@/lib/runs/rules";
 
 // Поточний користувач і його роль — з profiles.role (ніколи з user_metadata).
 // getClaims() перевіряє JWT; getSession() для авторизації на сервері не використовуємо.
+// Викликається першою в кожній сторінці й Server Action (impl-ws7-templates/design.md, Auth): proxy лише перенаправляє
+// на /login (UX), а дані захищають RLS і функції бази.
 export async function requireActor() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
@@ -22,3 +24,5 @@ export async function requireActor() {
 
   return { supabase, actor, email: profile?.email ?? claims.email ?? null };
 }
+
+export { canManageTemplates } from "./roles";
