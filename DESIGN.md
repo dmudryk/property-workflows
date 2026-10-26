@@ -1,7 +1,7 @@
 # Дизайн-система: Property Workflows
 
 - **Джерело:** AI-чат: Claude Code (агент у цьому репо), промпт — в описі PR дизайн-системи. Основа палітри, шрифтів,
-  радіуса й тіней — тема tweakcn «my aweasome theme» (https://tweakcn.com/themes/cmlxzdqhc000004js4867ch0s), обрана
+  радіуса й тіней — тема tweakcn «Nettinx Design System» (https://tweakcn.com/themes/cmqbb3gdw000104l29dvzaqja), обрана
   розробником; адаптація під «Вигляд і тон» PM і контраст — у розділі 2 («Що змінено відносно теми-основи»).
 - **Вхід від PM:** розділ «Вигляд і тон» у `requirements/product.md` (знімок 2026-10-26) і
   `requirements/19-use-one-design-system.md` (AC-DSYS-01…04).
@@ -14,7 +14,7 @@
 запускають їх для випадків і відмічають задачі. Працюють переважно за ноутбуком, інколи з телефона. Тон — **спокійний,
 діловий, точний**: без жартів, знаків оклику, звинувачень («You made a mistake») і жаргону. Пріоритет — **щільність**:
 менеджер переглядає багато запусків одразу, тож таблиці щільні, але читабельні на телефоні. Вигляд — світлий, з
-легким бірюзово-зеленим відтінком сірих і м'якими тінями карток. Інтерфейс — англійською; тексти з AC PM — дослівно.
+темно-синім текстом, холодними сіро-блакитними тлами, помаранчевою основною дією й м'якими тінями карток. Інтерфейс — англійською; тексти з AC PM — дослівно.
 
 ## 2. Кольори
 
@@ -23,71 +23,70 @@
 (темна тема в PM — поза межами зрізу, тож вона лише не повинна ламатися).
 
 **Правила за змістом («Вигляд і тон»):**
-- `primary` (смарагдовий) — **лише основна дія екрана** (Launch, Save, Sign in): одна на екран, суцільна заливка
-  кнопки, ні для чого іншого — не для статусів, посилань у тексті чи декору.
-- **Смарагдовий `primary` і зелений статус «done»/«completed» — свідоме рішення розробника** (кольорова родина теми).
-  Щоб їх не плутати: основна дія — лише суцільна кнопка з білим текстом (відтінок 162), статус — лише світлий бейдж
-  `StatusBadge` зі словом (жовтіший зелений, відтінок 145); бейдж ніколи не має вигляду кнопки, а кнопка — бейджа.
+- `primary` (помаранчевий) — **лише основна дія екрана** (Launch, Save, Sign in): одна на екран, суцільна заливка
+  кнопки з темно-синім текстом, ні для чого іншого — не для статусів, посилань у тексті чи декору. Помаранчевий не
+  збігається з жодним кольором статусу.
 - `destructive` (червоний) — помилки й небезпечні дії; небезпечна дія завжди з підтвердженням і текстом
-  «This cannot be undone».
+  «This cannot be undone». Небезпечна кнопка — світле червоне тло з червоним текстом, тож її не сплутати з
+  суцільною помаранчевою основною дією.
 - Статуси — власні токени `status-*`, кожен із текстом поруч: «to do» — нейтральний сірий, «in progress» — синій,
   «done» і «completed» — зелений, «Unpublished changes» — теплий жовтий.
 
 **Що змінено відносно теми-основи** (решта значень — як у темі):
-- `primary` (світла): у темі `oklch(0.6373 0.1362 162.5)` — білий текст на ньому має контраст ~3.1:1. Відтінок і
-  насиченість ті самі, світлоту знижено до 0.53 (контраст 4.7:1). У темній темі колір теми без змін, але текст на ньому
-  — темний (`primary-foreground` у темі світлий, контраст ~1.9:1).
-- `input`: у темі = `border` (контраст ~1.3:1) — затемнено до ≥ 3:1.
-- `muted-foreground` (світла) і `destructive` — затемнено до тексту ≥ 4.5:1; у темній темі `destructive` — світлий
-  червоний, бо в темі він темний (для тла, а не для тексту).
-- Додано статусні токени `status-*` — у темі їх немає.
+- `primary-foreground`: у темі білий — на помаранчевому `primary` контраст ~2.4:1 (світла) і ~2.6:1 (темна). Текст
+  на основній дії — темно-синій `foreground` теми (6.9:1) і темне тло (7.5:1) у темній темі; сам помаранчевий — як у темі.
+- `input`: у темі = `border` (контраст ~1.3:1) — затемнено до ≥ 3:1 в обох темах.
+- `destructive`: у світлій темі затемнено до тексту ≥ 4.5:1; у темній — світлий червоний, бо в темі він темний (для тла,
+  а не для тексту).
+- Додано статусні токени `status-*` — у темі їх немає; нейтральні відтінки — холодні, як сірі теми.
 
 | Токен | Для чого | Світла | Темна | Клас |
 |---|---|---|---|---|
-| `background` / `foreground` | тло сторінки й основний текст | `oklch(0.9934 0.0017 174.5)` / `oklch(0.2464 0.0358 169)` | `oklch(0.1396 0.0125 174.7)` / `oklch(0.9861 0.0023 174.5)` | `bg-background`, `text-foreground` |
-| `card` / `card-foreground` | картки, панелі, таблиці | `oklch(1 0 0)` / `oklch(0.2464 0.0358 169)` | `oklch(0.17 0.017 171.6)` / `oklch(0.9861 0.0023 174.5)` | `bg-card`, `text-card-foreground` |
-| `popover` / `popover-foreground` | меню, діалоги | `oklch(1 0 0)` / як `foreground` | `oklch(0.1551 0.0146 172.8)` / як `foreground` | `bg-popover`, `text-popover-foreground` |
-| `primary` / `primary-foreground` | основна дія (одна на екран) | `oklch(0.53 0.1362 162.5)` / `oklch(0.9915 0.0116 174.2)` | `oklch(0.7678 0.1655 162.2)` / `oklch(0.17 0.02 170)` | `bg-primary`, `text-primary-foreground` |
-| `secondary` / `secondary-foreground` | другорядна дія | `oklch(0.9593 0.0088 174.3)` / `oklch(0.4406 0.074 167.5)` | `oklch(0.2539 0.023 171.6)` / `oklch(0.9302 0.0118 174.2)` | `bg-secondary`, `text-secondary-foreground` |
-| `muted` / `muted-foreground` | приглушене тло, підписи, допоміжний текст | `oklch(0.9572 0.0053 174.4)` / `oklch(0.52 0.04 172.2)` | `oklch(0.2295 0.0197 171.8)` / `oklch(0.7443 0.032 173.3)` | `bg-muted`, `text-muted-foreground` |
-| `accent` / `accent-foreground` | наведення, вибраний рядок (світлий відтінок, не акцент дії) | `oklch(0.9498 0.0187 174)` / `oklch(0.4575 0.0843 166.2)` | `oklch(0.299 0.0371 170.1)` / `oklch(0.9861 0.0023 174.5)` | `bg-accent`, `text-accent-foreground` |
-| `destructive` | помилка, небезпечна дія | `oklch(0.55 0.2 25.4)` | `oklch(0.7 0.17 25)` | `bg-destructive`, `text-destructive` |
-| `border` | розділювачі, межі карток | `oklch(0.9161 0.0142 174.1)` | `oklch(0.2852 0.0226 172)` | `border-border` |
-| `input` | межа поля вводу | `oklch(0.62 0.03 174)` | `oklch(0.5 0.025 172)` | `border-input` |
-| `ring` | кільце фокусу | `oklch(0.53 0.1362 162.5)` | `oklch(0.7678 0.1655 162.2)` | `ring-ring` |
-| `status-todo` / `-foreground` | статус задачі «to do» (сірий) | `oklch(0.94 0.006 174)` / `oklch(0.38 0.015 172)` | `oklch(0.28 0.012 172)` / `oklch(0.9 0.008 174)` | `bg-status-todo`, `text-status-todo-foreground` |
+| `background` / `foreground` | тло сторінки й основний текст | `oklch(1 0 0)` / `oklch(0.2226 0.0753 255.7)` | `oklch(0.154 0.0092 264.3)` / `oklch(0.9816 0.0017 247.8)` | `bg-background`, `text-foreground` |
+| `card` / `card-foreground` | картки, панелі, таблиці | `oklch(0.9816 0.0017 247.8)` / як `foreground` | `oklch(0.2042 0.0129 264.2)` / `oklch(0.9816 0.0017 247.8)` | `bg-card`, `text-card-foreground` |
+| `popover` / `popover-foreground` | меню, діалоги | `oklch(1 0 0)` / як `foreground` | як `background` / як `foreground` | `bg-popover`, `text-popover-foreground` |
+| `primary` / `primary-foreground` | основна дія (одна на екран) | `oklch(0.7336 0.1843 52.9)` / `oklch(0.2226 0.0753 255.7)` | `oklch(0.7222 0.1875 48.5)` / `oklch(0.154 0.0092 264.3)` | `bg-primary`, `text-primary-foreground` |
+| `secondary` / `secondary-foreground` | другорядна дія | `oklch(0.9477 0.0265 246.3)` / як `foreground` | `oklch(0.2795 0.0368 260)` / `oklch(0.9816 0.0017 247.8)` | `bg-secondary`, `text-secondary-foreground` |
+| `muted` / `muted-foreground` | приглушене тло, підписи, допоміжний текст | `oklch(0.9828 0.0085 247.9)` / `oklch(0.4317 0.0749 257.3)` | `oklch(0.2795 0.0368 260)` / `oklch(0.7107 0.0351 256.8)` | `bg-muted`, `text-muted-foreground` |
+| `accent` / `accent-foreground` | наведення, вибраний рядок (не акцент дії) | `oklch(0.9477 0.0265 246.3)` / як `foreground` | `oklch(0.2226 0.0753 255.7)` / `oklch(1 0 0)` | `bg-accent`, `text-accent-foreground` |
+| `destructive` | помилка, небезпечна дія | `oklch(0.55 0.2 25.3)` | `oklch(0.7 0.17 25)` | `bg-destructive`, `text-destructive` |
+| `border` | розділювачі, межі карток | `oklch(0.9288 0.0126 255.5)` | `oklch(0.2795 0.0368 260)` | `border-border` |
+| `input` | межа поля вводу | `oklch(0.62 0.03 255)` | `oklch(0.52 0.03 260)` | `border-input` |
+| `ring` | кільце фокусу | як `foreground` | як `primary` | `ring-ring` |
+| `status-todo` / `-foreground` | статус задачі «to do» (сірий) | `oklch(0.94 0.008 255)` / `oklch(0.38 0.02 257)` | `oklch(0.3 0.015 260)` / `oklch(0.9 0.01 255)` | `bg-status-todo`, `text-status-todo-foreground` |
 | `status-progress` / `-foreground` | статус запуску «in progress» (синій) | `oklch(0.93 0.045 250)` / `oklch(0.43 0.15 258)` | `oklch(0.31 0.07 255)` / `oklch(0.88 0.06 250)` | `bg-status-progress`, `text-status-progress-foreground` |
-| `status-done` / `-foreground` | «done» і «completed» (зелений) | `oklch(0.93 0.07 145)` / `oklch(0.42 0.12 145)` | `oklch(0.31 0.06 145)` / `oklch(0.88 0.09 145)` | `bg-status-done`, `text-status-done-foreground` |
+| `status-done` / `-foreground` | «done» і «completed» (зелений) | `oklch(0.93 0.07 150)` / `oklch(0.42 0.12 150)` | `oklch(0.31 0.06 150)` / `oklch(0.88 0.09 150)` | `bg-status-done`, `text-status-done-foreground` |
 | `status-unpublished` / `-foreground` | «Unpublished changes» (теплий жовтий) | `oklch(0.94 0.1 92)` / `oklch(0.43 0.09 65)` | `oklch(0.33 0.06 85)` / `oklch(0.93 0.09 95)` | `bg-status-unpublished`, `text-status-unpublished-foreground` |
 
 ### Контраст
 
-Пораховано за WCAG 2.x (OKLCH → sRGB → відносна яскравість). Текст ≥ 4.5:1, межі полів і фокус ≥ 3:1.
+Пораховано за WCAG 2.x (OKLCH → sRGB → відносна яскравість). Текст ≥ 4.5:1, межі полів і фокус ≥ 3:1. Помаранчевий фон
+кнопки відносно білої сторінки — 2.5:1; кнопку ідентифікує її текст (6.9:1), тож межі суцільної кнопки норма не вимагає.
 
 | Пара | Світла | Темна | Норма |
 |---|---|---|---|
-| `foreground` на `background` | 15.7 | 19.1 | ≥ 4.5 |
-| `card-foreground` на `card` | 16.0 | 18.3 | ≥ 4.5 |
-| `muted-foreground` на `background` | 5.3 | 8.9 | ≥ 4.5 |
-| `muted-foreground` на `card` | 5.4 | 8.5 | ≥ 4.5 |
-| `muted-foreground` на `muted` | 4.8 | 7.5 | ≥ 4.5 |
-| `primary-foreground` на `primary` | 4.7 | 9.8 | ≥ 4.5 |
-| `secondary-foreground` на `secondary` | 6.6 | 12.8 | ≥ 4.5 |
-| `accent-foreground` на `accent` | 6.0 | 12.9 | ≥ 4.5 |
-| `destructive` на `card` | 5.4 | 6.6 | ≥ 4.5 |
-| `destructive` на `background` | 5.3 | 6.9 | ≥ 4.5 |
-| `status-todo-foreground` на `status-todo` | 8.3 | 10.8 | ≥ 4.5 |
+| `foreground` на `background` | 17.3 | 18.6 | ≥ 4.5 |
+| `card-foreground` на `card` | 16.4 | 17.0 | ≥ 4.5 |
+| `muted-foreground` на `background` | 8.1 | 7.6 | ≥ 4.5 |
+| `muted-foreground` на `card` | 7.6 | 7.0 | ≥ 4.5 |
+| `muted-foreground` на `muted` | 7.7 | 5.7 | ≥ 4.5 |
+| `primary-foreground` на `primary` | 6.9 | 7.5 | ≥ 4.5 |
+| `secondary-foreground` на `secondary` | 14.9 | 13.9 | ≥ 4.5 |
+| `accent-foreground` на `accent` | 14.9 | 17.3 | ≥ 4.5 |
+| `destructive` на `card` | 5.1 | 6.2 | ≥ 4.5 |
+| `destructive` на `background` | 5.4 | 6.8 | ≥ 4.5 |
+| `status-todo-foreground` на `status-todo` | 8.4 | 10.1 | ≥ 4.5 |
 | `status-progress-foreground` на `status-progress` | 6.7 | 9.2 | ≥ 4.5 |
-| `status-done-foreground` на `status-done` | 6.7 | 9.2 | ≥ 4.5 |
+| `status-done-foreground` на `status-done` | 6.6 | 9.2 | ≥ 4.5 |
 | `status-unpublished-foreground` на `status-unpublished` | 6.9 | 10.0 | ≥ 4.5 |
-| `input` на `card` | 3.6 | 3.2 | ≥ 3 |
-| `input` на `background` | 3.5 | 3.4 | ≥ 3 |
-| `ring` на `background` | 4.7 | 10.2 | ≥ 3 |
-| `ring` на `card` | 4.8 | 9.8 | ≥ 3 |
+| `input` на `card` | 3.4 | 3.3 | ≥ 3 |
+| `input` на `background` | 3.6 | 3.6 | ≥ 3 |
+| `ring` на `background` | 17.3 | 7.5 | ≥ 3 |
+| `ring` на `card` | 16.4 | 6.8 | ≥ 3 |
 
 ## 3. Типографіка
 
-Шрифт — Inter (`next/font`, `--font-sans`), моноширинний — JetBrains Mono (`--font-mono`); міжлітерний інтервал
+Шрифт — Poppins (`next/font`, 400/500/600, `--font-sans`), моноширинний — JetBrains Mono (`--font-mono`); міжлітерний інтервал
 `--tracking-normal: -0.01em` (з теми-основи). Дрібного сірого тексту немає: найменший розмір — `text-sm`.
 
 | Роль | Клас | Де |
@@ -103,7 +102,7 @@
 - Ширина контенту — `max-w-4xl`, бічні відступи `px-4 sm:px-6`; між блоками сторінки — `gap-6`, усередині картки —
   `gap-4`, між полями форми — `gap-4`, між підписом і полем — `gap-2`.
 - Рядок таблиці — щільний: `py-2` (за замовчуванням `Table`).
-- Радіус — `--radius: 0.6rem` (з теми-основи); картки `rounded-xl`, поля й кнопки `rounded-lg`, бейджі статусів
+- Радіус — `--radius: 1rem` (з теми-основи); картки `rounded-xl`, поля й кнопки `rounded-lg`, бейджі статусів
   `rounded-full`.
 - Тіні — м'які, з теми-основи (`--elevation-*` → `shadow-xs/sm/md/lg`); картка — `shadow-sm`. Декоративних тіней і
   градієнтів немає.
