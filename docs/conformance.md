@@ -33,6 +33,10 @@
 
 | AC | Що перевіряє | Код | Тест | Статус |
 |---|---|---|---|---|
+| AC-DSYS-01 | статуси «in progress» / «completed» — ті самі слова й кольори в списку й на сторінці запуску | — | — | відкладено (чекає реалізації) |
+| AC-DSYS-02 | менеджер відкриває редактор за посиланням — «Not enough rights» і «Back to templates» у спільній розкладці, шаблон без змін | — | — | відкладено (чекає реалізації) |
+| AC-DSYS-03 | відвідувач без входу відкриває запуск за посиланням — сторінка входу в спільній розкладці, без даних | — | — | відкладено (чекає реалізації) |
+| AC-DSYS-04 | менеджер без запусків — «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці | — | — | відкладено (чекає реалізації) |
 | AC-TASK-01 | виконавець позначає свою задачу виконаною — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-02 | менеджер запуску позначає чужу задачу свого запуску — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-07 | адміністратор позначає задачу чужого запуску — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |
@@ -51,6 +55,15 @@
 | AC-TASK-13 | завершений запуск у списку: «completed» і «4 of 5 done» | `src/lib/runs/rules.ts` (runStatusLabel, progressLabel), `src/app/runs/page.tsx` | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-14 | список від найновішого; випадок і шаблон у рядку | `src/lib/runs/rules.ts` (newestFirst), `src/app/runs/page.tsx` | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-17 | виконавець бачить у списку прогрес «2 of 5 done» | `src/lib/runs/rules.ts` (progressLabel), `src/app/runs/page.tsx` | `src/lib/runs/tasks.test.ts` | реалізовано |
+| AC-EDITOR-01 | зміни без збереження — «Unpublished changes», повторне відкриття показує 6 задач | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-02 | менеджер бачить версію 1 з 5 задачами без незбережених змін | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-03 | збереження — версія 2 з 6 задачами поточна, позначка зникає | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-04 | шаблон без обов'язкової задачі — повідомлення, версії немає, зміни й позначка лишаються | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-05 | список версій від новішої: дата за Києвом і email автора | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-06 | запуск на версії 1 показує «Template version 1» і 5 задач | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-07 | менеджер відкриває список версій — «Not enough rights», без версій | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-08 | менеджер змінює шаблон чи зберігає версію напряму — шаблон без змін | — | — | відкладено (чекає реалізації) |
+| AC-EDITOR-09 | відвідувач без входу відкриває редактор — сторінка входу без вмісту | — | — | відкладено (чекає реалізації) |
 | AC-RUN-01 | запуск шаблону створює один запуск «in progress» з усіма 5 задачами «to do» | `src/lib/runs/rules.ts` (planRun), `supabase/migrations/20261020123813_runs_launch.sql` (launch_run) | `src/lib/runs/launch.test.ts` | реалізовано |
 | AC-RUN-02 | зміна шаблону після запуску не змінює задачі й назви в запуску | `src/lib/runs/rules.ts` (planRun), `supabase/migrations/20261020123813_runs_launch.sql` (launch_run) | `src/lib/runs/launch.test.ts` | реалізовано |
 | AC-RUN-03 | порожня назва чи назва з пробілів — запуску немає, «Enter a case name» | `src/lib/runs/rules.ts` (planRun), `supabase/migrations/20261020123813_runs_launch.sql` (launch_run) | `src/lib/runs/launch.test.ts` | реалізовано |
