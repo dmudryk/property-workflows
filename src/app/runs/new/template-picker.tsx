@@ -22,11 +22,15 @@ export function TemplatePicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="template">Template</Label>
+      {/* Видимий підпис — заголовок картки «Template» над списком. */}
+      <Label htmlFor="template" className="sr-only">
+        Template
+      </Label>
       <FormSelect
         id="template"
         items={templates.map((t) => ({ value: t.id, label: t.name }))}
         value={value}
+        size="xl"
         placeholder="Choose a template"
         onValueChange={(next) => {
           if (!next) return;

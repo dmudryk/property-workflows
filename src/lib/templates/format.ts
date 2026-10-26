@@ -20,6 +20,11 @@ export function templateVersionLabel(version: number): string {
   return `Template version ${version}`;
 }
 
+// Кількість зі словом у чипах: «1 task», «5 tasks», «2 sections».
+export function countLabel(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 // «Version N» у списках шаблонів і версій.
 export function versionLabel(version: number | null): string {
   return version === null ? "—" : `Version ${version}`;

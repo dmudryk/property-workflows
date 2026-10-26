@@ -17,6 +17,7 @@ export function FormSelect({
   defaultValue = null,
   placeholder,
   disabled,
+  size,
   className,
   onValueChange,
 }: {
@@ -27,6 +28,7 @@ export function FormSelect({
   defaultValue?: string | null;
   placeholder?: string;
   disabled?: boolean;
+  size?: React.ComponentProps<typeof SelectTrigger>["size"];
   className?: string;
   onValueChange?: (value: string | null) => void;
 }) {
@@ -39,7 +41,7 @@ export function FormSelect({
       disabled={disabled}
       onValueChange={(value) => onValueChange?.(value)}
     >
-      <SelectTrigger className={cn("w-full", className)}>
+      <SelectTrigger size={size} className={cn("w-full", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false}>
