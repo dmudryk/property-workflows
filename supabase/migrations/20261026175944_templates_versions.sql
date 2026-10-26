@@ -47,7 +47,7 @@ grant select, insert, update, delete on table public.template_versions, public.t
 -- Список версій і незбережені зміни — лише адміністратор (матриця прав; AC-EDITOR-02, AC-EDITOR-05, AC-EDITOR-07).
 create policy template_versions_select_admin on public.template_versions
   for select to authenticated
-  using ((select private.current_app_role()) = 'admin');
+  using ((select private.current_app_role()) in ('manager', 'admin') -- MUTATION (AC-EDITOR-07));
 
 create policy template_drafts_select_admin on public.template_drafts
   for select to authenticated
