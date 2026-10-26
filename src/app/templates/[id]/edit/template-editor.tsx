@@ -69,34 +69,52 @@ export function TemplateEditor({
     setContent(next);
     setSaveState("saving");
     setNotice(null);
+    // Кожна ланка черги ловить власні збої (мережа, 5xx): інакше відхилений promise зупинив би всі наступні збереження.
     queue.current = queue.current.then(async () => {
-      const result = await saveDraft(templateId, next);
-      if (result.ok) {
-        setUnpublished(true);
-        setSaveState("saved");
-        setError(null);
-      } else {
+      try {
+        const result = await saveDraft(templateId, next);
+        if (result.ok) {
+          setUnpublished(true);
+          setSaveState("saved");
+          setError(null);
+        } else {
+          setSaveState("error");
+          setError(TEMPLATE_ERRORS[result.error]);
+        }
+      } catch {
         setSaveState("error");
-        setError(TEMPLATE_ERRORS[result.error]);
+        setError(TEMPLATE_ERRORS.failed);
       }
     });
   }
 
+  // Збереження версії — теж ланка черги: спершу всі автозбереження, потім версія; правки після натискання підуть уже
+  // в нові незбережені зміни.
   async function saveVersion() {
     setPublishing(true);
     setError(null);
     setNotice(null);
-    await queue.current;
-    const result = await publishVersion(templateId);
-    setPublishing(false);
-    if (result.ok) {
-      setUnpublished(false);
-      if (result.version) {
-        setVersion(result.version);
-        setNotice(`Version ${result.version} saved`);
+    const step = queue.current.then(async () => {
+      try {
+        const result = await publishVersion(templateId);
+        if (result.ok) {
+          setUnpublished(false);
+          if (result.version) {
+            setVersion(result.version);
+            setNotice(`Version ${result.version} saved`);
+          }
+        } else {
+          setError(TEMPLATE_ERRORS[result.error]);
+        }
+      } catch {
+        setError(TEMPLATE_ERRORS.failed);
       }
-    } else {
-      setError(TEMPLATE_ERRORS[result.error]);
+    });
+    queue.current = step;
+    try {
+      await step;
+    } finally {
+      setPublishing(false);
     }
   }
 

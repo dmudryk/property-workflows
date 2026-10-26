@@ -100,6 +100,8 @@ alter table public.runs
   foreign key (template_id, template_version) references public.template_versions (template_id, number);
 
 -- Зміст шаблону тепер — у версіях; старі таблиці зрізу 1 більше ніхто не читає.
+-- РИЗИК: незворотне видалення. Дані переносяться у версію 1 вище в цій самій транзакції міграції; перед застосуванням
+-- на проді — свіжа резервна копія (Supabase Dashboard → Backups), відкат — нова міграція з відновленням із версії 1.
 drop table public.template_tasks, public.template_sections;
 
 -- ── R1. Нормалізація змісту: лише відомі ключі й типи, обрізані непорожні назви, унікальні id ──
@@ -243,7 +245,9 @@ begin
     raise exception 'TEMPLATE_NOT_FOUND' using errcode = 'P0002';
   end if;
 
-  select d.content into v_content from public.template_drafts as d where d.template_id = p_template_id;
+  -- Блокуємо й рядок незбережених змін: паралельне автозбереження дочекається кінця публікації й створить нові
+  -- незбережені зміни, а не загубиться разом із видаленням нижче.
+  select d.content into v_content from public.template_drafts as d where d.template_id = p_template_id for update;
   -- Немає незбережених змін — нічого не зберігаємо (solomchaak/property-workflows-spec#22).
   if v_content is null then
     return v_current;
