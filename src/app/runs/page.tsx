@@ -1,10 +1,11 @@
+import { PlusIcon } from "lucide-react";
 import Link from "next/link";
-import { ROW_LINK_ROW, RowLink } from "@/components/row-link";
-import { StatusBadge } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { progressCounts, type RunListItem } from "@/lib/runs/list";
 import { newestFirst, progressLabel } from "@/lib/runs/rules";
 import { requireActor } from "@/lib/auth/actor";
+import { RunsTable } from "./runs-table";
 
 // Список запусків: у кожному рядку — випадок, шаблон, статус і прогрес «N of M done» (AC-TASK-09, AC-TASK-13,
 // AC-TASK-17), від найновішого (AC-TASK-14). Які запуски видно — вирішує RLS (private.can_see_run): адміністратор —
@@ -14,49 +15,30 @@ export default async function RunsPage() {
   const { data: rows } = await supabase
     .from("runs")
     .select("id, case_name, template_name, status, created_at, run_tasks(status)");
-  const runs = newestFirst((rows ?? []).map((r) => ({ ...r, createdAt: r.created_at })));
+  const runs = newestFirst((rows ?? []).map((r) => ({ ...r, createdAt: r.created_at }))).map(
+    (run): RunListItem => ({
+      id: run.id,
+      caseName: run.case_name,
+      templateName: run.template_name,
+      status: run.status === "completed" ? "completed" : "in_progress",
+      ...progressCounts(run.run_tasks ?? []),
+      progress: progressLabel(run.run_tasks ?? []),
+    }),
+  );
 
   return (
     <main className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Runs</h1>
-        <Link href="/runs/new" className={buttonVariants({ size: "lg" })}>
-          Launch a template
-        </Link>
-      </div>
-      {runs.length > 0 ? (
-        <div className="rounded-lg border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Case</TableHead>
-                <TableHead className="hidden sm:table-cell">Template</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Progress</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {runs.map((run) => (
-                <TableRow key={run.id} data-testid="run-row" className={ROW_LINK_ROW}>
-                  <TableCell className="whitespace-normal">
-                    <RowLink href={`/runs/${run.id}`}>{run.case_name}</RowLink>
-                    <span className="block text-sm text-muted-foreground sm:hidden">{run.template_name}</span>
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">{run.template_name}</TableCell>
-                  <TableCell>
-                    <StatusBadge data-testid="run-status" kind={run.status === "completed" ? "completed" : "in_progress"} />
-                  </TableCell>
-                  <TableCell data-testid="run-progress" className="text-right font-medium tabular-nums">
-                    {progressLabel(run.run_tasks ?? [])}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <p className="text-base text-muted-foreground">No runs yet.</p>
-      )}
+      <PageHeader
+        title="Runs"
+        description="Every checklist launched from a template, and how far along it is."
+        actions={
+          <Link href="/runs/new" className={buttonVariants({ size: "xl" })}>
+            <PlusIcon aria-hidden />
+            Launch a template
+          </Link>
+        }
+      />
+      {runs.length > 0 ? <RunsTable runs={runs} /> : <p className="text-base text-muted-foreground">No runs yet.</p>}
     </main>
   );
 }
