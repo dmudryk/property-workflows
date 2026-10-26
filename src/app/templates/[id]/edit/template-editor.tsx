@@ -1,12 +1,16 @@
 "use client";
 
-import { Loader2Icon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Loader2Icon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { NumberBadge } from "@/components/number-badge";
+import { PageHeader } from "@/components/page-header";
+import { Segmented } from "@/components/segmented";
 import { StatusBadge } from "@/components/status-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +35,17 @@ import {
 } from "@/lib/templates/content";
 import { TEMPLATE_ERRORS } from "@/lib/templates/errors";
 import { versionLabel } from "@/lib/templates/format";
+import { cn } from "@/lib/utils";
 import { publishVersion, saveDraft } from "../../actions";
+
+// Кнопка лише з іконкою (переміщення, видалення): 44px; вимкнена — бліда, з курсором not-allowed.
+const ICON_BUTTON =
+  "text-muted-foreground disabled:pointer-events-auto disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground";
+const REMOVE_BUTTON = `${ICON_BUTTON} hover:bg-destructive/10 hover:text-destructive`;
+const REQUIREMENT = [
+  { value: "required", label: "Required" },
+  { value: "optional", label: "Optional" },
+] as const;
 
 // Редактор шаблону (impl-ws7-templates/design.md, U2): кожна зміна одразу зберігається як незбережені зміни
 // (AC-EDITOR-01); «Save version» створює версію (AC-EDITOR-03) або показує помилку AC-EDITOR-04 без втрати змін.
@@ -126,114 +140,175 @@ export function TemplateEditor({
     setPendingRemove(null);
   }
 
+  const lastSection = content.sections.length - 1;
+  let taskNumber = 0;
+
   return (
     <main className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <Link href={`/templates/${templateId}`} className="text-sm underline-offset-4 hover:underline">
-          Back to the template
-        </Link>
-        <h1 className="text-2xl font-semibold">{name}</h1>
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span className="tabular-nums">{versionLabel(version)}</span>
-          {unpublished ? <StatusBadge data-testid="unpublished" kind="unpublished" /> : null}
-          <span aria-live="polite">{saveState === "saving" ? "Saving…" : saveState === "saved" ? "All changes kept" : ""}</span>
-        </div>
-      </div>
-
-      {error ? (
-        <Alert variant="destructive">
-          <AlertDescription className="text-destructive">{error}</AlertDescription>
-        </Alert>
-      ) : null}
-      {notice ? (
-        <Alert>
-          <AlertDescription className="text-foreground">{notice}</AlertDescription>
-        </Alert>
-      ) : null}
+      <PageHeader
+        back={{ href: `/templates/${templateId}`, label: "Back to the template" }}
+        title={name}
+        badges={
+          <Badge className="h-7 bg-secondary px-3 text-sm text-secondary-foreground tabular-nums">
+            {version === null ? "Editing" : `Editing · ${versionLabel(version)}`}
+          </Badge>
+        }
+        description="Changes are kept as you go. Save version to use them in new runs; runs already launched keep the version they started with."
+      />
 
       {content.sections.map((section, si) => (
-        <Card key={section.id} size="sm">
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-2">
-              <NameField
-                label="Section name"
-                value={section.name}
-                className="text-base font-semibold"
-                onCommit={(value) => persist((c) => renameSection(c, section.id, value))}
-              />
-              <Button variant="outline" disabled={si === 0} onClick={() => persist((c) => moveSection(c, section.id, -1))}>
-                Move up
-              </Button>
+        <Card key={section.id} className="gap-0 bg-background py-0">
+          <div className="flex flex-wrap items-center gap-2 border-b bg-muted px-4 py-3 sm:px-5">
+            <NumberBadge>{si + 1}</NumberBadge>
+            <NameField
+              label="Section name"
+              value={section.name}
+              className="h-11 bg-background text-base font-semibold"
+              onCommit={(value) => persist((c) => renameSection(c, section.id, value))}
+            />
+            <div className="ml-auto flex items-center">
               <Button
-                variant="outline"
-                disabled={si === content.sections.length - 1}
-                onClick={() => persist((c) => moveSection(c, section.id, 1))}
+                variant="ghost"
+                size="icon-xl"
+                aria-label={`Move section up: ${section.name}`}
+                className={ICON_BUTTON}
+                disabled={si === 0}
+                onClick={() => persist((c) => moveSection(c, section.id, -1))}
               >
-                Move down
+                <ChevronUpIcon aria-hidden />
               </Button>
               <Button
                 variant="ghost"
+                size="icon-xl"
+                aria-label={`Move section down: ${section.name}`}
+                className={ICON_BUTTON}
+                disabled={si === lastSection}
+                onClick={() => persist((c) => moveSection(c, section.id, 1))}
+              >
+                <ChevronDownIcon aria-hidden />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-xl"
+                aria-label={`Remove section: ${section.name}`}
+                className={REMOVE_BUTTON}
                 onClick={() => setPendingRemove({ kind: "section", id: section.id, name: section.name })}
               >
-                Remove section
+                <Trash2Icon aria-hidden />
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            <ul className="flex flex-col divide-y">
-              {section.tasks.map((task) => (
-                <li key={task.id} data-testid="editor-task" className="flex flex-wrap items-center gap-2 py-2">
+          </div>
+          {section.tasks.length > 0 ? (
+            <ol className="flex flex-col divide-y divide-border/60">
+              {section.tasks.map((task, ti) => (
+                <li key={task.id} data-testid="editor-task" className="flex flex-wrap items-center gap-2 px-4 py-2 sm:px-5">
+                  <NumberBadge size="sm">{++taskNumber}</NumberBadge>
                   <NameField
                     label="Task name"
                     value={task.name}
+                    className="h-11"
                     onCommit={(value) => persist((c) => renameTask(c, task.id, value))}
                   />
-                  <Button
-                    variant="outline"
-                    aria-pressed={task.required}
-                    onClick={() => persist((c) => toggleRequired(c, task.id))}
-                  >
-                    {task.required ? "Required" : "Optional"}
-                  </Button>
-                  <Button variant="outline" onClick={() => persist((c) => moveTask(c, task.id, -1))}>
-                    Move up
-                  </Button>
-                  <Button variant="outline" onClick={() => persist((c) => moveTask(c, task.id, 1))}>
-                    Move down
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setPendingRemove({ kind: "task", id: task.id, name: task.name })}
-                  >
-                    Remove
-                  </Button>
+                  <div className="ml-auto flex items-center gap-1">
+                    <Segmented
+                      label={`Required or optional: ${task.name}`}
+                      options={REQUIREMENT}
+                      value={task.required ? "required" : "optional"}
+                      onChange={(next) => {
+                        if ((next === "required") !== task.required) persist((c) => toggleRequired(c, task.id));
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon-xl"
+                      aria-label={`Move task up: ${task.name}`}
+                      className={ICON_BUTTON}
+                      disabled={si === 0 && ti === 0}
+                      onClick={() => persist((c) => moveTask(c, task.id, -1))}
+                    >
+                      <ChevronUpIcon aria-hidden />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xl"
+                      aria-label={`Move task down: ${task.name}`}
+                      className={ICON_BUTTON}
+                      disabled={si === lastSection && ti === section.tasks.length - 1}
+                      onClick={() => persist((c) => moveTask(c, task.id, 1))}
+                    >
+                      <ChevronDownIcon aria-hidden />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xl"
+                      aria-label={`Remove task: ${task.name}`}
+                      className={REMOVE_BUTTON}
+                      onClick={() => setPendingRemove({ kind: "task", id: task.id, name: task.name })}
+                    >
+                      <XIcon aria-hidden />
+                    </Button>
+                  </div>
                 </li>
               ))}
-            </ul>
+            </ol>
+          ) : null}
+          <div className={cn("px-4 py-3 sm:px-5", section.tasks.length > 0 && "border-t border-border/60")}>
             <Button
-              variant="outline"
-              className="self-start"
+              variant="dashed"
+              size="xl"
+              className="w-full"
               onClick={() =>
                 persist((c) => addTask(c, section.id, { id: crypto.randomUUID(), name: "New task", required: false }))
               }
             >
+              <PlusIcon aria-hidden />
               Add task
             </Button>
-          </CardContent>
+          </div>
         </Card>
       ))}
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          onClick={() => persist((c) => addSection(c, { id: crypto.randomUUID(), name: "New section", tasks: [] }))}
-        >
-          Add section
-        </Button>
-        <Button size="lg" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
-          {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
-          {publishing ? "Saving version…" : "Save version"}
-        </Button>
+      <Button
+        variant="dashed"
+        size="xl"
+        className="w-full"
+        onClick={() => persist((c) => addSection(c, { id: crypto.randomUUID(), name: "New section", tasks: [] }))}
+      >
+        <PlusIcon aria-hidden />
+        Add section
+      </Button>
+
+      {/* Смугу збереження видно завжди: стан змін, автозбереження, результат «Save version» і помилка — поруч із дією. */}
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t bg-background px-4 py-3 shadow-[0_-6px_12px_-8px_color-mix(in_oklch,var(--color-foreground)_25%,transparent)] sm:-mx-6 sm:px-6">
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription className="text-destructive">{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+            {unpublished ? (
+              <StatusBadge data-testid="unpublished" kind="unpublished" />
+            ) : (
+              <span className="inline-flex items-center gap-2 text-muted-foreground">
+                <span aria-hidden className="size-2 rounded-full bg-status-todo-foreground" />
+                No changes yet
+              </span>
+            )}
+            <span aria-live="polite" className="text-muted-foreground">
+              {notice ?? (saveState === "saving" ? "Saving…" : saveState === "saved" ? "All changes kept" : "")}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href={`/templates/${templateId}`} className={cn(buttonVariants({ variant: "outline", size: "xl" }))}>
+              Close editor
+            </Link>
+            <Button size="xl" disabled={!unpublished || publishing} aria-busy={publishing} onClick={saveVersion}>
+              {publishing ? <Loader2Icon className="animate-spin" aria-hidden /> : null}
+              {publishing ? "Saving version…" : "Save version"}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Dialog open={pendingRemove !== null} onOpenChange={(open) => (open ? null : setPendingRemove(null))}>
