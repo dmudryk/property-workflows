@@ -1,3 +1,4 @@
+import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
 import { Logo } from "@/components/logo";
@@ -6,7 +7,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { Badge } from "@/components/ui/badge";
 
 // Одна розкладка для всіх сторінок, зокрема для входу (DESIGN.md, розділ 4). Для користувача, який увійшов, — бічна
-// панель: логотип, навігація, email, роль і вихід (на телефоні — смуга над вмістом). Гостю переходити нікуди, тож
+// панель (логотип, навігація, картка користувача з виходом) і вміст в одному рядку з переносом: коли поруч не
+// вміщаються 15rem панелі й 35rem вмісту (контейнер < 50rem), панель стає над вмістом. Гостю переходити нікуди, тож
 // панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері.
 export function AppShell({
   user,
@@ -20,32 +22,52 @@ export function AppShell({
   );
   if (!user) return <div className="flex flex-1 flex-col">{content}</div>;
 
+  const initial = (user.email ?? "?").charAt(0).toUpperCase();
+
+  // Обгортка — контейнер для запитів @min-[50rem], рядок усередині: над вмістом панель лише своєї висоти (content-start).
   return (
-    <div className="flex flex-1 flex-col md:flex-row">
-      <aside className="border-b bg-card md:sticky md:top-0 md:flex md:h-svh md:w-60 md:shrink-0 md:flex-col md:border-r md:border-b-0">
-        <div className="px-6 py-4 md:py-6">
-          <Link href="/" className="inline-flex rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <div className="@container flex flex-1 flex-col">
+      <div className="flex flex-1 flex-wrap @max-[50rem]:content-start">
+        <aside className="flex min-w-0 flex-[1_1_15rem] flex-col gap-6 border-b bg-muted p-4 @min-[50rem]:border-r @min-[50rem]:border-b-0 @min-[50rem]:py-6">
+          <Link
+            href="/"
+            className="inline-flex self-start rounded-lg px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <Logo />
           </Link>
-        </div>
-        <SidebarNav />
-        <div className="flex items-center justify-between gap-3 border-t px-4 py-3 md:mt-auto md:flex-col md:items-stretch md:px-3 md:py-4">
-          <div className="flex min-w-0 items-center gap-2 md:flex-col md:items-start md:px-3">
-            <span data-testid="user-email" className="truncate text-sm text-muted-foreground">
-              {user.email ?? "—"}
-            </span>
-            <Badge variant="outline" data-testid="user-role" className="h-6 px-2.5 text-sm">
-              {user.role ?? "no role"}
-            </Badge>
+          <div className="flex flex-col gap-2">
+            <p id="sidebar-nav-label" className="px-3 text-sm font-medium tracking-wider text-muted-foreground uppercase">
+              Workspace
+            </p>
+            <SidebarNav labelledBy="sidebar-nav-label" />
           </div>
-          <form action={signOut}>
-            <SubmitButton variant="outline" pendingLabel="Signing out…" className="md:w-full">
-              Sign out
-            </SubmitButton>
-          </form>
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">{content}</div>
+          <div className="flex flex-col gap-3 rounded-xl border bg-background p-3 shadow-xs @min-[50rem]:mt-auto">
+            <div className="flex min-w-0 items-center gap-3">
+              <span
+                aria-hidden
+                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-base font-semibold text-accent-foreground"
+              >
+                {initial}
+              </span>
+              <div className="flex min-w-0 flex-col items-start gap-1">
+                <span data-testid="user-email" title={user.email ?? undefined} className="w-full truncate text-sm font-medium">
+                  {user.email ?? "—"}
+                </span>
+                <Badge variant="secondary" data-testid="user-role" className="h-6 px-2.5 text-sm">
+                  {user.role ?? "no role"}
+                </Badge>
+              </div>
+            </div>
+            <form action={signOut}>
+              <SubmitButton variant="outline" size="xl" pendingLabel="Signing out…" className="w-full">
+                <LogOutIcon aria-hidden />
+                Sign out
+              </SubmitButton>
+            </form>
+          </div>
+        </aside>
+        <div className="flex min-w-0 flex-[999_1_35rem] flex-col">{content}</div>
+      </div>
     </div>
   );
 }

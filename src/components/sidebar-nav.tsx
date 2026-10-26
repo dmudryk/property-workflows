@@ -10,13 +10,13 @@ const ITEMS = [
   { href: "/templates", label: "Templates", icon: LayoutTemplateIcon },
 ];
 
-// Навігація бічної панелі (DESIGN.md, розділ 4): поточний розділ — тло accent і aria-current; на телефоні — рядок
-// під логотипом.
-export function SidebarNav() {
+// Навігація бічної панелі (DESIGN.md, розділ 4): пункти 44px з іконкою; поточний розділ — тло accent, напівжирний
+// текст і aria-current. Коли панель над вмістом (контейнер AppShell < 50rem), пункти стоять у рядок.
+export function SidebarNav({ labelledBy }: { labelledBy?: string }) {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Main" className="flex gap-1 px-3 pb-3 md:flex-col md:pb-0">
+    <nav aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : "Main"} className="flex gap-1 @min-[50rem]:flex-col">
       {ITEMS.map(({ href, label, icon: Icon }) => {
         const current = pathname === href || pathname.startsWith(`${href}/`);
         return (
@@ -25,13 +25,13 @@ export function SidebarNav() {
             href={href}
             aria-current={current ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "flex h-11 flex-1 items-center gap-3 rounded-lg px-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring @min-[50rem]:flex-none",
               current
-                ? "bg-accent font-medium text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                ? "bg-accent font-semibold text-accent-foreground"
+                : "font-medium text-muted-foreground hover:bg-accent/60 hover:text-accent-foreground",
             )}
           >
-            <Icon className="size-4 shrink-0" aria-hidden />
+            <Icon className="size-5 shrink-0" aria-hidden />
             {label}
           </Link>
         );
