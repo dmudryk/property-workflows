@@ -29,7 +29,8 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
 - `npm run dev` · `npm run build` (має показати `ƒ Proxy (Middleware)`) · `npm run lint` (0 warnings)
 - `npm run typecheck` (`next typegen && tsc --noEmit`) · `npm test` (Vitest)
 - `npm run spec:validate` · `npm run spec:check` · `npm run ac:coverage`
-- `npm run check:design` (лише токени) · `npm run check:boundary` (секретний ключ лише на сервері) — у CI окремий
+- `npm run check:design` (лише токени) · `npm run check:boundary` (секретний ключ лише на сервері) ·
+  `npm run check:writes` (запис у таблиці лише через функції бази, ADR 0002) — у CI окремий
   workflow `architecture.yml`
 - `node scripts/check-migration-order.mjs` — нова міграція новіша за `origin/main`, застосовані не змінено (у CI — `db-check`)
 - `npx supabase migration new <назва>` → SQL → PR. Застосовує міграції у вашу базу ЛИШЕ CI (`db-deploy` після merge у `main`)

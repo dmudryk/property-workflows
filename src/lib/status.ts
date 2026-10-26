@@ -31,3 +31,13 @@ export function statusLabel(kind: StatusKind): string {
 export function statusView(kind: StatusKind): { label: string; tone: string } {
   return { label: statusLabel(kind), tone: STATUS_TONES[kind] };
 }
+
+// Статус запуску з бази → вид бейджа. Один і той самий для списку й сторінки запуску (AC-DSYS-01).
+export function runStatusKind(status: string): "in_progress" | "completed" {
+  return status === "completed" ? "completed" : "in_progress";
+}
+
+// Статус задачі з бази → вид бейджа.
+export function taskStatusKind(status: string): "to_do" | "done" {
+  return status === "done" ? "done" : "to_do";
+}

@@ -33,10 +33,10 @@
 
 | AC | Що перевіряє | Код | Тест | Статус |
 |---|---|---|---|---|
-| AC-DSYS-01 | статуси «in progress» / «completed» — ті самі слова й кольори в списку й на сторінці запуску | — | — | відкладено (чекає реалізації) |
+| AC-DSYS-01 | «in progress» — синій, «completed» — зелений, ті самі слова й колір у списку й на сторінці запуску, слово поруч із кольором | `src/lib/status.ts` (runStatusKind, statusView), `src/components/status-badge.tsx`, `src/app/runs/page.tsx`, `src/app/runs/[id]/page.tsx` | `src/components/design-system.test.ts` | реалізовано |
 | AC-DSYS-02 | менеджер на редакторі — «Not enough rights» і «Back to templates», шаблон без змін | `src/app/templates/[id]/edit/page.tsx`, `src/components/not-enough-rights.tsx`, `supabase/migrations/20261026175944_templates_versions.sql` (template_drafts_select_admin, save_template_draft) | `tests/db/templates.test.ts` | реалізовано |
-| AC-DSYS-03 | відвідувач без входу відкриває запуск за посиланням — сторінка входу в спільній розкладці, без даних | — | — | відкладено (чекає реалізації) |
-| AC-DSYS-04 | менеджер без запусків — «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці | — | — | відкладено (чекає реалізації) |
+| AC-DSYS-03 | відвідувач без входу відкриває запуск — сторінка входу в AppShell, дані запуску не показано | `src/components/app-shell.tsx`, `src/app/login/page.tsx`, `src/lib/supabase/proxy.ts` (updateSession), `src/lib/auth/public-paths.ts`, `supabase/migrations/20261020123813_runs_launch.sql` (revoke from anon) | `src/lib/supabase/proxy.test.ts`, `src/components/design-system.test.ts` | реалізовано |
+| AC-DSYS-04 | менеджер без запусків — «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці | `src/lib/runs/list-view.ts` (runsListView), `src/components/empty-state.tsx`, `src/app/runs/page.tsx` | `src/components/design-system.test.ts` | реалізовано |
 | AC-TASK-01 | виконавець позначає свою задачу виконаною — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-02 | менеджер запуску позначає чужу задачу свого запуску — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |
 | AC-TASK-07 | адміністратор позначає задачу чужого запуску — статус «done» | `src/lib/runs/rules.ts` (markTaskDone), `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `src/lib/runs/tasks.test.ts` | реалізовано |

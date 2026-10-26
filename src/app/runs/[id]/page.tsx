@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
+import { runStatusKind, taskStatusKind } from "@/lib/status";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -83,7 +84,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
           <span data-testid="template-version" className="tabular-nums">
             {templateVersionLabel(run.template_version)}
           </span>
-          <StatusBadge data-testid="run-status" kind={run.status === "completed" ? "completed" : "in_progress"} />
+          <StatusBadge data-testid="run-status" kind={runStatusKind(run.status)} />
           <span>
             Run manager: <span data-testid="run-manager">{staffLabel(people.get(run.manager_id))}</span>
           </span>
@@ -144,7 +145,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
                     <span data-testid="task-required" className="text-sm text-muted-foreground">
                       {requiredLabel(task.required)}
                     </span>
-                    <StatusBadge data-testid="task-status" kind={task.status === "done" ? "done" : "to_do"} />
+                    <StatusBadge data-testid="task-status" kind={taskStatusKind(task.status)} />
                     {task.status === "to_do" &&
                     actor &&
                     canMarkDone(actor, { managerId: run.manager_id }, { assigneeId: task.assignee_id }) ? (
