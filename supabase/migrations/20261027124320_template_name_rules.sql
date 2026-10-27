@@ -2,10 +2,13 @@
 -- й унікальна, порожні назви й секції без задач відхиляє збереження, а не автозбереження.
 -- План: openspec/changes/impl-ws7-clarifications/design.md (R1–R4). Таблиць, політик і грантів не додаємо: функції —
 -- create or replace з тими самими сигнатурами, тож гранти й обгортки public.* лишаються (ADR 0001, ADR 0002).
+-- Назви обрізаються з обох боків від пробілів, табуляцій, переносів рядка, NBSP і BOM — як trim() у JS сторінок,
+-- навіть коли функцію викликають напряму (за замовчуванням btrim прибирає лише пробіл); набір символів — у кожному
+-- виклику btrim нижче й в індексі templates_name_key.
 
 -- ── R3. Унікальна назва без урахування регістру й пробілів на початку й у кінці (AC-EDITOR-23, AC-EDITOR-24) ──
 -- Явні перевірки у функціях дають повідомлення; індекс захищає від одночасних створень і збережень.
-create unique index templates_name_key on public.templates (lower(btrim(name)));
+create unique index templates_name_key on public.templates (lower(btrim(name, E' \t\n\r\f\u000b\u00a0\ufeff')));
 
 -- ── R1. Нормалізація незбережених змін: необов'язкова назва шаблону; порожні назви секцій і задач лишаються ──
 -- Порожня назва — незбережена зміна, яку відхиляє збереження версії (AC-EDITOR-20), тож автозбереження її не відкидає.
@@ -47,7 +50,7 @@ begin
       v_ids := v_ids || v_id;
       v_tasks := v_tasks || jsonb_build_array(jsonb_build_object(
         'id', v_id,
-        'name', btrim(coalesce(v_task ->> 'name', '')),
+        'name', btrim(coalesce(v_task ->> 'name', ''), E' \t\n\r\f\u000b\u00a0\ufeff'),
         'required', (v_task -> 'required')::boolean
       ));
     end loop;
@@ -58,14 +61,14 @@ begin
     v_ids := v_ids || v_id;
     v_sections := v_sections || jsonb_build_array(jsonb_build_object(
       'id', v_id,
-      'name', btrim(coalesce(v_section ->> 'name', '')),
+      'name', btrim(coalesce(v_section ->> 'name', ''), E' \t\n\r\f\u000b\u00a0\ufeff'),
       'tasks', v_tasks
     ));
   end loop;
 
   v_result := jsonb_build_object('sections', v_sections);
   if p_content ? 'name' then
-    v_result := v_result || jsonb_build_object('name', btrim(p_content ->> 'name'));
+    v_result := v_result || jsonb_build_object('name', btrim(p_content ->> 'name', E' \t\n\r\f\u000b\u00a0\ufeff'));
   end if;
   return v_result;
 end;
@@ -82,7 +85,7 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
   v_id uuid := gen_random_uuid();
-  v_name text := btrim(coalesce(p_name, ''));
+  v_name text := btrim(coalesce(p_name, ''), E' \t\n\r\f\u000b\u00a0\ufeff');
 begin
   if v_uid is null or (select private.current_app_role()) is distinct from 'admin' then
     raise exception 'NOT_ALLOWED' using errcode = '42501';
@@ -90,7 +93,7 @@ begin
   if v_name = '' then
     raise exception 'EMPTY_TEMPLATE_NAME' using errcode = '22023';
   end if;
-  if exists (select 1 from public.templates as t where lower(btrim(t.name)) = lower(v_name)) then
+  if exists (select 1 from public.templates as t where lower(btrim(t.name, E' \t\n\r\f\u000b\u00a0\ufeff')) = lower(v_name)) then
     raise exception 'NAME_TAKEN' using errcode = '23505';
   end if;
 
@@ -138,14 +141,14 @@ begin
   end if;
 
   -- AC-EDITOR-19, AC-EDITOR-21: назва — з незбережених змін (перейменування), інакше — поточна.
-  v_name := btrim(coalesce(v_content ->> 'name', v_current_name));
+  v_name := btrim(coalesce(v_content ->> 'name', v_current_name), E' \t\n\r\f\u000b\u00a0\ufeff');
   if v_name = '' then
     raise exception 'EMPTY_TEMPLATE_NAME' using errcode = '22023';
   end if;
   -- AC-EDITOR-24: назва іншого шаблону без урахування регістру й пробілів.
   if exists (
     select 1 from public.templates as t
-    where t.id <> p_template_id and lower(btrim(t.name)) = lower(v_name)
+    where t.id <> p_template_id and lower(btrim(t.name, E' \t\n\r\f\u000b\u00a0\ufeff')) = lower(v_name)
   ) then
     raise exception 'NAME_TAKEN' using errcode = '23505';
   end if;

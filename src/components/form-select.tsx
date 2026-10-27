@@ -55,7 +55,8 @@ export function FormSelect({
             className={item.disabled ? "text-muted-foreground data-disabled:opacity-100" : undefined}
           >
             {item.label}
-            {item.note ? <span className="text-muted-foreground">· {item.note}</span> : null}
+            {/* Примітка переноситься на вузькому екрані, а не обрізається (у пункті списку whitespace-nowrap). */}
+            {item.note ? <span className="min-w-0 whitespace-normal text-muted-foreground">· {item.note}</span> : null}
           </SelectItem>
         ))}
       </SelectContent>

@@ -78,15 +78,20 @@ describe("template-editor: операції редактора", () => {
     expect(MSG_NO_REQUIRED_TASK).toBe("A template needs at least one required task");
   });
 
-  it("задача з краю секції переходить у сусідню; назви обрізаються, порожня — теж незбережена зміна", () => {
+  it("AC-EDITOR-28: задача з краю секції переходить у сусідню секцію", () => {
     const moved = moveTask(tenantMoveIn, "t4", -1);
     expect(moved.sections[0].tasks.map((t) => t.id)).toEqual(["t1", "t2", "t3", "t4"]);
     expect(moved.sections[1].tasks.map((t) => t.id)).toEqual(["t5"]);
-    // Порожню назву відхиляє збереження версії, а не редактор (AC-EDITOR-20).
+  });
+
+  it("AC-EDITOR-20: очищена назва задачі — порожня назва в незбережених змінах (відхиляє збереження версії)", () => {
     expect(renameTask(tenantMoveIn, "t1", "   ").sections[0].tasks[0].name).toBe("");
     expect(renameTask(tenantMoveIn, "t1", "  Sign the lease again ").sections[0].tasks[0].name).toBe(
       "Sign the lease again",
     );
+  });
+
+  it("AC-EDITOR-21: перейменування шаблону — обрізана нова назва в незбережених змінах", () => {
     expect(renameTemplate(tenantMoveIn, " Tenant move-in (2026) ").name).toBe("Tenant move-in (2026)");
     expect(parseContent({ name: "Tenant move-in (2026)", sections: [] })).toEqual({ name: "Tenant move-in (2026)", sections: [] });
     expect(parseContent({ name: 7, sections: [] })).toBeNull();

@@ -56,13 +56,19 @@ describe("template-editor", () => {
     expect(saveStatus("saving").isError).toBe(false);
   });
 
-  it("тексти помилок збереження — дослівно з AC (AC-EDITOR-15, 20, 23, 24)", () => {
+  it("AC-EDITOR-15: секція без задач — «Every section needs at least one task»", () => {
     expect(templateErrorMessage(templateErrorCode({ code: "22023", message: "EMPTY_SECTION" }))).toBe(
       "Every section needs at least one task",
     );
+  });
+
+  it("AC-EDITOR-20: порожня назва секції чи задачі — «Every section and task needs a name»", () => {
     expect(templateErrorMessage(templateErrorCode({ code: "22023", message: "EMPTY_NAME" }))).toBe(
       "Every section and task needs a name",
     );
+  });
+
+  it("AC-EDITOR-23: зайнята назва нового шаблону — «A template with this name already exists»", () => {
     expect(templateErrorMessage(templateErrorCode({ code: "23505", message: "NAME_TAKEN" }))).toBe(
       "A template with this name already exists",
     );
@@ -70,6 +76,15 @@ describe("template-editor", () => {
     expect(
       templateErrorMessage(templateErrorCode({ code: "23505", message: 'duplicate key value violates unique constraint "templates_name_key"' })),
     ).toBe("A template with this name already exists");
+  });
+
+  it("AC-EDITOR-24: збереження перейменованого шаблону із зайнятою назвою — той самий текст", () => {
+    expect(templateErrorMessage(templateErrorCode({ code: "23505", message: "NAME_TAKEN" }))).toBe(
+      "A template with this name already exists",
+    );
+  });
+
+  it("AC-EDITOR-19: порожня назва шаблону — «Enter a template name»", () => {
     expect(templateErrorMessage(templateErrorCode({ code: "22023", message: "EMPTY_TEMPLATE_NAME" }))).toBe(
       "Enter a template name",
     );

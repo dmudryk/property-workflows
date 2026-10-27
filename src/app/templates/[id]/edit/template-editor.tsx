@@ -91,6 +91,8 @@ export function TemplateEditor({
     latest.current = next;
     setContent(next);
     setSaveState("saving");
+    // Нова правка робить помилку попереднього «Save version» неактуальною (наприклад, виправлена порожня назва).
+    setError(null);
     // Кожна ланка черги ловить власні збої (мережа, 5xx): інакше відхилений promise зупинив би всі наступні збереження.
     // Збій — у фіксованому місці смуги (AC-EDITOR-25); правка лишається на екрані, а наступна зміна надішле весь зміст.
     queue.current = queue.current.then(async () => {

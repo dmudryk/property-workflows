@@ -1,6 +1,6 @@
 // Тести бази уточнень PM від 27.10 (openspec/specs/template-editor; impl-ws7-clarifications): справжній Postgres
 // (PGlite) з нашими міграціями. Відмовні AC перевіряють і відмову, і незмінні дані (asService — в обхід RLS).
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   countTasks,
   moveTask,
@@ -24,6 +24,11 @@ beforeEach(async () => {
   ADMIN_A = t.users["admin@example.test"];
   MANAGER_B = t.users["manager.b@example.test"];
 }, 60_000);
+
+// Кожна база — окремий Postgres у WASM: закриваємо, щоб пам'ять не росла від тесту до тесту.
+afterEach(async () => {
+  await t.db.close();
+});
 
 async function template(id: string) {
   const [row] = await t.asService<{ name: string; current_version: number | null; current_content: TemplateContent | null }>(
@@ -187,6 +192,10 @@ describe("template-editor", () => {
 
     await expect(t.asUser(ADMIN_A, "select public.create_template('')")).rejects.toThrow(/EMPTY_TEMPLATE_NAME/);
     await expect(t.asUser(ADMIN_A, "select public.create_template('   ')")).rejects.toThrow(/EMPTY_TEMPLATE_NAME/);
+    // Прямий виклик з табуляцією, переносом рядка чи NBSP — теж порожня назва.
+    await expect(t.asUser(ADMIN_A, "select public.create_template(E'\t\n\u00a0')")).rejects.toThrow(
+      /EMPTY_TEMPLATE_NAME/,
+    );
 
     expect(await count("templates")).toBe(before);
   }, 60_000);
@@ -250,6 +259,9 @@ describe("template-editor", () => {
     const before = await count("templates");
 
     await expect(t.asUser(ADMIN_A, "select public.create_template(' tenant MOVE-IN ')")).rejects.toThrow(/NAME_TAKEN/);
+    await expect(t.asUser(ADMIN_A, "select public.create_template(E'\tTenant move-in\u00a0')")).rejects.toThrow(
+      /NAME_TAKEN/,
+    );
 
     expect(await count("templates")).toBe(before);
   }, 60_000);
@@ -343,7 +355,9 @@ describe("template-editor: запуски до появи версій", () => {
   const LEGACY_RUN = "c2700000-0000-4000-8000-000000000027";
 
   it("AC-EDITOR-27: запуск «Apartment 12, move-in», створений до появи версій, — «Template version 1» і ті самі задачі", async () => {
-    // Дані зрізу 1: менеджер і запуск з копією задач шаблону — до міграції templates_versions.
+    // Дані зрізу 1: менеджер і запуск з копією задач шаблону — до міграції templates_versions. Базу з beforeEach
+    // закриваємо: тесту потрібна інша.
+    await t.db.close();
     t = await createTestDb({
       before: {
         migration: "templates_versions",
