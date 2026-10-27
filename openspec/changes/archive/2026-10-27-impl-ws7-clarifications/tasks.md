@@ -20,12 +20,12 @@ AC-EDITOR-23, AC-EDITOR-24, AC-EDITOR-25, AC-EDITOR-26, AC-EDITOR-27, AC-EDITOR-
 
 Done when: AC-DSYS-05, AC-DSYS-06, AC-DSYS-07, AC-DSYS-08 — «реалізовано» в `docs/conformance.md`.
 
-- [ ] 2.1 ADR 0003 «Вибір теми».
+- [x] 2.1 ADR 0003 «Вибір теми».
   - Тема: cookie `theme`, `<html data-theme>`, темні токени й `@custom-variant dark` у `globals.css`, `ThemeSelect` в
     `AppShell`.
   - Документи: `DESIGN.md` і `AGENTS.md` — про тему.
-- [ ] 2.2 Повернення після входу: `next` у proxy, `safeNextPath`, сторінка й дія входу.
-- [ ] 2.3 Тести AC-DSYS-05…08.
+- [x] 2.2 Повернення після входу: `next` у proxy, `safeNextPath`, сторінка й дія входу.
+- [x] 2.3 Тести AC-DSYS-05…08.
   - Знімки з проду: тема й нові стани.
   - Рядки `docs/conformance.md`.
   - `npx openspec archive impl-ws7-clarifications -y`.

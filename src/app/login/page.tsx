@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { safeNextPath } from "@/lib/auth/next-path";
 import { login } from "./actions";
 import hero from "./login-hero.jpg";
 
@@ -18,8 +19,10 @@ const ERRORS: Record<string, string> = {
 // Вхід — у тій самій розкладці AppShell (AC-DSYS-03): картка з ілюстрацією зліва (з md) і логотипом та формою справа;
 // на телефоні — лише логотип і форма. Ілюстрація декоративна (порожній alt); підпис на ній — токени illustration.
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const message = typeof error === "string" && Object.hasOwn(ERRORS, error) ? ERRORS[error] : undefined;
+  // Сторінка з прямого посилання, на яку повернути після входу (AC-DSYS-08).
+  const nextPath = safeNextPath(next);
 
   return (
     <AppShell>
@@ -47,6 +50,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               <p className="text-sm text-muted-foreground">Welcome back. Enter your email and password to continue.</p>
             </div>
             <form action={login} className="flex flex-col gap-4">
+              {nextPath ? <input type="hidden" name="next" value={nextPath} /> : null}
               {message ? (
                 <Alert variant="destructive">
                   <AlertDescription className="text-destructive">{message}</AlertDescription>

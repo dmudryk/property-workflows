@@ -3,8 +3,20 @@
 @import "shadcn/tailwind.css";
 
 /* Токени — DESIGN.md, розділ 2 (основа — тема tweakcn «Nettinx Design System», адаптована під «Вигляд і тон» PM і
-   контраст). Новий токен: DESIGN.md → :root і темна тема нижче → --color-<назва> у @theme inline.
-   Темна тема — лише за системою (prefers-color-scheme); вбудований варіант dark: Tailwind 4 теж слідує за системою. */
+   контраст). Новий токен: DESIGN.md → :root і обидва блоки темної теми нижче → --color-<назва> у @theme inline.
+   Тема — вибір користувача (ADR 0003): <html data-theme="system | light | dark"> з cookie. Темні токени діють для
+   «Dark» і для «System» на пристрої з темним виглядом; варіант dark: — за тією самою умовою. */
+
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
@@ -54,6 +66,7 @@
 }
 
 :root {
+  color-scheme: light;
   --radius: 0.75rem;
   --tracking-normal: -0.01em;
   --background: oklch(1 0 0);
@@ -94,8 +107,50 @@
   --elevation-up: 0px -6px 12px -8px hsl(0 0% 0% / 0.18);
 }
 
+/* Темна тема: вибір «Dark». Значення — ті самі, що в блоці «System» нижче (тест AC-DSYS-05 звіряє обидва). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: oklch(0.154 0.0092 264.2798);
+  --foreground: oklch(0.9816 0.0017 247.839);
+  --card: oklch(0.2042 0.0129 264.2349);
+  --card-foreground: oklch(0.9816 0.0017 247.839);
+  --popover: oklch(0.154 0.0092 264.2798);
+  --popover-foreground: oklch(0.9816 0.0017 247.839);
+  --primary: oklch(0.7222 0.1875 48.4986);
+  --primary-foreground: oklch(0.154 0.0092 264.2798);
+  --secondary: oklch(0.2795 0.0368 260.031);
+  --secondary-foreground: oklch(0.9816 0.0017 247.839);
+  --muted: oklch(0.2795 0.0368 260.031);
+  --muted-foreground: oklch(0.7107 0.0351 256.7878);
+  --accent: oklch(0.2226 0.0753 255.7444);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.7 0.17 25);
+  --border: oklch(0.2795 0.0368 260.031);
+  --input: oklch(0.52 0.03 260);
+  --ring: oklch(0.7222 0.1875 48.4986);
+  --status-todo: oklch(0.3 0.015 260);
+  --status-todo-foreground: oklch(0.9 0.01 255);
+  --status-progress: oklch(0.31 0.07 255);
+  --status-progress-foreground: oklch(0.88 0.06 250);
+  --status-done: oklch(0.31 0.06 150);
+  --status-done-foreground: oklch(0.88 0.09 150);
+  --status-unpublished: oklch(0.33 0.06 85);
+  --status-unpublished-foreground: oklch(0.93 0.09 95);
+  --brand: oklch(0.7222 0.1875 48.4986);
+  /* ілюстрація входу світла в обох темах — значення ті самі, що у світлій */
+  --illustration: oklch(0.967 0.004 95);
+  --illustration-foreground: oklch(0.2226 0.0753 255.7444);
+  --elevation-xs: 0px 4px 15px 0px hsl(0 0% 0% / 0.2);
+  --elevation-sm: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 1px 2px -1px hsl(0 0% 0% / 0.4);
+  --elevation-md: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 2px 4px -1px hsl(0 0% 0% / 0.4);
+  --elevation-lg: 0px 4px 15px 0px hsl(0 0% 0% / 0.4), 0px 4px 6px -1px hsl(0 0% 0% / 0.4);
+  --elevation-up: 0px -6px 12px -8px hsl(0 0% 0% / 0.5);
+}
+
+/* Темна тема: «System» (за замовчуванням) на пристрої з темним виглядом. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root[data-theme="system"] {
+    color-scheme: dark;
     --background: oklch(0.154 0.0092 264.2798);
     --foreground: oklch(0.9816 0.0017 247.839);
     --card: oklch(0.2042 0.0129 264.2349);
