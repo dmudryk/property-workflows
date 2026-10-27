@@ -14,6 +14,8 @@ export function safeNextPath(value: unknown): string | null {
   } catch {
     return null;
   }
-  if (url.origin !== BASE || url.pathname === "/login" || url.pathname.startsWith("/login/")) return null;
+  // Після нормалізації «/.//evil.example» чи «/a/..//evil.example» стають «//evil.example» — адресою чужого сайту.
+  if (url.origin !== BASE || url.pathname.startsWith("//")) return null;
+  if (url.pathname === "/login" || url.pathname.startsWith("/login/")) return null;
   return `${url.pathname}${url.search}`;
 }

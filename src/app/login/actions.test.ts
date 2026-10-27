@@ -40,10 +40,23 @@ describe("design-system", () => {
   it("AC-DSYS-08: повернення лише на сторінку цього застосунку — чужі адреси й сторінка входу ведуть на головну", async () => {
     expect(safeNextPath(RUN)).toBe(RUN);
     expect(safeNextPath("/runs?view=all")).toBe("/runs?view=all");
-    for (const bad of ["//evil.example/x", "/\\evil.example", "https://evil.example", "runs", "/login", "/login?next=/runs", "/runs\n", null, 7]) {
+    for (const bad of [
+      "//evil.example/x",
+      "/\\evil.example",
+      "/.//evil.example",
+      "/a/..//evil.example?x=1",
+      "https://evil.example",
+      "runs",
+      "/login",
+      "/login?next=/runs",
+      "/runs\n",
+      null,
+      7,
+    ]) {
       expect(safeNextPath(bad), String(bad)).toBeNull();
     }
-    await expect(login(form("//evil.example/x"))).rejects.toThrow("REDIRECT /");
+    await expect(login(form("//evil.example/x"))).rejects.toThrow(/^REDIRECT \/$/);
+    await expect(login(form("/.//evil.example"))).rejects.toThrow(/^REDIRECT \/$/);
     await expect(login(form())).rejects.toThrow(/^REDIRECT \/$/);
   });
 });
