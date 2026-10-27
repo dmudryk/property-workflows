@@ -4,12 +4,14 @@ import { signOut } from "@/app/login/actions";
 import { Logo } from "@/components/logo";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { SubmitButton } from "@/components/submit-button";
+import { ThemeSelect } from "@/components/theme-select";
 import { Badge } from "@/components/ui/badge";
 
 // Одна розкладка для всіх сторінок, зокрема для входу (DESIGN.md, розділ 4). Для користувача, який увійшов, — бічна
 // панель (логотип, навігація, картка користувача з виходом) і вміст в одному рядку з переносом: коли поруч не
 // вміщаються 15rem панелі й 35rem вмісту (контейнер < 50rem), панель стає над вмістом. Гостю переходити нікуди, тож
-// панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері.
+// панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері. Вибір «Theme» (ADR 0003) —
+// у картці користувача, а гостю — під вмістом сторінки входу: тема діє на всіх сторінках, зокрема на вході.
 export function AppShell({
   user,
   children,
@@ -24,6 +26,11 @@ export function AppShell({
     return (
       <div data-testid="app-shell" className="flex flex-1 flex-col">
         {content}
+        <div className="mx-auto flex w-full max-w-4xl justify-end px-4 pb-6 sm:px-6">
+          <div className="w-44">
+            <ThemeSelect />
+          </div>
+        </div>
       </div>
     );
   }
@@ -64,6 +71,7 @@ export function AppShell({
                 </Badge>
               </div>
             </div>
+            <ThemeSelect />
             <form action={signOut}>
               <SubmitButton variant="outline" size="xl" pendingLabel="Signing out…" className="w-full">
                 <LogOutIcon aria-hidden />

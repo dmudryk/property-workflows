@@ -40,8 +40,12 @@ export async function updateSession(request: NextRequest) {
   const claims = data?.claims;
 
   if (!claims && !isPublicPath(request.nextUrl.pathname)) {
+    // Після входу — на ту саму сторінку (AC-DSYS-08): шлях і query — у ?next=, вхід перевіряє його safeNextPath.
     const url = request.nextUrl.clone();
+    const next = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     url.pathname = "/login";
+    url.search = "";
+    if (next !== "/") url.searchParams.set("next", next);
     return NextResponse.redirect(url);
   }
 

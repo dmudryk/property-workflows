@@ -71,9 +71,10 @@ OpenSpec 1.14.1 (devDependency + глобальний CLI тієї ж версі
   inline style.
 - Компоненти — лише з `@/components/ui` (shadcn/ui 4.22.1 на Base UI, змінюються в цій теці); спільні блоки сторінок —
   `src/components/` (`AppShell`, `StatusBadge`). Нових кольорів у компонентах не вигадуй; статус — лише `StatusBadge`.
-- Новий токен: `DESIGN.md` → `:root` і темна тема (`@media (prefers-color-scheme: dark)`) у `src/app/globals.css` →
-  `--color-<назва>` у `@theme inline`. Блоку `.dark` і `@custom-variant dark` немає — `shadcn add` може їх повернути,
-  прибирай.
+- Новий токен: `DESIGN.md` → `:root` і обидва темні блоки (`:root[data-theme="dark"]` і `:root[data-theme="system"]`
+  під `@media (prefers-color-scheme: dark)`) у `src/app/globals.css` → `--color-<назва>` у `@theme inline`. Тема —
+  вибір користувача, `<html data-theme>` з cookie (ADR 0003); `@custom-variant dark` — за тією самою умовою. Блоку
+  `.dark` немає — `shadcn add` може його повернути, прибирай.
 - Перевірка: `npm run check:design` (CI: `.github/workflows/architecture.yml`).
 
 ## Процес і ролі

@@ -23,6 +23,16 @@ describe("proxy (updateSession)", () => {
     expect(new URL(response.headers.get("location") ?? "").pathname).toBe("/login");
   });
 
+  it("AC-DSYS-08: відвідувач без входу на сторінці запуску — вхід з адресою повернення ?next=", async () => {
+    const response = await updateSession(new NextRequest(`${RUN_URL}?tab=tasks`));
+    const location = new URL(response.headers.get("location") ?? "");
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("next")).toBe("/runs/acde19d4-83ed-432b-a9e0-c75e12ab2d1e?tab=tasks");
+    // Головна — без ?next= (після входу й так головна).
+    const home = await updateSession(new NextRequest("http://localhost:3000/"));
+    expect(new URL(home.headers.get("location") ?? "").search).toBe("");
+  });
+
   it("користувач, який увійшов, отримує сторінку запуску без перенаправлення; /login відкрита гостю", async () => {
     session.claims = { sub: "manager-b" };
     const signedIn = await updateSession(new NextRequest(RUN_URL));
