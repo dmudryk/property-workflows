@@ -25,7 +25,7 @@ Done when: AC-DSYS-05, AC-DSYS-06, AC-DSYS-07, AC-DSYS-08 — «реалізов
     `AppShell`.
   - Документи: `DESIGN.md` і `AGENTS.md` — про тему.
 - [x] 2.2 Повернення після входу: `next` у proxy, `safeNextPath`, сторінка й дія входу.
-- [ ] 2.3 Тести AC-DSYS-05…08.
+- [x] 2.3 Тести AC-DSYS-05…08.
   - Знімки з проду: тема й нові стани.
   - Рядки `docs/conformance.md`.
   - `npx openspec archive impl-ws7-clarifications -y`.
