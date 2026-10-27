@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { EmptyState } from "@/components/empty-state";
 import { NotEnoughRights } from "@/components/not-enough-rights";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { canManageTemplates, requireActor } from "@/lib/auth/actor";
+import { MSG_NO_VERSIONS } from "@/lib/templates/empty-states";
 import { formatKyivDateTime, versionLabel } from "@/lib/templates/format";
 
 // Список версій — лише адміністратор (AC-EDITOR-05); менеджер — «Not enough rights» без версій (AC-EDITOR-07).
@@ -51,8 +53,8 @@ export default async function TemplateVersionsPage({ params }: PageProps<"/templ
           </Table>
         </div>
       ) : (
-        // Текст — до відповіді PM (solomchaak/property-workflows-spec#27).
-        <p className="text-base text-muted-foreground">No versions yet.</p>
+        // AC-EDITOR-18: шаблон без версій — текст без порожньої таблиці.
+        <EmptyState message={MSG_NO_VERSIONS} />
       )}
     </main>
   );

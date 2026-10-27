@@ -1,8 +1,10 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { canManageTemplates, requireActor } from "@/lib/auth/actor";
+import { templatesEmptyState } from "@/lib/templates/empty-states";
 import { TemplatesTable } from "./templates-table";
 
 // Список шаблонів (impl-ws7-templates/design.md, U1). Які шаблони видно — вирішує RLS (templates_select_visible):
@@ -39,8 +41,8 @@ export default async function TemplatesPage() {
       {rows.length > 0 ? (
         <TemplatesTable templates={rows} showStatus={admin} />
       ) : (
-        // Текст порожнього списку — до відповіді PM (solomchaak/property-workflows-spec#27).
-        <p className="text-base text-muted-foreground">No templates yet.</p>
+        // AC-EDITOR-17: порожній список — текст (і посилання для адміністратора), без порожньої таблиці.
+        <EmptyState {...templatesEmptyState(admin)} />
       )}
     </main>
   );

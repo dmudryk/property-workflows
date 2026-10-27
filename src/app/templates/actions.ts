@@ -14,8 +14,9 @@ export async function createTemplate(formData: FormData) {
   const { supabase, actor } = await requireActor();
   if (!canManageTemplates(actor)) redirect("/templates/new?error=not_allowed");
 
+  // AC-EDITOR-19: порожня назва чи лише пробіли — без запиту до бази; зайняту назву (AC-EDITOR-23) відхиляє база.
   const name = String(formData.get("name") ?? "").trim();
-  if (!name) redirect("/templates/new?error=empty_name");
+  if (!name) redirect("/templates/new?error=empty_template_name");
 
   const { data: id, error } = await supabase.rpc("create_template", { p_name: name });
   if (error || !id) redirect(`/templates/new?error=${templateErrorCode(error)}`);

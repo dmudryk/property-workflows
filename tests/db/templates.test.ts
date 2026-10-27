@@ -115,6 +115,8 @@ describe("template-editor", () => {
   }, 60_000);
 
   it("AC-EDITOR-04: новий шаблон без обов'язкової задачі — версії немає, зміни й позначка лишаються", async () => {
+    // Назва шаблону унікальна (AC-EDITOR-23): «Repair» зрізу 1 спершу отримує іншу назву.
+    await t.asService("update public.templates set name = 'Repair (slice 1)' where name = 'Repair'");
     const [{ id }] = await t.asUser<{ id: string }>(ADMIN_A, "select public.create_template('Repair') as id");
     const optionalOnly: TemplateContent = {
       sections: [

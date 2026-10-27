@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useOptimistic, type TransitionStartFunction } from "react";
 import { FormSelect } from "@/components/form-select";
 import { Label } from "@/components/ui/label";
+import { launchTemplateItems, type LaunchTemplate } from "@/lib/runs/launch-items";
 
 // Вибір шаблону для запуску: одразу відкриває його задачі (?template=…), поки сторінка вантажиться — індикатор.
+// Незбережений шаблон адміністратор бачить недоступним з приміткою «Save the template to launch it» (AC-EDITOR-10).
 // Список керований: значення — вибраний шаблон зі сторінки (null — ще не вибрано); поки триває перехід, список уже
 // показує новий вибір (useOptimistic), а після переходу — знову значення сторінки. Перехід (pending, startTransition)
 // належить формі запуску: поки він триває, форма ще має задачі й template_id попереднього шаблону, тож запуск вимкнено.
@@ -16,7 +18,7 @@ export function TemplatePicker({
   pending,
   startTransition,
 }: {
-  templates: { id: string; name: string }[];
+  templates: LaunchTemplate[];
   selectedId: string;
   pending: boolean;
   startTransition: TransitionStartFunction;
@@ -32,7 +34,7 @@ export function TemplatePicker({
       </Label>
       <FormSelect
         id="template"
-        items={templates.map((t) => ({ value: t.id, label: t.name }))}
+        items={launchTemplateItems(templates)}
         value={value}
         size="xl"
         placeholder="Choose a template"
