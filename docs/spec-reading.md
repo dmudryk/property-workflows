@@ -54,7 +54,7 @@
 
 # Зріз 2 (WS7): редактор шаблонів з версіями й одна дизайн-система
 
-Вимоги: solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-26
+Вимоги: solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-27 (уточнення PM; перший знімок зрізу — 2026-10-26)
 
 Вимоги зрізу: `requirements/20-edit-a-template-with-version-control.md` (solomchaak/property-workflows-spec#20,
 AC-EDITOR-01…09), `requirements/19-use-one-design-system.md` (solomchaak/property-workflows-spec#19, AC-DSYS-01…04),
@@ -80,10 +80,17 @@ AC-EDITOR-01…09), `requirements/19-use-one-design-system.md` (solomchaak/prope
 
 | # | AC / вимога | Питання | Рекомендація | Issue в репо PM | Відповідь PM | Рішення (що зробили) |
 |---|---|---|---|---|---|---|
-| Q4 | AC-EDITOR-07, AC-EDITOR-02 (solomchaak/property-workflows-spec#20) | Що має бути правдою, коли менеджер напряму, оминаючи сторінки, запитує список версій, старішу версію чи незбережені зміни шаблону? | A: не отримує нічого, крім поточної версії; шаблон не змінюється | solomchaak/property-workflows-spec#37 | очікуємо | у специфікації — текст PM; питання в Open questions; у плані — політики читання версій і незбережених змін лише для admin (тести бази AC-EDITOR-02, AC-EDITOR-07) |
-| Q5 | AC-EDITOR-03 (solomchaak/property-workflows-spec#20) | Що бачить адміністратор одразу після збереження — «Version 2 saved»? | A: повідомлення «Version N saved», позначка зникає | solomchaak/property-workflows-spec#38 | очікуємо | у специфікації — текст PM; до відповіді — без обов'язкового повідомлення успіху |
-| Q6 | AC-EDITOR-05 (solomchaak/property-workflows-spec#20) | Яку дату й email показує список версій для версії 1 шаблонів, що існували до зрізу 2? | A: дата підготовки шаблону і «—» замість email | не подано (необов'язковий коментар до solomchaak/property-workflows-spec#33) | очікуємо | у плані — версія 1 наявних шаблонів без автора (показ «—») |
-| Q7 | AC-DSYS-04 (solomchaak/property-workflows-spec#19) | Що бачить менеджер у формі запуску, коли жоден шаблон ще не має збереженої версії? | C: той самий текст, що й на порожньому списку шаблонів | не подано (необов'язковий коментар до solomchaak/property-workflows-spec#27) | очікуємо | у специфікації — текст PM; порожній стан форми запуску — до відповіді PM |
+| Q4 | AC-EDITOR-07, AC-EDITOR-02 (solomchaak/property-workflows-spec#20) | Що має бути правдою, коли менеджер напряму, оминаючи сторінки, запитує список версій, старішу версію чи незбережені зміни шаблону? | A: не отримує нічого, крім поточної версії; шаблон не змінюється | solomchaak/property-workflows-spec#37 | 2026-10-27: A — новий AC-EDITOR-29 і загальне правило доступу в матриці прав продукту | зміна `update-ws7-clarifications` (AC-EDITOR-29); політики читання версій і незбережених змін лише для admin уже є — тест AC-EDITOR-29 у задачі 1 `impl-ws7-clarifications` |
+| Q5 | AC-EDITOR-03 (solomchaak/property-workflows-spec#20) | Що бачить адміністратор одразу після збереження — «Version 2 saved»? | A: повідомлення «Version N saved», позначка зникає | solomchaak/property-workflows-spec#38 | 2026-10-27: A — AC-EDITOR-03 переформульовано: «Version N saved» | зміна `update-ws7-clarifications` (MODIFIED AC-EDITOR-03); повідомлення вже показує редактор — тест у задачі 1 |
+| Q6 | AC-EDITOR-05 (solomchaak/property-workflows-spec#20) | Яку дату й email показує список версій для версії 1 шаблонів, що існували до зрізу 2? | A: дата підготовки шаблону і «—» замість email | не подано (необов'язковий коментар до solomchaak/property-workflows-spec#33) | 2026-10-27, у #33: версія 1 — «збережена адміністратором, який підготував шаблон» (припущення PM) | автор версії 1 перенесених шаблонів — перший адміністратор (задача 1 `impl-ws7-clarifications`); у свіжій базі без профілів — «—» |
+| Q7 | AC-DSYS-04 (solomchaak/property-workflows-spec#19) | Що бачить менеджер у формі запуску, коли жоден шаблон ще не має збереженої версії? | C: той самий текст, що й на порожньому списку шаблонів | не подано (необов'язковий коментар до solomchaak/property-workflows-spec#27) | 2026-10-27, у #27: лише порожні списки шаблонів (AC-EDITOR-17) і версій (AC-EDITOR-18); форму запуску без шаблонів PM не описав | порожній стан форми запуску не специфікуємо; у формі — та сама логіка, що й раніше |
+
+## Відповіді PM 2026-10-27 (зріз 2)
+
+PM відповів на всі 18 питань зрізу (solomchaak/property-workflows-spec#21–#38) і закрив їх: 24 нові AC (AC-DSYS-05…08,
+AC-EDITOR-10…29), переформульовані AC-EDITOR-02 і AC-EDITOR-03, загальне правило доступу в матриці прав і абзац про теми
+у «Вигляд і тон». Переклад — зміна специфікації `update-ws7-clarifications` (ADDED / MODIFIED, ID AC PM без змін);
+рядки нових AC у `docs/conformance.md` — «відкладено (чекає реалізації)» до задач `impl-ws7-clarifications`.
 
 ## Власні припущення (зріз 2)
 
