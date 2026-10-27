@@ -2,7 +2,8 @@
 // Застосовує ті самі supabase/migrations/*.sql і supabase/seed.sql, що й job db-deploy у CI, без Docker.
 // Межа емуляції: Auth, PostgREST і JWT — спрощені (auth.uid() читає request.jwt.claim.sub).
 // Взято з koldovsky/2026-quitcode-06-leave-portal-demo@48337f0 (tests/db/supabase-pglite.ts) і адаптовано:
-// без підрозділів і посад демо, ролі manager/admin, додано asAnon (відвідувач без входу).
+// без підрозділів і посад демо, ролі manager/admin, додано asAnon (відвідувач без входу) і хук before (дані, що
+// існували до певної міграції, — наприклад, запуск зрізу 1 до появи версій шаблонів, AC-EDITOR-27).
 import { readFileSync, readdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
@@ -57,13 +58,25 @@ async function inTransaction<T>(db: PGlite, role: string, userId: string | null,
   }
 }
 
-export async function createTestDb(): Promise<TestDb> {
+/** before: SQL (від імені власника бази) перед першою міграцією, назва файлу якої містить migration. */
+export async function createTestDb(options: { before?: { migration: string; sql: string } } = {}): Promise<TestDb> {
   const db = new PGlite();
   await db.exec(SUPABASE_SHIM);
   const migrations = readdirSync(new URL("supabase/migrations/", root))
     .filter((f) => f.endsWith(".sql"))
     .sort();
-  for (const file of migrations) await db.exec(read(`supabase/migrations/${file}`));
+  const { before } = options;
+  if (before && !migrations.some((f) => f.includes(before.migration))) {
+    throw new Error(`Міграції ${before.migration} немає`);
+  }
+  let beforeDone = false;
+  for (const file of migrations) {
+    if (before && !beforeDone && file.includes(before.migration)) {
+      await db.exec(before.sql);
+      beforeDone = true;
+    }
+    await db.exec(read(`supabase/migrations/${file}`));
+  }
   await db.exec(read("supabase/seed.sql"));
 
   // Як scripts/create-demo-users.mjs: користувач Auth → тригер створює профіль → service_role ставить роль.

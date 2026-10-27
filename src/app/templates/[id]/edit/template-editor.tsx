@@ -2,6 +2,7 @@
 
 import { ChevronDownIcon, ChevronUpIcon, Loader2Icon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NumberBadge } from "@/components/number-badge";
 import { PageHeader } from "@/components/page-header";
@@ -20,20 +21,26 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MSG_CANNOT_UNDO } from "@/lib/runs/rules";
+import { Label } from "@/components/ui/label";
 import {
   addSection,
   addTask,
   moveSection,
   moveTask,
-  removeSection,
-  removeTask,
   renameSection,
   renameTask,
+  renameTemplate,
   toggleRequired,
   type TemplateContent,
 } from "@/lib/templates/content";
-import { TEMPLATE_ERRORS } from "@/lib/templates/errors";
+import {
+  removeConfirmation,
+  resolveRemove,
+  saveStatus,
+  type PendingRemove,
+  type SaveState,
+} from "@/lib/templates/editor-state";
+import { TEMPLATE_ERRORS, type TemplateError } from "@/lib/templates/errors";
 import { versionLabel } from "@/lib/templates/format";
 import { cn } from "@/lib/utils";
 import { publishVersion, saveDraft } from "../../actions";
@@ -47,10 +54,11 @@ const REQUIREMENT = [
   { value: "optional", label: "Optional" },
 ] as const;
 
-// Редактор шаблону (impl-ws7-templates/design.md, U2): кожна зміна одразу зберігається як незбережені зміни
-// (AC-EDITOR-01); «Save version» створює версію (AC-EDITOR-03) або показує помилку AC-EDITOR-04 без втрати змін.
-// Server Actions виконуються по черзі: «Save version» спершу дочікується останнього автозбереження.
-type PendingRemove = { kind: "section" | "task"; id: string; name: string };
+// Редактор шаблону (impl-ws7-templates/design.md, U2; impl-ws7-clarifications/design.md, U1): кожна зміна одразу
+// зберігається як незбережені зміни (AC-EDITOR-01), зокрема назва шаблону (AC-EDITOR-21) і порожні назви (їх відхиляє
+// збереження — AC-EDITOR-20). «Save version» створює версію й відкриває сторінку шаблону з «Version N saved»
+// (AC-EDITOR-03) або показує помилку (AC-EDITOR-04, 15, 20, 24) без втрати змін. Server Actions виконуються по черзі:
+// «Save version» спершу дочікується останнього автозбереження.
 
 export function TemplateEditor({
   templateId,
@@ -65,12 +73,12 @@ export function TemplateEditor({
   initialContent: TemplateContent;
   initiallyUnpublished: boolean;
 }) {
+  const router = useRouter();
   const [content, setContent] = useState(initialContent);
   const [unpublished, setUnpublished] = useState(initiallyUnpublished);
-  const [version, setVersion] = useState(currentVersion);
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [saveError, setSaveError] = useState<TemplateError>("failed");
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [pendingRemove, setPendingRemove] = useState<PendingRemove | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
@@ -83,22 +91,23 @@ export function TemplateEditor({
     latest.current = next;
     setContent(next);
     setSaveState("saving");
-    setNotice(null);
+    // Нова правка робить помилку попереднього «Save version» неактуальною (наприклад, виправлена порожня назва).
+    setError(null);
     // Кожна ланка черги ловить власні збої (мережа, 5xx): інакше відхилений promise зупинив би всі наступні збереження.
+    // Збій — у фіксованому місці смуги (AC-EDITOR-25); правка лишається на екрані, а наступна зміна надішле весь зміст.
     queue.current = queue.current.then(async () => {
       try {
         const result = await saveDraft(templateId, next);
         if (result.ok) {
           setUnpublished(true);
           setSaveState("saved");
-          setError(null);
         } else {
           setSaveState("error");
-          setError(TEMPLATE_ERRORS[result.error]);
+          setSaveError(result.error);
         }
       } catch {
         setSaveState("error");
-        setError(TEMPLATE_ERRORS.failed);
+        setSaveError("failed");
       }
     });
   }
@@ -108,16 +117,13 @@ export function TemplateEditor({
   async function saveVersion() {
     setPublishing(true);
     setError(null);
-    setNotice(null);
     const step = queue.current.then(async () => {
       try {
         const result = await publishVersion(templateId);
         if (result.ok) {
           setUnpublished(false);
-          if (result.version) {
-            setVersion(result.version);
-            setNotice(`Version ${result.version} saved`);
-          }
+          // AC-EDITOR-03: «Version N saved» — на сторінці шаблону, яка вже показує нову поточну версію.
+          router.push(result.version ? `/templates/${templateId}?saved=${result.version}` : `/templates/${templateId}`);
         } else {
           setError(TEMPLATE_ERRORS[result.error]);
         }
@@ -135,26 +141,40 @@ export function TemplateEditor({
 
   function confirmRemove() {
     if (!pendingRemove) return;
-    const { kind, id } = pendingRemove;
-    persist((c) => (kind === "section" ? removeSection(c, id) : removeTask(c, id)));
+    const item = pendingRemove;
+    persist((c) => resolveRemove(c, item, true));
     setPendingRemove(null);
   }
 
   const lastSection = content.sections.length - 1;
+  const status = saveStatus(saveState, saveError);
+  const confirmation = pendingRemove ? removeConfirmation(pendingRemove) : null;
   let taskNumber = 0;
 
   return (
     <main className="flex flex-1 flex-col gap-6">
       <PageHeader
         back={{ href: `/templates/${templateId}`, label: "Back to the template" }}
-        title={name}
+        title={content.name || name}
         badges={
           <Badge className="h-7 bg-secondary px-3 text-sm text-secondary-foreground tabular-nums">
-            {version === null ? "Editing" : `Editing · ${versionLabel(version)}`}
+            {currentVersion === null ? "Editing" : `Editing · ${versionLabel(currentVersion)}`}
           </Badge>
         }
         description="Changes are kept as you go. Save version to use them in new runs; runs already launched keep the version they started with."
       />
+
+      {/* AC-EDITOR-21: перейменування — незбережена зміна; нова назва діє з наступною версією. */}
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="template-name">Template name</Label>
+        <NameField
+          id="template-name"
+          label="Template name"
+          value={content.name ?? name}
+          className="h-11"
+          onCommit={(value) => persist((c) => renameTemplate(c, value))}
+        />
+      </div>
 
       {content.sections.map((section, si) => (
         <Card key={section.id} className="gap-0 bg-background py-0">
@@ -299,8 +319,13 @@ export function TemplateEditor({
                   No changes yet
                 </span>
               )}
-              <span aria-live="polite" className="text-muted-foreground">
-                {notice ?? (saveState === "saving" ? "Saving…" : saveState === "saved" ? "All changes kept" : "")}
+              {/* Фіксоване місце стану змін (AC-EDITOR-25): «All changes kept», «Saving…» або збій кольором помилки. */}
+              <span
+                data-testid="save-status"
+                role={status.isError ? "alert" : "status"}
+                className={status.isError ? "font-medium text-destructive" : "text-muted-foreground"}
+              >
+                {status.text}
               </span>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -319,8 +344,8 @@ export function TemplateEditor({
       <Dialog open={pendingRemove !== null} onOpenChange={(open) => (open ? null : setPendingRemove(null))}>
         <DialogContent showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle>Remove &quot;{pendingRemove?.name}&quot;?</DialogTitle>
-            <DialogDescription>{MSG_CANNOT_UNDO}</DialogDescription>
+            <DialogTitle>{confirmation?.title}</DialogTitle>
+            <DialogDescription>{confirmation?.notice}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingRemove(null)}>
@@ -336,14 +361,16 @@ export function TemplateEditor({
   );
 }
 
-// Назва секції чи задачі: зберігається після паузи у введенні або при виході з поля; порожня назва не зберігається —
-// поле повертає попередню (solomchaak/property-workflows-spec#28).
+// Назва шаблону, секції чи задачі: зберігається після паузи у введенні або при виході з поля. Порожня назва теж
+// зберігається як незбережена зміна — її відхиляє «Save version» (AC-EDITOR-19, AC-EDITOR-20).
 function NameField({
+  id,
   label,
   value,
   className,
   onCommit,
 }: {
+  id?: string;
   label: string;
   value: string;
   className?: string;
@@ -359,12 +386,13 @@ function NameField({
   function commit(next: string) {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
-    if (next.trim() && next.trim() !== value) onCommit(next);
+    if (next.trim() !== value) onCommit(next);
   }
 
   return (
     <Input
-      aria-label={label}
+      id={id}
+      aria-label={id ? undefined : label}
       value={text}
       className={className ? `min-w-48 flex-1 ${className}` : "min-w-48 flex-1"}
       onChange={(e) => {
@@ -373,10 +401,7 @@ function NameField({
         if (timer.current) clearTimeout(timer.current);
         timer.current = setTimeout(() => commit(next), 600);
       }}
-      onBlur={() => {
-        if (!text.trim()) setText(value);
-        commit(text);
-      }}
+      onBlur={() => commit(text)}
     />
   );
 }

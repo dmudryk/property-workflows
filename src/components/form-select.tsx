@@ -3,7 +3,8 @@
 import { cn } from "cn";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export type FormSelectItem = { value: string | null; label: string };
+// disabled — пункт видно, але вибрати його не можна; note — пояснення поруч із назвою (наприклад, AC-EDITOR-10).
+export type FormSelectItem = { value: string | null; label: string; disabled?: boolean; note?: string };
 
 // Випадний список у вигляді дизайн-системи (DESIGN.md, розділ 5) замість системного <select>. Значення йде у форму
 // прихованим полем name; пункт зі значенням null надсилає порожній рядок (наприклад, «Me (run manager)»).
@@ -46,8 +47,16 @@ export function FormSelect({
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false}>
         {items.map((item) => (
-          <SelectItem key={item.value ?? ""} value={item.value}>
+          <SelectItem
+            key={item.value ?? ""}
+            value={item.value}
+            disabled={item.disabled}
+            // Недоступний пункт з поясненням лишається читабельним: приглушений колір замість прозорості.
+            className={item.disabled ? "text-muted-foreground data-disabled:opacity-100" : undefined}
+          >
             {item.label}
+            {/* Примітка переноситься на вузькому екрані, а не обрізається (у пункті списку whitespace-nowrap). */}
+            {item.note ? <span className="min-w-0 whitespace-normal text-muted-foreground">· {item.note}</span> : null}
           </SelectItem>
         ))}
       </SelectContent>

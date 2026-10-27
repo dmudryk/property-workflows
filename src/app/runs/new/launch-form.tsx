@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import type { LaunchTemplate } from "@/lib/runs/launch-items";
 import { countLabel } from "@/lib/templates/format";
 import { launchRun } from "../actions";
 import { TemplatePicker } from "./template-picker";
@@ -31,7 +32,7 @@ export function LaunchForm({
   assignees,
   error,
 }: {
-  templates: { id: string; name: string }[];
+  templates: LaunchTemplate[];
   selectedId: string;
   templateName: string | null;
   sections: LaunchSection[];

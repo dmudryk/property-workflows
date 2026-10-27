@@ -5,15 +5,15 @@ AC-EDITOR-15, AC-EDITOR-16, AC-EDITOR-17, AC-EDITOR-18, AC-EDITOR-19, AC-EDITOR-
 AC-EDITOR-23, AC-EDITOR-24, AC-EDITOR-25, AC-EDITOR-26, AC-EDITOR-27, AC-EDITOR-28, AC-EDITOR-29 — «реалізовано» в
 `docs/conformance.md`.
 
-- [ ] 1.1 Міграція `…_template_name_rules.sql`:
+- [x] 1.1 Міграція `…_template_name_rules.sql`:
   - назва шаблону в незбережених змінах і версіях; порожні назви — до збереження;
   - перевірки збереження R2, унікальна назва (функція + індекс), автор версії 1 (R4).
-- [ ] 1.2 `src/lib/templates/content.ts` (назва шаблону, порожні назви) і `src/lib/templates/errors.ts` (тексти з AC).
+- [x] 1.2 `src/lib/templates/content.ts` (назва шаблону, порожні назви) і `src/lib/templates/errors.ts` (тексти з AC).
   Дія `createTemplate` (порожня й зайнята назва).
-- [ ] 1.3 Редактор: поле «Template name», порожні назви, стан змін у фіксованому місці (AC-EDITOR-25).
+- [x] 1.3 Редактор: поле «Template name», порожні назви, стан змін у фіксованому місці (AC-EDITOR-25).
   Сторінки `/templates`, `/templates/[id]`, `/templates/[id]/versions` (порожні стани, «required»/«optional», «Launch»).
   Форма запуску з недоступним незбереженим шаблоном.
-- [ ] 1.4 Тести бази (зокрема хук міграцій для AC-EDITOR-27), дій, рендеру й чистих функцій на кожен AC задачі.
+- [x] 1.4 Тести бази (зокрема хук міграцій для AC-EDITOR-27), дій, рендеру й чистих функцій на кожен AC задачі.
   Мутаційна перевірка — таблиця в описі PR.
 
 ## 2. Вибір теми й повернення після входу (PR «Реалізація» `task/theme-and-return`)

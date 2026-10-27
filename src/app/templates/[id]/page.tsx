@@ -1,4 +1,4 @@
-import { CircleIcon, HistoryIcon, PencilIcon } from "lucide-react";
+import { CircleIcon, HistoryIcon, PencilIcon, PlayIcon } from "lucide-react";
 import Link from "next/link";
 import { Chip } from "@/components/chip";
 import { NumberBadge } from "@/components/number-badge";
@@ -11,13 +11,16 @@ import { Card } from "@/components/ui/card";
 import { canManageTemplates, requireActor } from "@/lib/auth/actor";
 import { cn } from "@/lib/utils";
 import { EMPTY_CONTENT, parseContent, summarizeContent } from "@/lib/templates/content";
+import { versionSavedMessage } from "@/lib/templates/editor-state";
 import { countLabel, versionLabel } from "@/lib/templates/format";
 
-// Шаблон: поточна версія з секціями й задачами (AC-EDITOR-02). Адміністратор додатково бачить позначку
-// «Unpublished changes» (AC-EDITOR-01) і посилання на редактор і список версій. Шаблон, якого користувач не бачить
-// (RLS: менеджер — лише збережені), — «Template not found» без даних (до відповіді PM, solomchaak/property-workflows-spec#26).
-export default async function TemplatePage({ params }: PageProps<"/templates/[id]">) {
+// Шаблон: поточна версія з секціями й задачами, кожна з позначкою «required» чи «optional», і посилання «Launch»
+// (AC-EDITOR-02). Адміністратор додатково бачить позначку «Unpublished changes» (AC-EDITOR-01), посилання на редактор і
+// список версій, а після збереження — «Version N saved» (AC-EDITOR-03). Шаблон, якого користувач не бачить (RLS:
+// менеджер — лише збережені), — «Template not found» без секцій і задач (AC-EDITOR-16).
+export default async function TemplatePage({ params, searchParams }: PageProps<"/templates/[id]">) {
   const { id } = await params;
+  const { saved: savedParam } = await searchParams;
   const { supabase, actor } = await requireActor();
   const admin = canManageTemplates(actor);
 
@@ -45,6 +48,8 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
   const content = parseContent(tpl.current_content) ?? EMPTY_CONTENT;
   const summary = summarizeContent(content);
   const saved = tpl.current_version !== null;
+  // Повідомлення лише про поточну версію: застарілий чи вигаданий ?saved= нічого не показує.
+  const justSaved = admin && saved && savedParam === String(tpl.current_version);
 
   return (
     <main className="flex flex-col gap-6">
@@ -79,6 +84,15 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
           admin ? (
             <>
               {/* cn: buttonVariants (cva) не зливає border-transparent бази з border-border варіанта outline. */}
+              {saved ? (
+                <Link
+                  href={`/runs/new?template=${id}`}
+                  className={cn(buttonVariants({ variant: "outline", size: "xl" }))}
+                >
+                  <PlayIcon aria-hidden />
+                  Launch
+                </Link>
+              ) : null}
               <Link
                 href={`/templates/${id}/versions`}
                 className={cn(buttonVariants({ variant: "outline", size: "xl" }))}
@@ -91,9 +105,21 @@ export default async function TemplatePage({ params }: PageProps<"/templates/[id
                 Edit template
               </Link>
             </>
+          ) : saved ? (
+            // Менеджеру «Launch» — основна дія сторінки (припущення PM до AC-EDITOR-02).
+            <Link href={`/runs/new?template=${id}`} className={buttonVariants({ size: "xl" })}>
+              <PlayIcon aria-hidden />
+              Launch
+            </Link>
           ) : null
         }
       />
+
+      {justSaved ? (
+        <p role="status" data-testid="version-saved" className="text-base">
+          {versionSavedMessage(tpl.current_version!)}
+        </p>
+      ) : null}
 
       {!saved ? (
         <p className="text-base text-muted-foreground">This template has no saved version yet.</p>
