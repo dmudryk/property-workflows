@@ -54,6 +54,8 @@ describe("design-system", () => {
     expect(html).not.toContain("Sign out");
     expect(html).not.toContain("Run manager");
     expect(html).not.toMatch(/\d+ of \d+ done/);
+    // Перемикача теми на вході немає (ADR 0004): тема з cookie діє й тут.
+    expect(html).not.toContain(">Theme</legend>");
   });
 
   it("AC-DSYS-04: без запусків — «No runs yet. Launch a template to start one.» і «Launch a template», без таблиці", () => {
