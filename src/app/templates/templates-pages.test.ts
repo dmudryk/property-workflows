@@ -5,15 +5,15 @@ import TemplatePage from "./[id]/page";
 import TemplateVersionsPage from "./[id]/versions/page";
 import TemplatesPage from "./page";
 
-// Сторінки шаблонів читають дані через requireActor(). У тесті таблиці містять рівно ті рядки, які роль отримала б
-// від бази (RLS перевіряють тести бази tests/db/*); тут — що сторінка показує з цими рядками.
+// Сторінки шаблонів читають дані через справжній requireActor() з клієнтом Supabase. Мокаємо лише клієнт: таблиці
+// містять рівно ті рядки, які роль отримала б від бази (RLS перевіряють тести бази tests/db/*); тут — що сторінка
+// показує з цими рядками. Роль користувача requireActor() бере з profiles, як на проді.
 const db = vi.hoisted(() => ({
-  actor: { id: "manager-b", role: "manager" } as { id: string; role: "manager" | "admin" } | null,
+  actor: { id: "manager-b", role: "manager" } as { id: string; role: "manager" | "admin" },
   tables: {} as Record<string, unknown[]>,
 }));
 
-vi.mock("@/lib/auth/actor", async () => {
-  const { canManageTemplates } = await import("@/lib/auth/roles");
+vi.mock("@/lib/supabase/server", () => {
   // Ланцюжок запиту supabase-js: фільтри не змінюють рядків; await — усі рядки, maybeSingle — перший.
   const query = (rows: unknown[]) => {
     const q = {
@@ -27,12 +27,11 @@ vi.mock("@/lib/auth/actor", async () => {
     };
     return q;
   };
+  const profile = () => [{ role: db.actor.role, email: "user@example.test", full_name: null }];
   return {
-    canManageTemplates,
-    requireActor: async () => ({
-      supabase: { from: (table: string) => query(db.tables[table] ?? []) },
-      actor: db.actor,
-      email: "user@example.test",
+    createClient: async () => ({
+      auth: { getClaims: async () => ({ data: { claims: { sub: db.actor.id } }, error: null }) },
+      from: (table: string) => query(table === "profiles" ? profile() : (db.tables[table] ?? [])),
     }),
   };
 });

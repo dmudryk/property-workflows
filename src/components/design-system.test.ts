@@ -8,19 +8,19 @@ import { runStatusKind } from "@/lib/status";
 import { EmptyState } from "./empty-state";
 import { StatusBadge } from "./status-badge";
 
-// Сторінка /runs читає запуски через requireActor(); у тесті — менеджер, якому RLS віддає лише рядки з `runs.rows`.
+// Сторінка /runs читає запуски через справжній requireActor(); мокаємо лише клієнт Supabase: менеджер B
+// (роль — з profiles, як на проді), якому RLS віддає лише рядки з `runs.rows`.
 const runs = vi.hoisted(() => ({ rows: [] as unknown[] }));
-vi.mock("@/lib/auth/actor", () => ({
-  requireActor: async () => ({
-    supabase: { from: () => ({ select: async () => ({ data: runs.rows, error: null }) }) },
-    actor: { id: "manager-b", role: "manager" },
-    email: "manager.b@example.test",
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: async () => ({
+    auth: { getClaims: async () => ({ data: { claims: { sub: "manager-b" } }, error: null }) },
+    from: (table: string) => ({
+      select: () =>
+        table === "profiles"
+          ? { eq: () => ({ maybeSingle: async () => ({ data: { role: "manager", email: "manager.b@example.test", full_name: null }, error: null }) }) }
+          : Promise.resolve({ data: runs.rows, error: null }),
+    }),
   }),
-}));
-
-// Статичний імпорт картинки входу: у Next.js — об'єкт із розмірами й blurDataURL; Vitest дає лише шлях.
-vi.mock("@/app/login/login-hero.jpg", () => ({
-  default: { src: "/login-hero.jpg", width: 1200, height: 1490, blurDataURL: "data:image/jpeg;base64,AA==" },
 }));
 
 beforeEach(() => {

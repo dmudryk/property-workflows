@@ -24,10 +24,14 @@ const managerA: Actor = { id: "manager-a", role: "manager" };
 const managerB: Actor = { id: "manager-b", role: "manager" };
 const admin: Actor = { id: "admin-1", role: "admin" };
 
-function launched(actor: Actor, caseName: string, assignments: Record<string, string> = {}) {
-  const result = planRun(actor, caseName, tenantMoveIn(), assignments);
+// Запуск із результату planRun; відмова валить тест з її текстом (умова — тут, а не в тесті).
+function runOf(result: ReturnType<typeof planRun>) {
   if (!result.ok) throw new Error(`expected a run, got: ${result.error}`);
   return result.run;
+}
+
+function launched(actor: Actor, caseName: string, assignments: Record<string, string> = {}) {
+  return runOf(planRun(actor, caseName, tenantMoveIn(), assignments));
 }
 
 describe("workflow-runs", () => {
@@ -39,22 +43,21 @@ describe("workflow-runs", () => {
     const result = planRun(managerA, "Apartment 12, move-in", template);
 
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.run.status).toBe("in_progress");
-    expect(result.run.tasks).toHaveLength(5);
-    expect(result.run.tasks.every((t) => t.status === "to_do")).toBe(true);
+    const run = runOf(result);
+    expect(run.status).toBe("in_progress");
+    expect(run.tasks).toHaveLength(5);
+    expect(run.tasks.every((t) => t.status === "to_do")).toBe(true);
   });
 
   it("AC-RUN-02: changing the template after launch does not change the run", () => {
     const template = tenantMoveIn();
-    const result = planRun(managerA, "Apartment 12, move-in", template);
-    if (!result.ok) throw new Error(result.error);
+    const run = runOf(planRun(managerA, "Apartment 12, move-in", template));
 
     template[0].name = "Sign the lease (v2)";
     template.push({ id: "t6", sectionName: "Move-in day", name: "Welcome pack", required: false, position: 6 });
 
-    expect(result.run.tasks).toHaveLength(5);
-    expect(result.run.tasks.map((t) => t.name)).toEqual([
+    expect(run.tasks).toHaveLength(5);
+    expect(run.tasks.map((t) => t.name)).toEqual([
       "Sign the lease",
       "Collect the deposit",
       "Order cleaning",
@@ -117,21 +120,19 @@ describe("workflow-runs", () => {
 
     expect(Array.from(` ${name}`)).toHaveLength(101);
     expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.run.caseName).toBe(name);
+    expect(runOf(result).caseName).toBe(name);
   });
 
   it("AC-RUN-12: renaming and moving template sections after launch does not change the run's sections", () => {
     const template = tenantMoveIn().map((t) =>
       t.sectionName === "Before move-in" && t.id === "t3" ? { ...t, sectionName: "Move-in day" } : t,
     );
-    const result = planRun(managerA, "Apartment 12, move-in", template);
-    if (!result.ok) throw new Error(result.error);
+    const run = runOf(planRun(managerA, "Apartment 12, move-in", template));
 
     template[3].sectionName = "Key handover";
     template[2].sectionName = "Before move-in";
 
-    const sections = groupBySection(result.run.tasks).map((s) => [s.name, s.tasks.length]);
+    const sections = groupBySection(run.tasks).map((s) => [s.name, s.tasks.length]);
     expect(sections).toEqual([
       ["Before move-in", 2],
       ["Move-in day", 3],
