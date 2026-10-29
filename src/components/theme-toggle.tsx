@@ -18,8 +18,15 @@ const ThemeContext = createContext<{ theme: ThemeChoice; choose: (next: ThemeCho
   choose: applyTheme,
 });
 
-export function ThemeProvider({ theme: initial, children }: { theme: ThemeChoice; children?: React.ReactNode }) {
-  const [theme, setTheme] = useState(initial);
+export function ThemeProvider({ theme: fromServer, children }: { theme: ThemeChoice; children?: React.ReactNode }) {
+  const [theme, setTheme] = useState(fromServer);
+  // Layout перемальовано на сервері (серверна дія, revalidatePath) з іншим cookie — тему змінили в іншій вкладці:
+  // <html data-theme> уже нова, тож і перемикач показує її, а не старий вибір цієї вкладки.
+  const [seen, setSeen] = useState(fromServer);
+  if (fromServer !== seen) {
+    setSeen(fromServer);
+    setTheme(fromServer);
+  }
   const choose = (next: ThemeChoice) => {
     setTheme(next);
     applyTheme(next);
