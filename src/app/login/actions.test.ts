@@ -49,6 +49,7 @@ describe("design-system", () => {
       "runs",
       "/login",
       "/login?next=/runs",
+      "/login/reset",
       "/runs\n",
       null,
       7,
@@ -58,5 +59,14 @@ describe("design-system", () => {
     await expect(login(form("//evil.example/x"))).rejects.toThrow(/^REDIRECT \/$/);
     await expect(login(form("/.//evil.example"))).rejects.toThrow(/^REDIRECT \/$/);
     await expect(login(form())).rejects.toThrow(/^REDIRECT \/$/);
+  });
+
+  it("AC-DSYS-08: «//хост/…» — чужий сайт для будь-якого хоста, зокрема того, що збігається з внутрішньою базою розбору адрес", async () => {
+    // safeNextPath розбирає адресу відносно http://app.invalid. Без перевірки «//» на початку «//app.invalid/…»
+    // пройшла б як шлях цього застосунку, хоча це адреса з іншим хостом (impl-ws7-clarifications, design.md, U5).
+    for (const bad of [`//app.invalid${RUN}`, "//app.invalid", "//localhost:3000/runs"]) {
+      expect(safeNextPath(bad), bad).toBeNull();
+    }
+    await expect(login(form(`//app.invalid${RUN}`))).rejects.toThrow(/^REDIRECT \/$/);
   });
 });
