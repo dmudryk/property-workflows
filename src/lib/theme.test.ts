@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import RootLayout from "@/app/layout";
-import { ThemeProvider, ThemeSelect } from "@/components/theme-select";
+import { ThemeProvider, ThemeToggle } from "@/components/theme-toggle";
 import { THEME_MAX_AGE, themeCookie, themeFromCookie } from "./theme";
 
 // RootLayout читає cookie теми (next/headers) і підключає шрифти (next/font) — у тесті їх замінено.
@@ -41,9 +41,12 @@ async function renderLayout() {
   return renderToStaticMarkup(await RootLayout({ children: createElement("main"), params: Promise.resolve({}) } as never));
 }
 
-// Підпис вибраного значення у випадному списку «Theme».
+// Назва вибраного положення в перемикачі «Theme»: група з підписом «Theme», у ній — рівно одна вибрана радіокнопка.
 function selectedTheme(html: string): string | undefined {
-  return html.match(/<button[^>]*id="theme"[^>]*>.*?<span[^>]*>([^<]+)<\/span>/)?.[1];
+  expect(html).toMatch(/<fieldset[^>]*><legend[^>]*>Theme<\/legend>/);
+  const checked = html.split("<label").filter((option) => /<input[^>]*type="radio"[^>]*checked=""/.test(option));
+  expect(checked).toHaveLength(1);
+  return checked[0].match(/<span class="sr-only">([^<]+)<\/span>/)?.[1];
 }
 
 // OKLCH → лінійний sRGB → відносна яскравість і контраст WCAG 2.x.
@@ -70,7 +73,7 @@ describe("design-system", () => {
   it("AC-DSYS-05: темний пристрій без вибору теми — темна тема, «Theme» показує «System»", async () => {
     expect(themeFromCookie(undefined)).toBe("system");
     expect(await renderLayout()).toMatch(/<html[^>]*data-theme="system"/);
-    expect(selectedTheme(renderToStaticMarkup(createElement(ThemeSelect)))).toBe("System");
+    expect(selectedTheme(renderToStaticMarkup(createElement(ThemeToggle)))).toBe("System");
 
     // «System» на темному пристрої — ті самі темні токени, що й «Dark».
     const system = tokens(':root[data-theme="system"]', darkMedia());
@@ -92,7 +95,7 @@ describe("design-system", () => {
       expect(await renderLayout()).toMatch(/<html[^>]*data-theme="light"/);
     }
     expect(
-      selectedTheme(renderToStaticMarkup(createElement(ThemeProvider, { theme: "light" }, createElement(ThemeSelect)))),
+      selectedTheme(renderToStaticMarkup(createElement(ThemeProvider, { theme: "light" }, createElement(ThemeToggle)))),
     ).toBe("Light");
     // Темні токени діють лише для «dark» і «system»; для «light» — лише світлі токени :root.
     expect([...css.matchAll(/:root\[data-theme="(\w+)"\]/g)].map((m) => m[1]).sort()).toEqual(["dark", "system"]);
