@@ -14,6 +14,9 @@ const AC = String.raw`AC-[A-Z]+-\d+`;
 // (@/lib/…, @/app/…) або відносним шляхом (../../src/lib/…). У регулярному виразі esquery не може бути «/», тому
 // роздільник — «.».
 const OWN_MODULE = String.raw`/^(@|.*src).(lib.(?!supabase([^A-Za-z0-9_-]|$))[A-Za-z0-9_-]|app([^A-Za-z0-9_-]|$))/`;
+// Тести лежать і всередині src/, тож власний модуль мокають і відносним шляхом без «src» (./actions, ../../lib/…).
+// Відносний шлях — завжди наш файл; дозволено лише ресурси (стилі й картинки), які Vitest не збирає як Next.js.
+const OWN_RELATIVE = String.raw`/^\.\.?.(?!.*\.(css|scss|svg|png|jpe?g|gif|webp|avif)$)/`;
 const NO_OWN_MOCK =
   "Не мокайте власні модулі (src/lib/**, src/app/**) — тестуйте справжній код: SQL/RLS на PGlite, " +
   "введення-виведення — через передані залежності. Мок клієнта Supabase (@/lib/supabase/*) дозволено.";
@@ -53,6 +56,14 @@ const eslintConfig = defineConfig([
         {
           // vi.mock(import("@/lib/…")) — та сама заборона для форми з import().
           selector: `CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.source.value=${OWN_MODULE}]`,
+          message: NO_OWN_MOCK,
+        },
+        {
+          selector: `CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.value=${OWN_RELATIVE}]`,
+          message: NO_OWN_MOCK,
+        },
+        {
+          selector: `CallExpression[callee.object.name='vi'][callee.property.name=/^(mock|doMock)$/][arguments.0.source.value=${OWN_RELATIVE}]`,
           message: NO_OWN_MOCK,
         },
       ],

@@ -8,9 +8,9 @@ const nextStaticImage = {
   name: "next-static-image",
   enforce: "pre" as const,
   load(id: string) {
-    const file = id.split("?")[0];
-    if (!/\.(jpe?g|png|webp|avif|gif)$/i.test(file)) return null;
-    const image = { src: `/${basename(file)}`, width: 1200, height: 1490, blurDataURL: "data:image/jpeg;base64,AA==" };
+    // Лише звичайний імпорт: «?url», «?raw», «?inline» лишаються рядками, як у Vite.
+    if (id.includes("?") || !/\.(jpe?g|png|webp|avif|gif)$/i.test(id)) return null;
+    const image = { src: `/${basename(id)}`, width: 1200, height: 1490, blurDataURL: "data:image/jpeg;base64,AA==" };
     return `export default ${JSON.stringify(image)};`;
   },
 };

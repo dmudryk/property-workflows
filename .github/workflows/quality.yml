@@ -40,9 +40,16 @@ jobs:
       # З node_modules fallow правильно класифікує залежності (без них друкує WARN і може помилитися); версія — з lock-файлу.
       - run: npm ci
       - name: fallow audit (лише нове відносно бази)
+        # Значення подій — через env, а не вставкою в скрипт: так shell не виконає нічого з назви гілки.
+        # Push у main: база — коміт до push (github.event.before), а не HEAD~1 — інакше з кількох комітів
+        # (rebase-merge) перевірено лише останній.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -o pipefail
-          if [ "${{ github.event_name }}" = "pull_request" ]; then BASE="origin/${{ github.base_ref }}"; else BASE="HEAD~1"; fi
+          if [ "$EVENT_NAME" = "pull_request" ]; then BASE="origin/$BASE_REF"; else BASE="$BEFORE_SHA"; fi
           npx fallow audit --base "$BASE" --format github-summary | tee -a "$GITHUB_STEP_SUMMARY"
 
   coverage:
@@ -59,7 +66,8 @@ jobs:
       - name: Vitest із покриттям (падає, якщо доменний файл нижче своєї підлоги)
         run: npm run test:coverage
       - name: Таблиця покриття → Summary
-        if: always()
+        # І після падіння тестів, але лише якщо звіт є: без нього (впав npm ci) крок дав би другу, хибну помилку.
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
         run: npm run coverage:summary
 
   deps:

@@ -19,7 +19,9 @@ const pct = (m) => (m.total === 0 ? "—" : `${Math.floor(m.pct)} %`);
 const summary = JSON.parse(readFileSync(process.argv[2] ?? "coverage/coverage-summary.json", "utf8"));
 const rows = Object.entries(summary)
   .filter(([file]) => file !== "total")
-  .map(([file, m]) => ({ file: path.relative(process.cwd(), file).replaceAll("\\", "/"), layer: layerIndex(file), m }))
+  .map(([file, m]) => ({ file: path.relative(process.cwd(), file).replaceAll("\\", "/"), m }))
+  // Шар — за шляхом від кореня репо: абсолютний шлях клону (напр. …/src/lib/work/<репо>) інакше збігся б із доменом.
+  .map((r) => ({ ...r, layer: layerIndex(r.file) }))
   .sort((a, b) => a.layer - b.layer || a.m.lines.pct - b.m.lines.pct || a.file.localeCompare(b.file));
 
 const { total } = summary;
