@@ -36,7 +36,10 @@ function runClaude(caseDir, model) {
   cpSync(path.join(caseDir, "agent"), blindDir, { recursive: true });
   const started = Date.now();
   return new Promise((resolve) => {
-    const child = spawn("claude", args, { cwd: blindDir, stdio: ["pipe", "pipe", "pipe"] });
+    const child = spawn(claudeBin(), args, { cwd: blindDir, stdio: ["pipe", "pipe", "pipe"] });
+    // Якщо процес не стартував, запис у stdin теж дає помилку: без обробника вона обірвала б увесь прогін, а так
+    // спрацює child.on("error") — вердикту немає, рядок звіту — NEEDS-HUMAN.
+    child.stdin.on("error", () => {});
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (d) => (stdout += d));
@@ -60,6 +63,23 @@ function runClaude(caseDir, model) {
     });
     child.stdin.end(prompt); // кирилиця через stdin, а не argv (кодова сторінка Windows)
   });
+}
+
+/**
+ * Windows: npm ставить Claude Code обгорткою claude.cmd, а spawn без оболонки .cmd не запускає (ENOENT); через
+ * оболонку зіпсувалась би JSON-схема в аргументах. Тому беремо справжній claude.exe — з PATH або поруч з обгорткою
+ * npm. UAT_CLAUDE_BIN — явний шлях, якщо Claude Code встановлено інакше.
+ */
+function claudeBin() {
+  if (process.env.UAT_CLAUDE_BIN) return process.env.UAT_CLAUDE_BIN;
+  if (process.platform !== "win32") return "claude";
+  for (const dir of (process.env.PATH ?? "").split(path.delimiter).filter(Boolean)) {
+    const exe = path.join(dir, "claude.exe");
+    if (existsSync(exe)) return exe;
+    const npmExe = path.join(dir, "node_modules", "@anthropic-ai", "claude-code", "bin", "claude.exe");
+    if (existsSync(path.join(dir, "claude.cmd")) && existsSync(npmExe)) return npmExe;
+  }
+  return "claude";
 }
 
 const verdictOf = (review) => review?.out?.structured_output ?? null;
