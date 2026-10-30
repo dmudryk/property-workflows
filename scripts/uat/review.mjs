@@ -7,7 +7,7 @@
 // Використання: node scripts/uat/review.mjs [--only AC-USERS-07] [--model claude-haiku-5-5] [--no-escalate]
 // Потрібен Claude Code (`claude` у PATH) з входом за підпискою або ANTHROPIC_API_KEY.
 import { spawn } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -16,6 +16,20 @@ import { HAIKU, SONNET, caseDirs, readJson, quoteInAria } from "./lib.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const prompt = readFileSync(path.join(here, "review-prompt.uk.md"), "utf8");
 const schema = JSON.stringify(readJson(path.join(here, "verdict.schema.json")));
+
+/**
+ * Копія теки файл за файлом. Не fs.cpSync: у Node 24 на Windows він мовчки валить процес (код 127, без помилки),
+ * коли шлях джерела містить кирилицю (напр. «…\Документи\…»).
+ */
+function copyDir(from, to) {
+  mkdirSync(to, { recursive: true });
+  for (const entry of readdirSync(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name);
+    const dest = path.join(to, entry.name);
+    if (entry.isDirectory()) copyDir(src, dest);
+    else copyFileSync(src, dest);
+  }
+}
 
 function runClaude(caseDir, model) {
   const args = [
@@ -33,7 +47,7 @@ function runClaude(caseDir, model) {
   ];
   // Окрема тека в системному temp: у cwd немає ні назви випадку (NC-…), ні файлів репо.
   const blindDir = mkdtempSync(path.join(os.tmpdir(), "uat-review-"));
-  cpSync(path.join(caseDir, "agent"), blindDir, { recursive: true });
+  copyDir(path.join(caseDir, "agent"), blindDir);
   const started = Date.now();
   return new Promise((resolve) => {
     const child = spawn(claudeBin(), args, { cwd: blindDir, stdio: ["pipe", "pipe", "pipe"] });
