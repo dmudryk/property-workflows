@@ -60,8 +60,13 @@ test(
       page,
       {
         clause: 'B sees the page of the run "Apartment 12, move-in"',
-        visible: ["the page of the run with the heading «Apartment 12, move-in»", "the user card with manager.a@example.test"],
-        hidden: ["it is the page the link led to: the address is the same run page, not the list of runs or the home page"],
+        // Лише те, що є в «Тоді» і читається з кадру. Email у картці користувача обрізано «…» (DESIGN.md), тож що
+        // увійшов саме B, доводить твердження, а не кадр.
+        visible: ["the page of the run with the heading «Apartment 12, move-in»"],
+        hidden: [
+          "it is the page the link led to: the address is the same run page, not the list of runs or the home page",
+          "B is signed in: the user card holds manager.a@example.test",
+        ],
       },
       async () => {
         await expect(page).toHaveURL((url) => url.pathname === runPath);
