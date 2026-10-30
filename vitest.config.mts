@@ -1,6 +1,22 @@
+import { basename } from "node:path";
 import { defineConfig } from "vitest/config";
 
+// Статичний імпорт картинки (import hero from "./login-hero.jpg"): Next.js дає об'єкт із розмірами й blurDataURL, а
+// Vite — лише рядок-шлях, і next/image з placeholder="blur" падає. Плагін віддає об'єкт того самого вигляду, що й
+// завантажувач картинок Next.js, — замість vi.mock картинки в кожному тесті. Розміри умовні: картинки сторінок — з fill.
+const nextStaticImage = {
+  name: "next-static-image",
+  enforce: "pre" as const,
+  load(id: string) {
+    // Лише звичайний імпорт: «?url», «?raw», «?inline» лишаються рядками, як у Vite.
+    if (id.includes("?") || !/\.(jpe?g|png|webp|avif|gif)$/i.test(id)) return null;
+    const image = { src: `/${basename(id)}`, width: 1200, height: 1490, blurDataURL: "data:image/jpeg;base64,AA==" };
+    return `export default ${JSON.stringify(image)};`;
+  },
+};
+
 export default defineConfig({
+  plugins: [nextStaticImage],
   // Vite 8: аліас @/* з tsconfig.json без окремого плагіна.
   resolve: { tsconfigPaths: true },
   test: {
