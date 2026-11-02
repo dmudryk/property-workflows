@@ -10,7 +10,7 @@
 | Вендор бачить запуск, лише якщо він виконавець хоча б однієї задачі (менеджером запуску вендор не буває) | `private.can_see_run` — гілка «виконавець» | AC-VENDOR-03, AC-VENDOR-06, AC-VENDOR-10 |
 | Вендор позначає лише задачі, де він виконавець | `private.mark_task_done` (виконавець / менеджер запуску / адміністратор) | AC-VENDOR-05, AC-VENDOR-07 |
 | Вендор не запускає шаблон | `private.launch_run`: роль не `manager` / `admin` → `NOT_ALLOWED` | AC-VENDOR-09 |
-| Вендор не бачить шаблонів, секцій, задач, версій і незбережених змін | політики `templates_select_visible`, `template_sections/tasks_select_staff`, `template_versions/drafts_select_admin` | AC-VENDOR-08 |
+| Вендор не бачить шаблонів (зміст — у `templates.current_content`), версій і незбережених змін | політики `templates_select_visible`, `template_versions_select_admin`, `template_drafts_select_admin` | AC-VENDOR-08 |
 | Вендор бачить лише власний профіль | `profiles_select_own_or_admin` | матриця прав |
 
 ## D1. Міграція `…_vendor_role.sql` (одна)

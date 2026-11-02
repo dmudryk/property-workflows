@@ -4,7 +4,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { MSG_CANNOT_UNDO, MSG_RUN_NOT_FOUND, canMarkDone, needsConfirmation, staffLabel } from "@/lib/runs/rules";
-import { requireActor } from "@/lib/auth/actor";
+import { isVendor, requireActor } from "@/lib/auth/actor";
 import { runStatusKind, taskStatusKind } from "@/lib/status";
 import { templateVersionLabel } from "@/lib/templates/format";
 import { markDone } from "../actions";
@@ -17,11 +17,15 @@ import { RunTasks, type RunTaskView } from "./run-tasks";
 // й база, відмова — повідомлення AC-TASK-03. Запуск, якого користувач не бачить (RLS), — «Run not found» (AC-TASK-10).
 // Версія шаблону, з якої створено запуск, — «Template version N» (AC-EDITOR-06). Прогрес і задачі показує RunTasks
 // (позначка «Mark as done» — оптимістично, DESIGN.md, розділ 6).
+// Вендор бачить лише свої задачі (RLS) — назву, секцію, «required»/«optional», статус — і «Your tasks: N of K done»;
+// без шаблону, версії, менеджера запуску, email і прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05). Запуск без його
+// задач RLS не віддає — «Run not found» (AC-VENDOR-06). Підтвердження останньої обов'язкової — за public.completes_run.
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error, confirm } = await searchParams;
   const message = messageFor(RUN_ERRORS, error);
   const { supabase, actor } = await requireActor();
+  const vendor = isVendor(actor);
 
   const { data: run } = await supabase
     .from("runs")
@@ -47,9 +51,18 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
       .select("id, section_name, name, required, position, assignee_id, status")
       .eq("run_id", id)
       .order("position"),
-    supabase.rpc("list_staff"),
+    // Вендору email інших користувачів не показуємо (і база йому їх не віддає).
+    vendor ? Promise.resolve({ data: [] }) : supabase.rpc("list_staff"),
   ]);
   const people = new Map((staff ?? []).map((member) => [member.id, member]));
+  // Вендор сам не бачить, чи його задача — остання обов'язкова «to do» у запуску: це каже база.
+  const completes = new Map(
+    await Promise.all(
+      (vendor ? (rows ?? []).filter((t) => t.status === "to_do") : []).map(
+        async (t) => [t.id, (await supabase.rpc("completes_run", { p_task_id: t.id })).data === true] as const,
+      ),
+    ),
+  );
   const tasks: RunTaskView[] = (rows ?? []).map((t) => ({
     id: t.id,
     sectionName: t.section_name,
@@ -57,14 +70,23 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     required: t.required,
     position: t.position,
     status: taskStatusKind(t.status),
-    assigneeLabel: staffLabel(people.get(t.assignee_id)),
+    assigneeLabel: vendor ? "" : staffLabel(people.get(t.assignee_id)),
     canMark: actor ? canMarkDone(actor, { managerId: run.manager_id }, { assigneeId: t.assignee_id }) : false,
+    completesRun: completes.get(t.id),
   }));
 
-  const confirmTask =
-    typeof confirm === "string" && needsConfirmation(tasks, confirm) ? tasks.find((t) => t.id === confirm) : undefined;
+  const confirmable = (taskId: string) =>
+    vendor ? tasks.some((t) => t.id === taskId && t.completesRun) : needsConfirmation(tasks, taskId);
+  const confirmTask = typeof confirm === "string" && confirmable(confirm) ? tasks.find((t) => t.id === confirm) : undefined;
 
-  const header = (
+  const header = vendor ? (
+    <>
+      <Link href="/runs" className="text-sm underline-offset-4 hover:underline">
+        Back to runs
+      </Link>
+      <h1 className="text-2xl font-semibold">Your tasks</h1>
+    </>
+  ) : (
     <>
       <Link href="/runs" className="text-sm underline-offset-4 hover:underline">
         Back to runs
@@ -115,7 +137,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
   return (
     <main className="flex flex-col gap-6">
-      <RunTasks runId={run.id} tasks={tasks} header={header} notices={notices} />
+      <RunTasks runId={run.id} tasks={tasks} header={header} notices={notices} vendor={vendor} />
     </main>
   );
 }
