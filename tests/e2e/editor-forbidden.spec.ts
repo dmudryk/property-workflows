@@ -54,12 +54,15 @@ test(
       {
         clause:
           'B sees the message "Not enough rights" and the link "Back to templates" in the same page layout as the other pages, no content of the editor, and the template stays at version 1 with no unpublished changes',
+        // Лише написи, які кадр показує дослівно: «Workspace» CSS виводить великими літерами, а email у картці
+        // обрізано «…» (DESIGN.md) — їх перевіряють твердження.
         visible: [
           "the message «Not enough rights»",
           "the link «Back to templates»",
-          "the same page layout as the other pages: the sidebar with «Stepline», «Workspace», «Runs», «Templates» and the user card with manager.c@example.test",
+          "the same page layout as the other pages: the sidebar with «Stepline», «Runs» and «Templates»",
         ],
         hidden: [
+          "the sidebar navigation «Workspace» and the user card with manager.c@example.test (signed in as B)",
           "no content of the editor: no text fields, sections, tasks or «Save version» on the page",
           "the template stays at version 1 with no unpublished changes: the administrator's page of the template still shows «Version 1» and no «Unpublished changes»",
         ],
