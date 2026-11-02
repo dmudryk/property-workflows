@@ -22,15 +22,32 @@
 
 ## A. Ворота
 
-- PR воріт: <!-- …/pull/N -->
-- Зелений `quality` на `main`: <!-- …/actions/runs/N -->
-- Обов'язкові перевірки в `solo-main` з <!-- дата -->: <!-- назви jobs -->
+- PR воріт: https://github.com/dmudryk/property-workflows/pull/29 (`quality.yml`, `.fallowrc.jsonc`, тестові правила
+  `@vitest/eslint-plugin` як `error`, `vitest.coverage.config.mts` з `FLOORED` — 13 доменних файлів); відповіді на
+  рев'ю `/code-review high` (9 знахідок: 6 виправлено, 3 пояснено) і CodeRabbit (2: 1 виправлено, 1 пояснено) — у PR.
+- Зелений `quality` на `main`: https://github.com/dmudryk/property-workflows/actions/runs/41052507777 (`a039c9c`,
+  30.10.2026 — злиття #29; усі три jobs).
+- Обов'язкові перевірки в `solo-main` з 02.11.2026: «Ворота: fallow audit» і «Покриття: доменна підлога» (після
+  зелених прогонів `quality` на `main`); разом зі `spec`, `app`, `conformance`, `db-check` — 6. «Порада: вразливі
+  залежності» — ні, вона дорадча.
+- Знахідки тестових правил лінтера (7) — виправлено без вимкнення правил: `vi.mock` власного `@/lib/auth/actor` →
+  мок лише клієнта Supabase (2 файли), `vi.mock` картинки → плагін у `vitest.config.mts`, умови в тестах
+  `launch.test.ts` → хелпер `runOf` поза тестами.
 
 Розбір першого повного прогону `fallow` (той самий — в описі PR воріт):
 
 | Група знахідок | Скільки | Справжня / навмисна / хибна | Дія і причина |
 |---|---|---|---|
-| <!-- напр. unused dependency @tailwindcss/turbopack --> | 1 | хибна | `ignoreDependencies`: підключено рядком у `next.config.ts`, fallow цього не бачить |
+| Невикористаний файл `src/components/ui/native-select.tsx` | 1 | справжня | видалено в #29: DESIGN.md забороняє `NativeSelect` («`FormSelect` для кожного вибору»), файл ніхто не імпортує |
+| Невикористаний файл `src/lib/supabase/client.ts` | 1 | навмисна | лишено: браузерний клієнт шаблону курсу (структура в AGENTS.md); ворота валять лише нові знахідки; так само в демо курсу (`ws8-01-gates`) |
+| Невикористаний експорт `AC_ID_GLOBAL` (`scripts/lib/spec-lib.mjs`) | 1 | навмисна | лишено: файл шаблону курсу, оновлюється `git cherry-pick` з шаблону; так само в демо |
+| Дубль імені експорту `TemplateTask` (`src/lib/runs/rules.ts` ↔ `src/lib/templates/content.ts`) | 1 | хибна | лишено: два різні типи в різних модулях, barrel-реекспорту немає — неоднозначності немає |
+| Дубль `src/app/globals.css` 111–148 ↔ 152–189 | 1 | навмисна | лишено: темні токени для `data-theme="dark"` і `data-theme="system"` під `@media` (DESIGN.md §9, ADR 0003); тест AC-DSYS-05 звіряє, що значення однакові |
+| Дубль `check-design-tokens.mjs` ↔ `check-server-boundary.mjs` | 2 | справжня | лишено з поясненням: спільний обхід файлів двох наших перевірок; винести в `scripts/lib` — окремим PR |
+| Складність у скриптах (`check-spec`, `create-demo-users` — шаблон; `check-writes-via-rpc`, `check-*` — WS7) | 10 | шаблон — навмисна; наші — справжня | лишено: скрипти покриті `tests/scripts/*`, але як дочірній процес, тож CRAP без покриття |
+| Складність у сторінках і Server Actions (`runs/actions.ts`, `template-editor.tsx`, форма запуску…) | 13 | справжня | лишено: правила — у функціях бази з тестами PGlite (ADR 0002), сторінки — e2e; `ignore` не додано, щоб нова складність тут валила аудит |
+| Складність `tests/db/supabase-pglite.ts` | 1 | навмисна | лишено: тестовий гарнес (джерело — демо курсу) |
+| Гарячі точки, приховане зчеплення, цілі рефакторингу | — | інформаційне | не ворота |
 
 ## B. Якість тестів
 
@@ -143,16 +160,36 @@
 
 ## D. Eval рецензента
 
-- PR з вадами (не злитий): <!-- …/pull/N -->
-- Ключ і таблиця: <!-- …/pull/N#issuecomment-M -->
+- PR з вадами (не злитий): https://github.com/dmudryk/property-workflows/pull/36 (гілка `task/refactor-templates`,
+  нейтральні коміти й опис; усі обов'язкові перевірки зелені — вади CI не ловить).
+- Ключ і таблиця: https://github.com/dmudryk/property-workflows/pull/36#issuecomment-6579620905
+- Рецензенти: CodeRabbit (профіль ASSERTIVE) і `/code-review high` у Claude Code (модель `claude-opus-5-5`); перший
+  прогін — на коміті `606404b`.
 
 | # | Вада (ключ) | CodeRabbit | `/code-review high` |
 |---|---|---|---|
-| 1 | <!-- категорія і файл:рядок --> | <!-- знайшов / пропустив + цитата --> | <!-- знайшов / пропустив + цитата --> |
-| 2 | … | … | … |
-| 3 | … | … | … |
-| П | приманка: <!-- що --> | <!-- хибна тривога? цитата --> | <!-- хибна тривога? цитата --> |
+| 1 | логіка, межа з AC — `supabase/migrations/20261102135710_case_name_whitespace.sql:29`: `>= 100` замість `> 100` (AC-RUN-07, AC-RUN-11) | **знайшов** (Minor): «Замініть `>= 100` на `> 100` у перевірці довжини назви. Міграція відхиляє назву випадку з рівно 100 символами…» | **знайшов**: «The length guard changed from `> 100` to `>= 100`, so the database now rejects a case name of exactly 100 characters. That breaks AC-RUN-11…» |
+| 2 | авторизація в дії — `src/app/templates/actions.ts:21`: перевірка ролі після `rpc("create_template")` | **знайшов, але знецінив** (Minor): «…запис виконується раніше за рішення про доступ», і водночас «Ця гіпотеза підтверджується лише для вузької гонки… Для стабільних ролей це не відбувається.» | **знайшов**: «The `canManageTemplates(actor)` check now runs after `supabase.rpc("create_template")`. A non-admin's write request reaches the database…» |
+| 3 | тести, мок замість правила — `src/app/runs/actions.test.ts`: «AC-RUN-11» / «AC-RUN-07» на замоканому `rpc`, що завжди успішний | **пропустив**: лише Trivial «Перевірте назву RPC у моку `launch_run`. Мок `rpc` ігнорує перший аргумент `_name`.» | **знайшов**: «The new AC-RUN-11 test mocks `rpc` to always succeed… It never checks the value sent or exercises launch_run, so it reports coverage while the real database rejects this exact input.» |
+| П | приманка: `src/lib/auth/next-path.ts` — перевірки в `isOtherSite` / `isSignInPage`, поведінка та сама | хибної тривоги немає (про файл нічого) | хибної тривоги немає: «No functional bug, just dead logic.» |
 
-- Інші знахідки: <!-- слушна / шум, по рядку на кожну -->
-- Правило, що закриває пропуск: <!-- рядок в AGENTS.md чи path instruction, …/commit/<sha> -->
-- Повторний прогін: <!-- хто, результат, цитата, …/pull/N#issuecomment-M -->
+- Інші знахідки: CodeRabbit — «Передавайте в RPC очищену назву, а не початкову з форми» (слушна, вада існувала й до
+  PR); `/code-review` — `btrim` у SQL і `trim()` у JS обрізають різні символи (слушна), сирий `caseName` у `rpc`
+  (слушна), менеджер бачить помилку назви замість «not allowed» (слушна, наслідок вади 2), немає тесту
+  `createTemplate` для менеджера (слушна — тому вада 2 пройшла CI), рядки `conformance.md` не оновлено (слушна).
+  Шуму й хибних тривог — 0.
+- Підсумок першого прогону: `/code-review high` — 3 з 3; CodeRabbit — 2 з 3 (вада 2 — як Minor із застереженням),
+  пропустив ваду 3.
+- Правило, що закриває пропуск (вада 3, CodeRabbit): рядок в `AGENTS.md` (його читають обидва рецензенти й агент, що
+  пише код) — «AC, правило якого живе в базі… доводить лише тест бази на PGlite… Тест на замоканому `supabase.rpc`, що
+  завжди повертає успіх… такого AC не доводить — у рев'ю це «must fix»» —
+  https://github.com/dmudryk/property-workflows/pull/38 (`32ca689`).
+- Повторний прогін (після `git merge main` у #36): `/code-review high` — знову 3 з 3, ваду 3 тепер обґрунтовує новим
+  правилом: «The AC-RUN-11 and AC-RUN-07 tests run against a mocked `supabase.rpc` that always succeeds, but both limits
+  live in SQL (launch_run). This breaks the project rule that a DB-held AC must be proved by a PGlite test.»
+  CodeRabbit (`@coderabbitai full review`, рев'ю на `96b52ad`) — ваду 3 тепер **знайдено по суті**, але як Trivial, а не
+  «must fix», як у правилі: «Додайте інтеграційні тести для межі довжини в БД. Мок `supabase.rpc` завжди повертає
+  успіх. Тому AC-RUN-11 перевіряє лише поведінку дії та редирект.» Висновок: правило закрило пропуск, серйозність —
+  нижча, ніж у правилі; наступний крок — path instruction у `.coderabbit.yaml` для `**/*.test.ts`. Коментар із
+  повторним прогоном: https://github.com/dmudryk/property-workflows/pull/36#issuecomment-6580677567. PR #36 закрито
+  без злиття.
