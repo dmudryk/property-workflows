@@ -8,7 +8,8 @@ import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { canManageTemplates, requireActor } from "@/lib/auth/actor";
+import { NotEnoughRights } from "@/components/not-enough-rights";
+import { canManageTemplates, isVendor, requireActor } from "@/lib/auth/actor";
 import { cn } from "@/lib/utils";
 import { EMPTY_CONTENT, parseContent, summarizeContent } from "@/lib/templates/content";
 import { versionSavedMessage } from "@/lib/templates/editor-state";
@@ -22,6 +23,8 @@ export default async function TemplatePage({ params, searchParams }: PageProps<"
   const { id } = await params;
   const { saved: savedParam } = await searchParams;
   const { supabase, actor } = await requireActor();
+  // Вендор шаблонів не бачить (матриця прав) — та сама відмова, що й на списку шаблонів (AC-VENDOR-08).
+  if (isVendor(actor)) return <NotEnoughRights />;
   const admin = canManageTemplates(actor);
 
   const { data: tpl } = await supabase

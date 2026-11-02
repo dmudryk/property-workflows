@@ -1,5 +1,6 @@
+import { NotEnoughRights } from "@/components/not-enough-rights";
 import { PageHeader } from "@/components/page-header";
-import { requireActor } from "@/lib/auth/actor";
+import { canLaunch, requireActor } from "@/lib/auth/actor";
 import { staffLabel } from "@/lib/runs/rules";
 import { launchableTemplate } from "@/lib/runs/launch-items";
 import { parseContent } from "@/lib/templates/content";
@@ -12,6 +13,8 @@ import { LaunchForm } from "./launch-form";
 // (AC-EDITOR-10; менеджеру його не показує RLS), а вибрати його не можна ні в списку, ні через ?template=.
 export default async function NewRunPage({ searchParams }: PageProps<"/runs/new">) {
   const { supabase, actor } = await requireActor();
+  // Вендор шаблонів не запускає (матриця прав; база — private.launch_run, AC-VENDOR-09): відмова без даних.
+  if (!canLaunch(actor)) return <NotEnoughRights backHref="/runs" backLabel="Back to runs" />;
   const { template, error } = await searchParams;
   const templateId = typeof template === "string" ? template : "";
   const message = messageFor(LAUNCH_ERRORS, error);

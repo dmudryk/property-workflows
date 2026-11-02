@@ -100,13 +100,13 @@
 | AC-RUN-11 | пробіл перед назвою зі 100 символів — запуск, назва без пробілу | `src/lib/runs/rules.ts` (validateCaseName), `supabase/migrations/20261021071209_runs_clarifications.sql` (launch_run) | `src/lib/runs/launch.test.ts` | реалізовано |
 | AC-RUN-10 | вибір виконавця — лише email, без імен і ролей | `src/lib/runs/rules.ts` (staffLabel), `src/app/runs/new/page.tsx`, `supabase/migrations/20261021071209_runs_clarifications.sql` (list_staff) | `src/lib/runs/launch.test.ts` | реалізовано |
 | AC-RUN-12 | зміна секцій шаблону не змінює секції запуску | `src/lib/runs/rules.ts` (groupBySection), `supabase/migrations/20261021071209_runs_clarifications.sql` (launch_run) | `src/lib/runs/launch.test.ts` | реалізовано |
-| AC-VENDOR-01 | менеджер призначає вендора виконавцем задач 3 і 4 під час запуску | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-02 | вибір виконавця — email менеджерів, адміністратора й вендора, без імен і ролей | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-03 | вендор бачить лише запуск зі своїми задачами — статус і «Your tasks: 0 of 2 done» | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-04 | вендор бачить у запуску лише свої задачі, без чужих email і прогресу запуску | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-05 | вендор позначає свою задачу — «done» і «Your tasks: 1 of 2 done» | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-06 | чужий запуск за прямим посиланням — «Run not found», без задач | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-07 | чужа задача, позначена напряму, лишається «to do» | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-08 | список шаблонів за прямим посиланням — «Not enough rights», без шаблонів | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-09 | запуск шаблону вендором напряму — запуску не створено | — | — | відкладено (чекає реалізації) |
-| AC-VENDOR-10 | вендор без задач — «No tasks assigned to you yet.», без таблиці | — | — | відкладено (чекає реалізації) |
+| AC-VENDOR-01 | менеджер призначає вендора виконавцем задач 3 і 4 під час запуску | `supabase/migrations/20261102133247_vendor_role.sql` (is_staff), `src/app/runs/new/page.tsx` | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-02 | вибір виконавця — email менеджерів, адміністратора й вендора, без імен і ролей | `supabase/migrations/20261102133247_vendor_role.sql` (staff, list_staff), `src/app/runs/new/page.tsx` | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-03 | вендор бачить лише запуск зі своїми задачами — статус і «Your tasks: 0 of 2 done» | `src/app/runs/page.tsx`, `src/lib/runs/list-view.ts` (yourTasksLabel), `supabase/migrations/20261102133247_vendor_role.sql` (run_tasks_select_visible) | `tests/db/vendor.test.ts`, `src/app/runs/vendor-pages.test.ts` | реалізовано |
+| AC-VENDOR-04 | вендор бачить у запуску лише свої задачі, без чужих email і прогресу запуску | `src/app/runs/[id]/page.tsx`, `src/app/runs/[id]/run-tasks.tsx`, `supabase/migrations/20261102133247_vendor_role.sql` (run_tasks_select_visible, staff) | `tests/db/vendor.test.ts`, `src/app/runs/vendor-pages.test.ts` | реалізовано |
+| AC-VENDOR-05 | вендор позначає свою задачу — «done» і «Your tasks: 1 of 2 done» | `src/app/runs/actions.ts` (markDone), `src/app/runs/[id]/run-tasks.tsx`, `supabase/migrations/20261102133247_vendor_role.sql` (completes_run) | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-06 | чужий запуск за прямим посиланням — «Run not found», без задач | `src/app/runs/[id]/page.tsx` (Run not found), `supabase/migrations/20261020123813_runs_launch.sql` (can_see_run) | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-07 | чужа задача, позначена напряму, лишається «to do» | `supabase/migrations/20261020124103_runs_complete_tasks.sql` (mark_task_done) | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-08 | список шаблонів за прямим посиланням — «Not enough rights», без шаблонів | `src/app/templates/page.tsx`, `src/lib/auth/roles.ts` (isVendor), `supabase/migrations/20261026175944_templates_versions.sql` (templates_select_visible) | `tests/db/vendor.test.ts`, `src/app/runs/vendor-pages.test.ts` | реалізовано |
+| AC-VENDOR-09 | запуск шаблону вендором напряму — запуску не створено | `supabase/migrations/20261026175944_templates_versions.sql` (launch_run), `src/app/runs/new/page.tsx` (canLaunch) | `tests/db/vendor.test.ts` | реалізовано |
+| AC-VENDOR-10 | вендор без задач — «No tasks assigned to you yet.», без таблиці | `src/app/runs/page.tsx`, `src/lib/runs/list-view.ts` (MSG_NO_TASKS_YET) | `tests/db/vendor.test.ts`, `src/app/runs/vendor-pages.test.ts` | реалізовано |

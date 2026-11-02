@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MSG_EMPTY_CASE_NAME, needsConfirmation, validateCaseName } from "@/lib/runs/rules";
-import { requireActor } from "@/lib/auth/actor";
+import { isVendor, requireActor } from "@/lib/auth/actor";
 
 // Запуск шаблону для випадку (AC-RUN-01…09). Правила — src/lib/runs/rules.ts; запис — одна функція Postgres
 // public.launch_run (design.md, D5), тож запуск і всі його задачі створюються в одній транзакції.
@@ -54,10 +54,18 @@ export async function markDone(formData: FormData) {
   if (!runId || !taskId) redirect("/runs");
 
   // AC-TASK-04, AC-TASK-16: остання обов'язкова задача — лише після підтвердження («This cannot be undone»).
+  // Вендор бачить лише свої задачі, тож для нього це вирішує база (public.completes_run; AC-VENDOR-05).
   if (actor && formData.get("confirmed") !== "1") {
-    const { data: tasks } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
-    const list = (tasks ?? []).map((t) => ({ id: t.id, required: t.required, status: t.status as "to_do" | "done" }));
-    if (needsConfirmation(list, taskId)) redirect(`/runs/${runId}?confirm=${encodeURIComponent(taskId)}`);
+    let confirmFirst: boolean;
+    if (isVendor(actor)) {
+      const { data } = await supabase.rpc("completes_run", { p_task_id: taskId });
+      confirmFirst = data === true;
+    } else {
+      const { data: tasks } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
+      const list = (tasks ?? []).map((t) => ({ id: t.id, required: t.required, status: t.status as "to_do" | "done" }));
+      confirmFirst = needsConfirmation(list, taskId);
+    }
+    if (confirmFirst) redirect(`/runs/${runId}?confirm=${encodeURIComponent(taskId)}`);
   }
 
   let code: "not_allowed" | "failed" | null = actor ? null : "not_allowed";

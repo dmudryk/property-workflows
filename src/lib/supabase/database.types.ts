@@ -232,6 +232,10 @@ export type Database = {
         Args: { p_task_id: string };
         Returns: undefined;
       };
+      completes_run: {
+        Args: { p_task_id: string };
+        Returns: boolean;
+      };
       list_staff: {
         Args: Record<PropertyKey, never>;
         Returns: { id: string; email: string | null }[];
