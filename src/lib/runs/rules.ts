@@ -1,7 +1,7 @@
 // Правила зрізу WS6 (openspec/specs/workflow-runs, openspec/specs/run-tasks) — чисті функції без бази.
 // Server actions викликають їх до звернення до Supabase; ті самі права й обмеження дублює база (RLS, check, функції).
 
-export type Role = "manager" | "admin";
+export type Role = "manager" | "admin" | "vendor";
 
 export type Actor = { id: string; role: Role };
 
