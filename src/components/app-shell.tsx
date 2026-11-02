@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 // панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері. Перемикач «Theme» (ADR 0004)
 // — угорі: коли панель над вмістом, — у рядку логотипа, а коли поруч, — над вмістом праворуч (у вузькій панелі поруч
 // із логотипом він не вміщається). Гостю перемикача немає: тема з cookie діє й на вході.
+// Панель поруч із вмістом закріплена: висота екрана, не тягнеться за довгою сторінкою, навігація й картка користувача
+// видно під час прокрутки (вища за екран — прокручується сама). Над вмістом (вузький екран) — звичайна.
 export function AppShell({
   user,
   children,
@@ -41,7 +43,7 @@ export function AppShell({
   return (
     <div data-testid="app-shell" className="@container/shell flex flex-1 flex-col">
       <div className="flex flex-1 flex-wrap @max-[50rem]:content-start">
-        <aside className="flex min-w-0 flex-[1_1_15rem] flex-col gap-6 border-b bg-muted p-4 @min-[50rem]:border-r @min-[50rem]:border-b-0 @min-[50rem]:py-6">
+        <aside className="flex min-w-0 flex-[1_1_15rem] flex-col gap-6 border-b bg-muted p-4 @min-[50rem]:sticky @min-[50rem]:top-0 @min-[50rem]:h-svh @min-[50rem]:self-start @min-[50rem]:overflow-y-auto @min-[50rem]:border-r @min-[50rem]:border-b-0 @min-[50rem]:py-6">
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/"
