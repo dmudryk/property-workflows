@@ -187,4 +187,9 @@
 - Повторний прогін (після `git merge main` у #36): `/code-review high` — знову 3 з 3, ваду 3 тепер обґрунтовує новим
   правилом: «The AC-RUN-11 and AC-RUN-07 tests run against a mocked `supabase.rpc` that always succeeds, but both limits
   live in SQL (launch_run). This breaks the project rule that a DB-held AC must be proved by a PGlite test.»
-  CodeRabbit (`@coderabbitai full review`) — <!-- CR-RERUN -->
+  CodeRabbit (`@coderabbitai full review`, рев'ю на `96b52ad`) — ваду 3 тепер **знайдено по суті**, але як Trivial, а не
+  «must fix», як у правилі: «Додайте інтеграційні тести для межі довжини в БД. Мок `supabase.rpc` завжди повертає
+  успіх. Тому AC-RUN-11 перевіряє лише поведінку дії та редирект.» Висновок: правило закрило пропуск, серйозність —
+  нижча, ніж у правилі; наступний крок — path instruction у `.coderabbit.yaml` для `**/*.test.ts`. Коментар із
+  повторним прогоном: https://github.com/dmudryk/property-workflows/pull/36#issuecomment-6580677567. PR #36 закрито
+  без злиття.
