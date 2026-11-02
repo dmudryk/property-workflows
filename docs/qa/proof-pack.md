@@ -109,7 +109,8 @@
 
 - Звіт: [docs/qa/uat/2026-11-02/report.md](uat/2026-11-02/report.md) (і `manifest.json`, `frames/`) — прогін 02.11.2026
   14:41 (Київ) проти https://property-workflows-bravo16.vercel.app (`/api/health`: `a039c9c`), код тестів `task/uat` @
-  `6d7afe6`, без незакомічених змін.
+  `6d7afe6`, без незакомічених змін. Перед злиттям гілку перебазовано на `main` (після треку B): `tests/e2e/`,
+  `playwright.config.ts` і `scripts/uat/` від цього не змінились — ті самі файли, що в PR треку C.
 - Відео: вкладення в описі PR треку C (у git немає).
 - Рецензент: `claude-haiku-5-5`; суперечки — `claude-sonnet-5-5` (у фінальному прогоні суперечок не було). Розбір —
   $0,0066 за цінами API.
