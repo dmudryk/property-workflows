@@ -1,17 +1,19 @@
 import { LogOutIcon } from "lucide-react";
 import Link from "next/link";
+import { cn } from "cn";
 import { signOut } from "@/app/login/actions";
 import { Logo } from "@/components/logo";
 import { SidebarNav } from "@/components/sidebar-nav";
 import { SubmitButton } from "@/components/submit-button";
-import { ThemeSelect } from "@/components/theme-select";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 
 // Одна розкладка для всіх сторінок, зокрема для входу (DESIGN.md, розділ 4). Для користувача, який увійшов, — бічна
 // панель (логотип, навігація, картка користувача з виходом) і вміст в одному рядку з переносом: коли поруч не
 // вміщаються 15rem панелі й 35rem вмісту (контейнер < 50rem), панель стає над вмістом. Гостю переходити нікуди, тож
-// панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері. Вибір «Theme» (ADR 0003) —
-// у картці користувача, а гостю — під вмістом сторінки входу: тема діє на всіх сторінках, зокрема на вході.
+// панелі немає, а логотип — у картці входу. Вміст сторінки — у тому самому контейнері. Перемикач «Theme» (ADR 0004)
+// — угорі: коли панель над вмістом, — у рядку логотипа, а коли поруч, — над вмістом праворуч (у вузькій панелі поруч
+// із логотипом він не вміщається). Гостю перемикача немає: тема з cookie діє й на вході.
 export function AppShell({
   user,
   children,
@@ -19,35 +21,36 @@ export function AppShell({
   user?: { email: string | null; role: string | null } | null;
   children: React.ReactNode;
 }) {
-  const content = (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">{children}</div>
+  const content = (className?: string) => (
+    <div className={cn("mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6", className)}>
+      {children}
+    </div>
   );
   if (!user) {
     return (
       <div data-testid="app-shell" className="flex flex-1 flex-col">
-        {content}
-        <div className="mx-auto flex w-full max-w-4xl justify-end px-4 pb-6 sm:px-6">
-          <div className="w-44">
-            <ThemeSelect />
-          </div>
-        </div>
+        {content()}
       </div>
     );
   }
 
   const initial = (user.email ?? "?").charAt(0).toUpperCase();
 
-  // Обгортка — контейнер для запитів @min-[50rem], рядок усередині: над вмістом панель лише своєї висоти (content-start).
+  // Обгортка — контейнер shell для запитів @min-[50rem], рядок усередині: над вмістом панель лише своєї висоти
+  // (content-start). Колонка вмісту — сама контейнер, тож перемикач над вмістом питає саме shell.
   return (
-    <div data-testid="app-shell" className="@container flex flex-1 flex-col">
+    <div data-testid="app-shell" className="@container/shell flex flex-1 flex-col">
       <div className="flex flex-1 flex-wrap @max-[50rem]:content-start">
         <aside className="flex min-w-0 flex-[1_1_15rem] flex-col gap-6 border-b bg-muted p-4 @min-[50rem]:border-r @min-[50rem]:border-b-0 @min-[50rem]:py-6">
-          <Link
-            href="/"
-            className="inline-flex self-start rounded-lg px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Logo />
-          </Link>
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href="/"
+              className="inline-flex rounded-lg px-2 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Logo />
+            </Link>
+            <ThemeToggle className="@min-[50rem]:hidden" />
+          </div>
           <div className="flex flex-col gap-2">
             <p id="sidebar-nav-label" className="px-3 text-sm font-medium tracking-wider text-muted-foreground uppercase">
               Workspace
@@ -71,7 +74,6 @@ export function AppShell({
                 </Badge>
               </div>
             </div>
-            <ThemeSelect />
             <form action={signOut}>
               <SubmitButton variant="outline" size="xl" pendingLabel="Signing out…" className="w-full">
                 <LogOutIcon aria-hidden />
@@ -81,7 +83,13 @@ export function AppShell({
           </div>
         </aside>
         {/* Колонка вмісту — контейнер (cqw): смуга на всю її ширину, як-от смуга збереження редактора. */}
-        <div className="@container/content flex min-w-0 flex-[999_1_35rem] flex-col">{content}</div>
+        <div className="@container/content flex min-w-0 flex-[999_1_35rem] flex-col">
+          {/* Перемикач — на рівні логотипа панелі (py-6), праворуч у ширині вмісту. */}
+          <div className="mx-auto hidden w-full max-w-4xl justify-end px-4 pt-4 sm:px-6 @min-[50rem]/shell:flex">
+            <ThemeToggle />
+          </div>
+          {content("@min-[50rem]/shell:pt-4")}
+        </div>
       </div>
     </div>
   );

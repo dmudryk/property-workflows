@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Poppins } from "next/font/google";
 import { cookies } from "next/headers";
-import { ThemeProvider } from "@/components/theme-select";
+import { ThemeProvider } from "@/components/theme-toggle";
 import { THEME_COOKIE, themeFromCookie } from "@/lib/theme";
 import "./globals.css";
 
