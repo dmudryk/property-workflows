@@ -9,8 +9,8 @@
 -->
 
 - Прод-URL: https://property-workflows-bravo16.vercel.app
-- Вимоги: https://github.com/solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-27
-- `/api/health` на момент UAT: <!-- sha і db, напр. «sha 1a2b3c4, db ok, 01.11.2026» -->
+- Вимоги: https://github.com/solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-30
+- `/api/health` на момент UAT: sha `a039c9c`, db ok, 02.11.2026
 
 ## 3 AC
 
@@ -103,13 +103,36 @@
 
 | AC | Специфікація | Тест (твердження) | Агент | Вердикт | Кадр |
 |---|---|---|---|---|---|
-| AC-…-NN | <!-- …/blob/<sha>/tests/e2e/….spec.ts --> | <!-- passed / failed --> | <!-- Haiku: PASS / FAIL / NEEDS-HUMAN (+ Sonnet, якщо була суперечка) --> | <!-- PASS / FAIL / NEEDS-HUMAN і правило (R1–R6) --> | <!-- …/blob/<sha>/docs/qa/uat/<дата>/frames/AC-…-then-1.png --> |
+| AC-DSYS-02 | [tests/e2e/editor-forbidden.spec.ts](../../tests/e2e/editor-forbidden.spec.ts) | passed | Haiku: PASS | **PASS** (R6) | [AC-DSYS-02-then-1.png](uat/2026-11-02/frames/AC-DSYS-02-then-1.png) |
+| AC-DSYS-04 | [tests/e2e/runs-empty.spec.ts](../../tests/e2e/runs-empty.spec.ts) | passed | Haiku: PASS | **PASS** (R6) | [AC-DSYS-04-then-1.png](uat/2026-11-02/frames/AC-DSYS-04-then-1.png) |
+| AC-DSYS-08 | [tests/e2e/return-after-sign-in.spec.ts](../../tests/e2e/return-after-sign-in.spec.ts) | passed | Haiku: PASS | **PASS** (R6) | [AC-DSYS-08-then-1.png](uat/2026-11-02/frames/AC-DSYS-08-then-1.png) |
 
-- Звіт: <!-- …/blob/<sha>/docs/qa/uat/<YYYY-MM-DD>/report.md -->
-- Відео: <!-- вкладення в описі PR …/pull/N -->
-- Рецензент: <!-- моделі зі звіту (claude-haiku-5-5; суперечки — claude-sonnet-5-5) і вартість прогону -->
-- Негативний контроль: <!-- NC-… (npm run uat:nc): що навмисно хибне, вердикт (FAIL / NEEDS-HUMAN), …/pull/N -->
-- Дані: <!-- «лише читання» або «@writes: uat-<запуск>@example.test, рядок «Прибирання» зі звіту» -->
+- Звіт: [docs/qa/uat/2026-11-02/report.md](uat/2026-11-02/report.md) (і `manifest.json`, `frames/`) — прогін 02.11.2026
+  14:41 (Київ) проти https://property-workflows-bravo16.vercel.app (`/api/health`: `a039c9c`), код тестів `task/uat` @
+  `6d7afe6`, без незакомічених змін.
+- Відео: вкладення в описі PR треку C (у git немає).
+- Рецензент: `claude-haiku-5-5`; суперечки — `claude-sonnet-5-5` (у фінальному прогоні суперечок не було). Розбір —
+  $0,0066 за цінами API.
+- Негативний контроль (`npm run uat:nc`, 30.10.2026, на AC-DSYS-04): NC-1 — у твердженні навмисно інший текст
+  («No runs yet. Create a template to start one.») → **FAIL** (R1; Haiku сказав PASS, але впале твердження агент не
+  перекриває); NC-2 — в анотації `ac-text` змінено «Тоді» («… Create a template …»), тест і застосунок ті самі →
+  **NEEDS-HUMAN** (R3; Haiku і Sonnet — FAIL).
+- Дані: лише читання — усі три специфікації нічого не пишуть (без `@writes`); прибирання: синтетичних
+  `uat-*@example.test` видалено 0, лишилось 0. Акаунти: `manager.c@example.test` (менеджер без жодного запуску —
+  AC-DSYS-04, і менеджер B у AC-DSYS-02), `manager.a@example.test` (менеджер запуску «Apartment 12, move-in» —
+  AC-DSYS-08), `admin@example.test` (лише перегляд стану шаблону до й після AC-DSYS-02).
+
+Історія прогонів (чесно — що падало і чому):
+
+| Прогін | AC-DSYS-02 | AC-DSYS-04 | AC-DSYS-08 | Що зроблено |
+|---|---|---|---|---|
+| 30.10, 16:02 | FAIL (R1) на «Дано»: у «Tenant move-in» на проді були незбережені зміни (від 26.10, розробка WS7) | PASS | NEEDS-HUMAN (R3): у видимих частинах тесту був email картки, на кадрі обрізаний «…» | вада даних: незбережені зміни шаблону прибрано (рядок `template_drafts`; версія лишилась 1); вада тесту: email — у перевірки |
+| 30.10, 17:07 | NEEDS-HUMAN (R3): у видимих частинах — «Workspace» (CSS виводить великими) і обрізаний email | PASS | PASS | вада тесту: у видимих лише написи, що кадр показує дослівно |
+| 02.11, 14:41 | **PASS** | **PASS** | **PASS** | фінальний звіт |
+
+Вади продукту UAT не знайшов. Перед першими прогонами виправлено два збої скрипта рецензента з `materials/` на Windows
+(`scripts/uat/review.mjs`; промпт і схема не змінені): `claude.cmd` не запускався через `spawn` (ENOENT), а `fs.cpSync`
+мовчки валив процес на шляху з кирилицею.
 
 ### Приймання PM
 
