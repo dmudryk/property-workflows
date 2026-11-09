@@ -19,7 +19,7 @@ test(
     const V = world.users.v;
     const rows = page.getByTestId("run-row");
     // Список «до»: назви випадків і записи «Your tasks: N of K done» рядків (textContent — так само звіряє toHaveText).
-    let before = { total: 0, cases: [] as string[], progress: [] as string[] };
+    let before = { cases: [] as string[], progress: [] as string[] };
     let response: Awaited<ReturnType<typeof directRpc>> | null = null;
 
     await given(`vendor V (${V.email}) signed in and the template "Tenant move-in" with current version 1`, async () => {
@@ -28,7 +28,6 @@ test(
       await expect(page.getByTestId("user-email")).toHaveText(V.email);
       await expect(rows).toHaveCount(1);
       before = {
-        total: await runsCount(),
         cases: await rows.getByRole("link").allTextContents(),
         progress: await rows.getByTestId("run-progress").allTextContents(),
       };
@@ -48,8 +47,8 @@ test(
         clause: "no run is created, and the list of runs does not change",
         visible: [`the list of runs still shows only «${CASE_APT12}» with «Your tasks: 0 of 2 done»`],
         hidden: [
-          `V's direct request to launch «${TEMPLATE_NAME}» was refused: HTTP 403, NOT_ALLOWED`,
-          "no run is created: the number of runs in the database is the same as before, and no run has V as the run manager",
+          `V's direct request to launch «${TEMPLATE_NAME}» was refused: HTTP 403, code 42501, NOT_ALLOWED`,
+          "no run is created: in the database no run has V as the run manager (a run launched by V would have V as its run manager)",
           "the list of runs after reloading has the same rows as before the request",
         ],
       },
@@ -60,8 +59,9 @@ test(
         await expect(rows.getByTestId("run-progress")).toHaveText("Your tasks: 0 of 2 done");
         await expect(rows.getByRole("link")).toHaveText(before.cases);
         await expect(rows.getByTestId("run-progress")).toHaveText(before.progress);
-        expect(response).toMatchObject({ status: 403, message: "NOT_ALLOWED" });
-        expect(await runsCount()).toBe(before.total);
+        expect(response).toMatchObject({ status: 403, code: "42501", message: "NOT_ALLOWED" });
+        // Запуск вендора мав би менеджером запуску саме V — тож «запуску не створено» доводить ця перевірка
+        // (лічильник усіх запусків на спільному проді крихкий: PM може саме тоді щось запустити).
         expect(await runsCount({ managerId: V.id })).toBe(0);
       },
     );

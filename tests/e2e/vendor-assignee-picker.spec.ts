@@ -35,8 +35,11 @@ test(
     );
 
     await when("A opens the assignee picker", async () => {
-      // Перша задача шаблону — найвищий список на сторінці: під ним найбільше місця для пунктів.
-      await page.getByRole("combobox").nth(1).click();
+      // Вибір виконавця першої задачі шаблону (за її підписом у кроці «Assignees»): найвищий список на сторінці —
+      // під ним найбільше місця для пунктів. Назву беремо зі сторінки: акаунти спільні, синтетичного світу тут немає.
+      const firstTask = (await page.locator("fieldset label").first().textContent())?.trim() ?? "";
+      expect(firstTask).not.toBe("");
+      await page.getByRole("combobox", { name: firstTask }).click();
       await expect(page.getByRole("listbox")).toBeVisible();
     });
 

@@ -101,9 +101,10 @@ export async function launchAs(
   return { id: runId as string, taskIds: rows.map((row) => row.id) };
 }
 
+/** Файл містить живий токен V (~1 год), тож права — лише власнику (0600; у Windows діють ACL теки користувача). */
 export function writeWorld(world: World) {
-  mkdirSync(path.dirname(WORLD_FILE), { recursive: true });
-  writeFileSync(WORLD_FILE, JSON.stringify(world, null, 2));
+  mkdirSync(path.dirname(WORLD_FILE), { recursive: true, mode: 0o700 });
+  writeFileSync(WORLD_FILE, JSON.stringify(world, null, 2), { mode: 0o600 });
 }
 
 export function readWorld(): World {
@@ -126,8 +127,15 @@ export async function directRpc(token: string, fn: string, args: Record<string, 
     headers: { apikey: key, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(args),
   });
-  const body = (await res.json().catch(() => null)) as { code?: string; message?: string } | null;
-  return { status: res.status, code: body?.code ?? null, message: body?.message ?? null };
+  // Сире тіло — для діагностики, якщо відповідь не JSON (наприклад, 502 від проксі); токена в ньому немає.
+  const raw = await res.text();
+  let body: { code?: string; message?: string } | null = null;
+  try {
+    body = JSON.parse(raw) as { code?: string; message?: string };
+  } catch {
+    body = null;
+  }
+  return { status: res.status, code: body?.code ?? null, message: body?.message ?? null, raw: raw.slice(0, 300) };
 }
 
 // Перевірки «що не змінилося» в базі (секретним ключем, в обхід RLS) — лише читання.
