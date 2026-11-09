@@ -32,11 +32,12 @@ test(
     await when(`A launches the template for the case "Apartment 12, move-in" and assigns V as the assignee of tasks 3 and 4`, async () => {
       await page.getByLabel("Case name").fill(CASE_APT12);
       // Вибір виконавця — список дизайн-системи (Base UI Select): кнопка-combobox з підписом задачі, пункти — option.
+      // Вибране значення — у полі select-value кнопки (текст самої кнопки містить ще й символ іконки «▼»).
       for (const task of [tasks[2], tasks[3]]) {
         const picker = page.getByRole("combobox", { name: task.name });
         await picker.click();
         await page.getByRole("option", { name: V, exact: true }).click();
-        await expect(picker).toHaveText(V);
+        await expect(picker.locator("[data-slot=select-value]")).toHaveText(V);
       }
       await page.getByRole("button", { name: "Launch run" }).click();
       await page.waitForURL(/\/runs\/[0-9a-f-]{36}$/);

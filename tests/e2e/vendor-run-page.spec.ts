@@ -57,8 +57,8 @@ test(
           await expect(row.getByText(task.name, { exact: true })).toBeVisible();
           await expect(row.getByTestId("task-required")).toHaveText(label(task.required));
           await expect(row.getByTestId("task-status")).toHaveText("to do");
-          // Секція — заголовок картки, у якій стоїть задача.
-          const card = page.locator("[data-slot=card]").filter({ has: row });
+          // Секція — заголовок картки, у якій стоїть задача (картку шукаємо за назвою задачі: вона унікальна).
+          const card = page.locator("[data-slot=card]").filter({ has: page.getByText(task.name, { exact: true }) });
           await expect(card.getByRole("heading", { level: 2 })).toHaveText(task.section);
         }
         for (const task of others) await expect(page.getByText(task.name, { exact: true })).toHaveCount(0);

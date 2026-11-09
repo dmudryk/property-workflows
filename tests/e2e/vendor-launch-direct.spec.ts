@@ -18,7 +18,8 @@ test(
     const world = readWorld();
     const V = world.users.v;
     const rows = page.getByTestId("run-row");
-    let before = { total: 0, rows: [] as string[] };
+    // Список «до»: назви випадків і записи «Your tasks: N of K done» рядків (textContent — так само звіряє toHaveText).
+    let before = { total: 0, cases: [] as string[], progress: [] as string[] };
     let response: Awaited<ReturnType<typeof directRpc>> | null = null;
 
     await given(`vendor V (${V.email}) signed in and the template "Tenant move-in" with current version 1`, async () => {
@@ -26,7 +27,11 @@ test(
       await page.goto("/runs");
       await expect(page.getByTestId("user-email")).toHaveText(V.email);
       await expect(rows).toHaveCount(1);
-      before = { total: await runsCount(), rows: await rows.allInnerTexts() };
+      before = {
+        total: await runsCount(),
+        cases: await rows.getByRole("link").allTextContents(),
+        progress: await rows.getByTestId("run-progress").allTextContents(),
+      };
     });
 
     await when("V tries to launch this template directly, bypassing the pages of the application", async () => {
@@ -53,7 +58,8 @@ test(
         await expect(rows).toHaveCount(1);
         await expect(rows.getByRole("link", { name: CASE_APT12, exact: true })).toBeVisible();
         await expect(rows.getByTestId("run-progress")).toHaveText("Your tasks: 0 of 2 done");
-        await expect(rows).toHaveText(before.rows);
+        await expect(rows.getByRole("link")).toHaveText(before.cases);
+        await expect(rows.getByTestId("run-progress")).toHaveText(before.progress);
         expect(response).toMatchObject({ status: 403, message: "NOT_ALLOWED" });
         expect(await runsCount()).toBe(before.total);
         expect(await runsCount({ managerId: V.id })).toBe(0);
