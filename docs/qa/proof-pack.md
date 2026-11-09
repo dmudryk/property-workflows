@@ -1,4 +1,4 @@
-# QA proof pack: <назва зрізу 3>
+# QA proof pack: зріз 3 — вендор працює лише зі своїми задачами
 
 <!--
 Шаблон з koldovsky/2026-quitcode-09-software-factory-hw/materials/templates/proof-pack.template.md (уперше — у WS8).
@@ -9,74 +9,199 @@
 Бонус фабрики: цей файл — база для звіту порівняння «звичайно проти фабрики».
 -->
 
-- Прод-URL: <!-- https://<проєкт>.vercel.app -->
-- Зріз 3: <!-- одне речення «що зможе користувач» — рядок roadmap PM -->
-- Вимоги: <!-- рядок «Вимоги:» з docs/conformance.md (репо PM і дата /requirements-sync) -->
-- Спека: <!-- …/blob/<sha>/openspec/specs/<область>/spec.md -->
-- `/api/health` на момент UAT: <!-- sha і db, напр. «sha 1a2b3c4, db ok, 10.11.2026» -->
+Усі посилання на файли — на `main` після злиття всіх PR зрізу: `27d00db` (#43). Рядки в `.md` — з `?plain=1`, щоб
+GitHub відкрив саме рядок.
+
+- Прод-URL: https://property-workflows-bravo16.vercel.app
+- Зріз 3: «The third slice (WS8) adds the vendor: an outside contractor who sees and works only on the tasks assigned to
+  them.» — [requirements/product.md:10](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/requirements/product.md?plain=1#L10);
+  вимога PM — [requirements/39-assign-a-vendor-own-tasks.md](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/requirements/39-assign-a-vendor-own-tasks.md)
+  (https://github.com/solomchaak/property-workflows-spec/issues/39).
+- Вимоги: https://github.com/solomchaak/property-workflows-spec · джерело: issues · знімок 2026-10-30
+  ([docs/conformance.md:32](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/conformance.md?plain=1#L32));
+  09.11.2026 — вимоги актуальні (розділ A).
+- Спека: https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md
+  (AC-VENDOR-01…10).
+- `/api/health` на момент UAT: sha `0d0c0dd`, 09.11.2026 21:59 (Київ) —
+  [звіт UAT:3](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L3)
+  (`deployedSha` у `manifest.json`); поле `db` конвеєр UAT не записує — бере з `/api/health` лише `sha`
+  ([scripts/uat/run.mjs:40](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/uat/run.mjs#L40)).
+  Код застосунку між `0d0c0dd` і `27d00db` не змінювався: `git diff 0d0c0dd 27d00db -- src supabase` — лише тест
+  `src/lib/auth/access.test.ts` (#42).
 
 ## Доказ на кожен AC зрізу 3
 
-<!-- Рядок на кожен AC. Рівень: unit / база (PGlite) / e2e. «Здатен упасти»: червоний прогін, убитий мутант Stryker
-     чи SQL-мутант (KILLED) — для відмов обов'язково; для інших — якщо є. Вердикт — остаточний зі звіту UAT (R1–R6). -->
+Рівні: **база** — PGlite з нашими міграціями, запит від імені ролі (`asUser`), без моків `rpc`; **рендер** — справжня
+сторінка з замоканим лише клієнтом Supabase; **unit** — чиста функція; **e2e** — UAT на проді (Playwright + агент).
+«Здатен упасти» — SQL-мутанти V1–V10 (`scripts/mutants.mjs`, усі 10 KILLED) і Stryker, вивід — в описі
+https://github.com/dmudryk/property-workflows/pull/42. Вердикт — остаточний з фінального звіту UAT 09.11.2026 21:59.
 
 | AC | Вид | Тест (рівень, посилання) | Здатен упасти | Специфікація UAT | Вердикт UAT і кадр | PR і SHA злиття |
 |---|---|---|---|---|---|---|
-| AC-…-NN | <!-- відмова (заборонена роль / чужі дані / не увійшов) --> | <!-- база: …/blob/<sha>/tests/db/….test.ts#L<N> --> | <!-- SQL-мутант KILLED, …/pull/N --> | <!-- …/blob/<sha>/tests/e2e/….spec.ts#L<N> --> | <!-- PASS (R6), …/frames/AC-…-then-1.png --> | <!-- …/pull/N, <sha> --> |
-| AC-…-NN | <!-- стан інтерфейсу (порожній стан / помилка) --> | … | … | … | … | … |
-| AC-…-NN | <!-- основний сценарій --> | … | … | … | … | … |
+| [AC-VENDOR-01](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L14) | основний сценарій (менеджер призначає вендора під час запуску) | база: [vendor.test.ts:49](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L49) | V1 KILLED — [`is_staff` без вендора](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L40) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-assign-at-launch.spec.ts:13](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-assign-at-launch.spec.ts#L13) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L12) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L23) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-01-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-02](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L25) | основний сценарій (вибір виконавця — лише email) | база: [vendor.test.ts:63](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L63) (`list_staff()` від імені A: email B, адміністратора й V; колонки — рівно `email,id`) | V2 KILLED — [`staff()` без вендорів](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L46) ([#42](https://github.com/dmudryk/property-workflows/pull/42)); частину «без імен і ролей» мутантом не ламали (її тримає твердження `email,id`) | [vendor-assignee-picker.spec.ts:21](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-assignee-picker.spec.ts#L21) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L13) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L50) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-02-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-03](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L36) | основний сценарій + чужі дані (лише свій запуск, без «Apartment 14, repair») | база: [vendor.test.ts:72](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L72); рендер `/runs`: [vendor-pages.test.ts:55](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/app/runs/vendor-pages.test.ts#L55) | V4 KILLED — [`run_tasks_select_visible`](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L58); V5 KILLED — [`can_see_run`](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L64); Stryker `list-view.ts` 13/13 ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-runs-list.spec.ts:12](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-runs-list.spec.ts#L12) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L14) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L75) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-03-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-04](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L47) | основний сценарій + чужі дані (рівно задачі 3 і 4, без чужих email і прогресу запуску) | база: [vendor.test.ts:90](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L90); рендер `/runs/[id]`: [vendor-pages.test.ts:85](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/app/runs/vendor-pages.test.ts#L85) | V3 KILLED — [`staff()` без перевірки того, хто викликає](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L52); V4 KILLED — [`run_tasks_select_visible`](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L58); V10 KILLED — [`profiles_select_own_or_admin`](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L94) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-run-page.spec.ts:14](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-run-page.spec.ts#L14) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L15) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L100) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-04-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-05](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L58) | основний сценарій (вендор позначає свою задачу) | база: [vendor.test.ts:112](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L112), [:128](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L128) (підтвердження — лише для останньої обов'язкової, `completes_run`) | V9 KILLED — [`mark_task_done`: виконавець не позначає свою задачу](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L88); Stryker `list-view.ts` 13/13 (`yourTasksLabel`) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-mark-done.spec.ts:12](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-mark-done.spec.ts#L12) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L16) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L130) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-05-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-06](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L69) | відмова (чужі дані: чужий запуск за прямим посиланням) | база: [vendor.test.ts:144](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L144) | V5 KILLED — [`can_see_run`: вендор бачить чужий запуск](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L64) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-foreign-run.spec.ts:13](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-foreign-run.spec.ts#L13) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L17) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L155) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-06-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-07](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L80) | відмова (чужі дані напряму, оминаючи сторінки) | база: [vendor.test.ts:153](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L153) (`mark_task_done` від імені V → `NOT_ALLOWED`, задача 1 — `to_do`) | V6 KILLED — [`mark_task_done` без перевірки прав](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L70) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-foreign-task-direct.spec.ts:16](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-foreign-task-direct.spec.ts#L16) (запит у Data API токеном V; відмова — [:62](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-foreign-task-direct.spec.ts#L62)) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L18) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L178) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-07-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-08](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L90) | відмова (заборонена роль, пряме посилання) | база: [vendor.test.ts:163](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L163); рендер `/templates`: [vendor-pages.test.ts:106](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/app/runs/vendor-pages.test.ts#L106); unit `isVendor`: [access.test.ts:55](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L55), [:60](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L60), [:64](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L64), [:68](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L68) | V7 KILLED — [`templates_select_visible`: вендору як менеджеру](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L76); Stryker `roles.ts` 14/24 → 24/24 ([#42](https://github.com/dmudryk/property-workflows/pull/42)); UAT уміє впасти: NC-1 → **FAIL** (R1), NC-2 → **NEEDS-HUMAN** (R3) — [звіт NC](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09-nc/report.md?plain=1#L12) | [vendor-templates-forbidden.spec.ts:25](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-templates-forbidden.spec.ts#L25) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L19) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L202) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-08-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-09](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L101) | відмова (заборонена роль напряму, оминаючи сторінки) | база: [vendor.test.ts:175](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L175); unit `canLaunch`: [access.test.ts:47](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L47), [:51](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/auth/access.test.ts#L51) | V8 KILLED — [`launch_run` без перевірки ролі](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L82); Stryker `roles.ts` 14/24 → 24/24 ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-launch-direct.spec.ts:14](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-launch-direct.spec.ts#L14) (запит у Data API токеном V; відмова — [:62](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-launch-direct.spec.ts#L62), запуску не створено — [:65](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-launch-direct.spec.ts#L65)) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L20) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L225) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-09-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+| [AC-VENDOR-10](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/specs/vendor-access/spec.md?plain=1#L112) | стан інтерфейсу (порожній список запусків вендора) | база: [vendor.test.ts:186](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/db/vendor.test.ts#L186); рендер `/runs`: [vendor-pages.test.ts:76](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/app/runs/vendor-pages.test.ts#L76) | V5 KILLED — [`can_see_run`](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L64) ([#42](https://github.com/dmudryk/property-workflows/pull/42)) | [vendor-runs-empty.spec.ts:15](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-runs-empty.spec.ts#L15) | Haiku: PASS → **PASS** (R6) · [рядок звіту](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L21) · [розбір](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L249) · [кадр](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/frames/AC-VENDOR-10-then-1.png) | [#35](https://github.com/dmudryk/property-workflows/pull/35) `a90f7ae` · [#42](https://github.com/dmudryk/property-workflows/pull/42) `65eb0c6` · [#43](https://github.com/dmudryk/property-workflows/pull/43) `27d00db` |
+
+Що злито де: #35 — міграція `20261102133247_vendor_role.sql`, сторінки вендора, тести бази й рендеру; #42 — мутанти
+V1–V10 і unit-тести `access.test.ts` (AC-VENDOR-08, AC-VENDOR-09); #43 — UAT-специфікації, звіт і кадри.
+
+Назви тестів з AC ID (дослівно, на `27d00db`; назви e2e — у рядках «**Тест:**» розборів звіту UAT):
+
+- AC-VENDOR-01 — база: «AC-VENDOR-01: менеджер A призначає вендора V виконавцем задач 3 і 4 — у задач 1, 2 і 5 виконавець A».
+- AC-VENDOR-02 — база: «AC-VENDOR-02: вибір виконавця показує менеджеру A email B, адміністратора й V — без імен і ролей».
+- AC-VENDOR-03 — база: «AC-VENDOR-03: вендор бачить лише «Apartment 12, move-in» зі статусом і «Your tasks: 0 of 2 done»,
+  без «Apartment 14, repair»»; рендер: «AC-VENDOR-03: список запусків вендора — «Apartment 12, move-in» зі статусом і
+  «Your tasks: 0 of 2 done», без запуску шаблону».
+- AC-VENDOR-04 — база: «AC-VENDOR-04: вендор у запуску бачить рівно задачі 3 і 4 (назва, секція, позначка, статус) — без
+  задач 1, 2, 5 і email інших»; рендер: «AC-VENDOR-04: вендор у запуску бачить лише задачі 3 і 4 — назва, секція,
+  позначка, статус; без email, прогресу запуску й менеджера».
+- AC-VENDOR-05 — база: «AC-VENDOR-05: вендор позначає задачу 3 (не останню обов'язкову) — «done» і «Your tasks: 1 of 2
+  done»», «AC-VENDOR-05: остання обов'язкова задача запуску вендора — з підтвердженням (completes_run), чужа задача — ні».
+- AC-VENDOR-06 — база: «AC-VENDOR-06: чужий запуск «Apartment 14, repair» для вендора — жодного рядка запуску й задач».
+- AC-VENDOR-07 — база: «AC-VENDOR-07: вендор напряму позначає задачу 1 менеджера A — відмова, задача 1 лишається «to do»».
+- AC-VENDOR-08 — база: «AC-VENDOR-08: вендор не бачить жодного шаблону, версії чи незбережених змін»; рендер:
+  «AC-VENDOR-08: вендор відкриває список шаблонів — «Not enough rights», жодного шаблону»; unit: «AC-VENDOR-08: вендор —
+  «Not enough rights» замість списку шаблонів», «AC-VENDOR-08: менеджер не вендор — список шаблонів без «Not enough
+  rights»», «AC-VENDOR-08: адміністратор не вендор — список шаблонів без «Not enough rights»», «AC-VENDOR-08: відвідувач
+  без входу (null) не вендор».
+- AC-VENDOR-09 — база: «AC-VENDOR-09: вендор напряму запускає «Tenant move-in» — відмова, запусків не додалось»; unit:
+  «AC-VENDOR-09: вендор не запускає шаблон — відмова ще до читання даних», «AC-VENDOR-09: відвідувач без входу (null)
+  шаблон не запускає».
+- AC-VENDOR-10 — база: «AC-VENDOR-10: вендор без жодної задачі не бачить жодного запуску»; рендер: «AC-VENDOR-10: вендор
+  без задач — «No tasks assigned to you yet.», без таблиці й без посилання на запуск».
+
+Тестів на мок `rpc` чи TS-копію SQL-правила серед цих доказів немає: кожне правило вендора в SQL доводить тест бази, і
+кожен такий тест убив свій SQL-мутант.
 
 ## Не перевірено
 
-<!-- Чесно: що НЕ доведено і чому. Порожньо — лише якщо справді все доведено (тоді «немає»).
-     FAIL і NEEDS-HUMAN тут не ховаємо: вони — у таблиці вище з вердиктом. -->
-
 | AC чи частина | Чому не перевірено | Що зроблено замість | Ризик на проді |
 |---|---|---|---|
-| <!-- AC-…-NN «що не змінилося» --> | <!-- напр. AC пише в базу, безпечного прибирання немає --> | <!-- тест бази …#L<N>, перевірено вручну 10.11 --> | <!-- … --> |
+| Що показує сторінка вендору в AC-VENDOR-01 (форма запуску з вендором у виборі), AC-VENDOR-02 (у списку виконавців лише email), AC-VENDOR-05 («Your tasks: 1 of 2 done» на сторінці після позначки), AC-VENDOR-06 («Run not found» вендору) | рендер-тестів сторінок вендора на ці AC немає (у [vendor-pages.test.ts](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/app/runs/vendor-pages.test.ts#L54) — лише AC-VENDOR-03, 04, 08, 10), а e2e у CI не запускається: на рівні сторінки ці частини доведено одним рівнем — UAT на проді | дані сторінок — тести бази з мутантами V1, V2, V9, V5; текст запису — `yourTasksLabel` (Stryker 13/13); спільна логіка форми й «Run not found» — тести AC-RUN-04 ([launch.test.ts:77](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/runs/launch.test.ts#L77)) і AC-TASK-10 ([tasks.test.ts:134](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/src/lib/runs/tasks.test.ts#L134)); UAT 09.11 — PASS (R6) | регресію розмітки цих сторінок CI не зловить до наступного UAT; правило доступу в базі — ловить (`db-check`, тести PGlite) |
+| AC-VENDOR-07, AC-VENDOR-09: сам запит «напряму, оминаючи сторінки» на відео й кадрі | запит — Node `fetch` у Data API з токеном вендора поза браузером (токен не має потрапити у відео й трасу); кадр показує лише «що не змінилося» | відмову (`403`, `42501`, `NOT_ALLOWED`) і незмінні дані перевіряють твердження специфікацій ([:62](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-foreign-task-direct.spec.ts#L62) і [:62](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/vendor-launch-direct.spec.ts#L62)) — у звіті «Перевірки: пройшли»; правило — тести бази з V6 і V8 KILLED | низький: PM бачить на відео лише результат, а не сам запит |
+| UAT-специфікації AC-VENDOR-01…07, 09, 10: червоний прогін на ваді продукту | негативні контролі NC-1 і NC-2 зроблено лише на AC-VENDOR-08; червоні прогони інших специфікацій (09.11 17:03 — AC-VENDOR-01, 04, 09; 21:52 — AC-VENDOR-02) — вади самих тестів, не продукту | правила, які ці специфікації перевіряють на проді, доведено мутантами нижче (V1–V10, Stryker); вердикт PASS вимагає ще й згоди агента з кадром і цитатами (R6) | низький: хибно зелена специфікація пропустила б ваду розмітки, але не ваду доступу |
 
 ## A. Вимоги й спека
 
-- `/requirements-sync` — PR «Оновлення вимог»: <!-- …/pull/N (і після уточнень PM: …/pull/M або «Вимоги актуальні», дата) -->
-- Спека `add-<зріз3>` і план — PR «Специфікація»: <!-- …/pull/N -->
-- Зміна `clarify-<зріз3>` після уточнень: <!-- …/pull/N або «PM AC не змінював» -->
-- Питання PM: <!-- https://github.com/<pm>/<team-slug>-spec/issues/N, … або «питань не було» -->
+- `/requirements-sync` — PR «Оновлення вимог»: https://github.com/dmudryk/property-workflows/pull/30 (`sync/2026-10-30`,
+  злито `726a05c`; принесла `requirements/39-assign-a-vendor-own-tasks.md`); далі — «Вимоги актуальні, 2026-11-09»:
+  відкриті issues «Вимога» в репо PM (#2, #3, #19, #20, #39) і «Продукт» (#1) мають `updatedAt` дослівно як рядки
+  «> Джерело:» у `requirements/` (`gh issue list --repo solomchaak/property-workflows-spec --label requirement --state
+  open`, 09.11.2026); «Журнал змін» #39 — лише «2026-10-30 — created».
+- Спека `add-ws8-vendor` і план — PR «Специфікація»: https://github.com/dmudryk/property-workflows/pull/33 (злито
+  `c22dab6`; archive → `openspec/specs/vendor-access`); план `impl-ws8-vendor` — https://github.com/dmudryk/property-workflows/pull/37
+  (злито `735a8ff`). Він замінив https://github.com/dmudryk/property-workflows/pull/34 — той закрився без злиття, коли
+  після злиття #33 видалили його базову гілку.
+- Зміна `clarify-ws8-vendor` після уточнень: немає — PM AC не змінював (#39 востаннє оновлено 2026-10-30T07:15:12Z, як у
+  знімку; в `openspec/changes/archive/` для зрізу 3 — лише `2026-11-02-add-ws8-vendor` і `2026-11-02-impl-ws8-vendor`).
+- Питання PM: Open questions Q1–Q3 зміни `add-ws8-vendor` колеги команди вже поставили 02.11 через форму «Питання до
+  вимог», тож нових issues не створювали (AGENTS.md: без дублікатів) — Q1 і Q3 →
+  https://github.com/solomchaak/property-workflows-spec/issues/41, Q2 →
+  https://github.com/solomchaak/property-workflows-spec/issues/44 (суміжне — …/49); посилання в proposal і розділ
+  «Питання до PM (зріз 3)» у `docs/spec-reading.md` — PR «Специфікація» `spec/vendor-open-questions`. Усі питання
+  команди до зрізу 3 (мітка `question`): https://github.com/solomchaak/property-workflows-spec/issues/41 … …/50 —
+  відкриті, відповідей PM станом на 09.11.2026 немає.
 
 ## B. Реалізація
 
 | PR «Реалізація» | Задача з `tasks.md` | AC | Відповіді на знахідки CodeRabbit | `db-deploy` |
 |---|---|---|---|---|
-| <!-- …/pull/N --> | <!-- 1. … --> | <!-- AC-…-NN, AC-…-NN --> | <!-- усі: виправлено / аргумент у треді --> | <!-- …/actions/runs/N --> |
+| https://github.com/dmudryk/property-workflows/pull/35 (злито `a90f7ae`, 02.11) | [1. Вендор у базі й на сторінках](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/openspec/changes/archive/2026-11-02-impl-ws8-vendor/tasks.md?plain=1#L1) (1.1–1.5) | AC-VENDOR-01…10 (+ змінені AC-RUN-04, AC-TASK-08) | **рев'ю не було, знахідок 0.** Автоматичних рев'ю в репо немає (< 10 зірок): [коментар CodeRabbit](https://github.com/dmudryk/property-workflows/pull/35#issuecomment-6578837712); `@coderabbitai review` у злитому #35 (09.11) — «Pull request is closed» ([коментар](https://github.com/dmudryk/property-workflows/pull/35#issuecomment-6742643416)). Для рев'ю того самого diff (`735a8ff`..`a90f7ae`) створено https://github.com/dmudryk/property-workflows/pull/44 (не зливати) — три запити (09.11 15:48, 19:26, 20:09) — «Review rate limited», рев'ю не відбулося | https://github.com/dmudryk/property-workflows/actions/runs/41461574408 — «Apply migrations»: `20261102133247_vendor_role.sql` |
+| https://github.com/dmudryk/property-workflows/pull/42 (злито `65eb0c6`, 09.11) | поза `tasks.md` (задачу 1 закрито в #35): трек B WS9 — доказ, що тести здатні впасти | AC-VENDOR-01…10 (SQL-мутанти), AC-VENDOR-08, AC-VENDOR-09 (+ AC-RUN-05, AC-RUN-06) — unit | 1 знахідка (перевірка «Тип PR і межі змін»: `scripts/mutants.mjs`) — аргумент у [коментарі](https://github.com/dmudryk/property-workflows/pull/42#issuecomment-6749130665), CodeRabbit прийняв ([відповідь](https://github.com/dmudryk/property-workflows/pull/42#issuecomment-6749151789)) | https://github.com/dmudryk/property-workflows/actions/runs/42690648900 — міграцій немає («Remote database is up to date») |
+| https://github.com/dmudryk/property-workflows/pull/43 (злито `27d00db`, 09.11) | поза `tasks.md`: трек C WS9 — UAT на проді | AC-VENDOR-01…10 (UAT) | 11 знахідок (рев'ю на `dd55cbb`): 8 виправлено в `6ac213a` — [r4517052097](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052097), [r4517052144](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052144), [r4517052160](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052160), [r4517052184](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052184), [r4517052207](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052207), [r4517052229](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052229), [r4517052249](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052249), [r4517052265](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052265); 3 — аргумент у треді: [r4517052066](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052066) і [r4517052083](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052083) (CodeRabbit відкликав), [r4517052274](https://github.com/dmudryk/property-workflows/pull/43#discussion_r4517052274). Повторне рев'ю пізніших комітів (20:09) — «Review rate limited» | https://github.com/dmudryk/property-workflows/actions/runs/42692399392 — міграцій немає («Remote database is up to date») |
 
-- Ворота на `main` (`quality`): <!-- …/actions/runs/N -->
-- Мутації: <!-- Stryker до → після, SQL-мутації (npm run mutation:sql -- --markdown) — посилання на PR з виводом -->
+- Ворота на `main` (`quality`): https://github.com/dmudryk/property-workflows/actions/runs/42692399240 (`27d00db`:
+  «Ворота: fallow audit», «Покриття: доменна підлога», «Порада: вразливі залежності» — success); CI (`spec`, `app`,
+  `conformance`, `db-check`, `db-deploy`) — https://github.com/dmudryk/property-workflows/actions/runs/42692399392;
+  `smoke` (прод = `main`, база відповідає) — https://github.com/dmudryk/property-workflows/actions/runs/42692463480.
+  На злиттях задач: #35 — CI https://github.com/dmudryk/property-workflows/actions/runs/41461574408, `quality`
+  https://github.com/dmudryk/property-workflows/actions/runs/41461574459; #42 — CI
+  https://github.com/dmudryk/property-workflows/actions/runs/42690648900, `quality`
+  https://github.com/dmudryk/property-workflows/actions/runs/42690648330. Усі — success.
+- Мутації (вивід — в описі https://github.com/dmudryk/property-workflows/pull/42): SQL-мутанти V1–V10
+  (`node scripts/mutation-check.mjs --only V1,…,V10 --markdown`) — **10 з 10 KILLED** (100 %, 194,9 с), визначення —
+  [scripts/mutants.mjs:40](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L40)…[:94](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/scripts/mutants.mjs#L94);
+  Stryker `src/lib/auth/roles.ts` — до 14 з 24 (58,33 %: вижили мутанти `canLaunch` для менеджера й адміністратора і
+  `isVendor(null)`) → після **24 з 24** (тести `access.test.ts` писала окрема сесія агента лише з тексту AC);
+  `src/lib/runs/list-view.ts` — 13 з 13 → 13 з 13.
 
 ## C. UAT на проді
 
-- Звіт: <!-- …/blob/<sha>/docs/qa/uat/<YYYY-MM-DD>/report.md -->
-- Відео: <!-- вкладення в описі PR …/pull/N -->
-- Рецензент: <!-- моделі зі звіту і вартість прогону -->
-- Негативний контроль: <!-- NC-1 (npm run uat:nc): що навмисно хибне, вердикт FAIL, …/pull/N -->
-- Дані: <!-- «лише читання» або «@writes: uat-<запуск>@example.test, рядок «Прибирання» зі звіту» -->
+- Звіт: https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md
+  (і `manifest.json`, `frames/`) — `npm run uat -- --url https://property-workflows-bravo16.vercel.app --grep
+  AC-VENDOR`, 09.11.2026 21:59 (Київ), `task/uat-vendor` @ `64a928f` без незакомічених змін, `/api/health` — `0d0c0dd`;
+  10 AC: PASS 10, FAIL 0, NEEDS-HUMAN 0 (Playwright 133,3 с).
+- Відео: вкладення в описі https://github.com/dmudryk/property-workflows/pull/43 (розділ «Відео»: AC-VENDOR-01…10, NC-1,
+  NC-2 — 12 файлів `.webm`); у git немає.
+- Рецензент: `claude-haiku-5-5`, суперечки — `claude-sonnet-5-5` (у фінальному прогоні суперечок не було); розбір —
+  $0.0190 за цінами API (негативні контролі — $0.0421).
+- Негативний контроль (`npm run uat:nc`, 09.11.2026 22:07, `e52ae9f` без незакомічених змін):
+  https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09-nc/report.md —
+  NC-1 ([negative-controls.spec.ts:23](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/negative-controls.spec.ts#L23)):
+  у твердженні навмисно інший текст («Not enough permissions» замість «Not enough rights») → **FAIL** (R1; Haiku сказав
+  PASS, але впале твердження агент не перекриває); NC-2 ([:45](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/tests/e2e/negative-controls.spec.ts#L45)):
+  в анотації `ac-text` інше «Тоді» («Access denied», «Back to runs»), тест і застосунок ті самі → **NEEDS-HUMAN** (R3;
+  Haiku — NEEDS-HUMAN, Sonnet — FAIL). Обидва — на AC-VENDOR-08, PR https://github.com/dmudryk/property-workflows/pull/43.
+- Дані: `@writes` — синтетичні `uat-261109195944-{a,v,v1,v5,w}@example.test` (AC-VENDOR-01, 03–07, 09, 10); рядок
+  «Прибирання» — [звіт:7](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L7):
+  видалено 5, лишилось 0, їхніх рядків — 0. Лише читання під спільними акаунтами: AC-VENDOR-02 (`manager.a@example.test`
+  бачить `manager.b@example.test`, `admin@example.test`, `vendor@example.test`), AC-VENDOR-08 (`vendor@example.test`).
+
+Історія прогонів (з опису #43):
+
+| Прогін (09.11) | Код тестів | Результат | Що зроблено |
+|---|---|---|---|
+| 17:03 | `cfd13bb` | 7 PASS, 3 FAIL (R1): AC-VENDOR-01, 04, 09 | вади тестів (текст кнопки з «▼», strict mode локатора, `innerText` проти `textContent`) — виправлено в `51c5c3e` |
+| 17:33, 17:40 | `51c5c3e`, `d810d5f` | 10 PASS | рев'ю CodeRabbit: 8 виправлено в `6ac213a`, 3 — аргумент |
+| 21:52 | `6ac213a` | 9 PASS, 1 FAIL (R1): AC-VENDOR-02 | вада тесту: локатор `fieldset label` знаходив перемикач теми — `label[for^="assignee-"]` у `64a928f` |
+| 21:59 | `64a928f` | **10 PASS** | фінальний звіт (`e52ae9f`) |
+
+Вад продукту UAT не знайшов; тексти «Тоді» й вердикти не правили.
 
 ### Приймання PM
 
-<!-- Оцінки 0–3 — у таблиці приймання PM (її адресу сюди не пишемо). Тут — публічні коментарі PM. -->
+PM зріз 3 ще не приймав: у https://github.com/dmudryk/property-workflows/pull/43 коментарів PM немає, issues у
+`dmudryk/property-workflows` немає (перевірено 09.11.2026). Позначки рішення PM у звіті — порожні (☐).
 
 | AC | Рішення PM | Посилання |
 |---|---|---|
-| AC-…-NN | <!-- ✅ / ❌ → issue / NEEDS-HUMAN → … --> | <!-- коментар-підпис або issue «Відхилення від вимог» і «Виправлено: …» --> |
+| AC-VENDOR-01 | очікує приймання PM (звіт подано 09.11) | [звіт:48](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L48) |
+| AC-VENDOR-02 | очікує приймання PM (звіт подано 09.11) | [звіт:73](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L73) |
+| AC-VENDOR-03 | очікує приймання PM (звіт подано 09.11) | [звіт:98](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L98) |
+| AC-VENDOR-04 | очікує приймання PM (звіт подано 09.11) | [звіт:128](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L128) |
+| AC-VENDOR-05 | очікує приймання PM (звіт подано 09.11) | [звіт:153](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L153) |
+| AC-VENDOR-06 | очікує приймання PM (звіт подано 09.11) | [звіт:176](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L176) |
+| AC-VENDOR-07 | очікує приймання PM (звіт подано 09.11) | [звіт:200](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L200) |
+| AC-VENDOR-08 | очікує приймання PM (звіт подано 09.11) | [звіт:223](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L223) |
+| AC-VENDOR-09 | очікує приймання PM (звіт подано 09.11) | [звіт:247](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L247) |
+| AC-VENDOR-10 | очікує приймання PM (звіт подано 09.11) | [звіт:270](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/qa/uat/2026-11-09/report.md?plain=1#L270) |
 
 ## D. Прод і ретро
 
-- `/api/health` після злиття всіх задач: <!-- sha і db -->
-- Нові ролі й акаунти: <!-- роль — адреса@example.test; accounts.zip …/blob/<sha>/accounts.zip -->
-- `docs/conformance.md`: <!-- …/blob/<sha>/docs/conformance.md -->
+- `/api/health` після злиття всіх задач: sha `27d00db`, db ok, `production` — 09.11.2026 22:29 (Київ),
+  `curl -s https://property-workflows-bravo16.vercel.app/api/health`; `smoke` на `27d00db` —
+  https://github.com/dmudryk/property-workflows/actions/runs/42692463480 (success).
+- Нові ролі й акаунти: `vendor` — `vendor@example.test`
+  ([supabase/demo-users.json:33](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/supabase/demo-users.json#L33));
+  accounts.zip — https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/accounts.zip
+  (вендора додано в https://github.com/dmudryk/property-workflows/pull/39, `ac82630`). Синтетичні акаунти UAT
+  (`uat-261109195944-*@example.test`) видалено після прогону.
+- `docs/conformance.md`: [AC-VENDOR-01…10 — «реалізовано»](https://github.com/dmudryk/property-workflows/blob/27d00db3fbd2315792113895239989f978aa0bbe/docs/conformance.md?plain=1#L103-L112).
 
 ### Ретро: що б ми взяли з фабрики у свій звичайний процес
 
-<!-- До 10 рядків. По станціях фабрики: допуск, захищені тести, приховані сценарії, мутації й повтор,
-     рев'ю-спростування, пакет доказів з «Не перевірено», рівні автономії, бюджети.
-     Для кожної — «уже є», «візьмемо: <конкретний крок і файл чи налаштування>» або «не потрібно, бо …». -->
-
-- <!-- Допуск: … -->
+- **Допуск:** візьмемо — у `openspec/config.yaml` (rules.tasks) рядок «кожна задача `tasks.md` має п'ять нефункціональних (безпека, правила доступу, ідемпотентність, ізоляція, відмови) — без них задачу не беремо»; зараз «Done when: AC-…» є, а нефункціональних немає.
+- **Захищені тести:** уже є частково (fallow `weakened-tests` і `test-only-branch` — `error` у `.fallowrc.jsonc`); візьмемо — path instruction у `.coderabbit.yaml` для `tests/**`: зміна наявного тесту в PR «Реалізація» без пояснення в описі — «must fix».
+- **Приховані сценарії:** не потрібно як запечатаний набір у основному репо, бо автор коду й тестів — одна людина з агентом під наглядом; візьмемо — тести нового AC пише окрема сесія агента (F02), як `src/lib/auth/access.test.ts` у #42: рядок у `AGENTS.md`.
+- **Мутації й повтор:** уже є (Stryker, `npm run mutation:sql`, V1–V10 — 10/10 KILLED); візьмемо — дорадчий job `mutation:sql` у `.github/workflows/quality.yml` на PR, що змінюють `supabase/migrations/**`.
+- **Рев'ю-спростування:** уже є (CodeRabbit ASSERTIVE + `/code-review`, eval рецензента у WS8); нового не беремо.
+- **Пакет доказів з «Не перевірено»:** уже є (цей файл); візьмемо — розділ «Не перевірено» в `.github/pull_request_template.md` для PR «Реалізація», щоб чесне «не доведено» з'являлось у PR, а не наприкінці зрізу.
+- **Рівні автономії:** не потрібно в основному репо, бо прод = `main`, а зливає людина після CI й рев'ю; автозлиття лишаємо двійнику.
+- **Бюджети:** візьмемо — рядок «Вартість (з `/cost` Claude Code)» у шаблоні PR, щоб звичайний процес мав ті самі цифри, що пакет доказів фабрики.
