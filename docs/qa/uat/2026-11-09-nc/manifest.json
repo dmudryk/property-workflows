@@ -1,9 +1,9 @@
 {
   "kind": "uat",
-  "generatedAt": "2026-11-09T15:37:14.416Z",
+  "generatedAt": "2026-11-09T20:08:36.715Z",
   "baseURL": "https://property-workflows-bravo16.vercel.app",
   "deployedSha": "0d0c0dd1f4214d8164dcef0f65e0b1aaf199e549",
-  "testsCommit": "51c5c3e87dbf270a74dd6cdc3e2176e2b91cae1a",
+  "testsCommit": "e52ae9fc22f129ade3173c5b65feef4c695f1f77",
   "reviewer": {
     "model": "claude-haiku-5-5",
     "disputes": "claude-sonnet-5-5"
@@ -22,7 +22,7 @@
       "vision": {
         "met": true,
         "readable": true,
-        "notes": "На кадрі frame-then-1.png (сторінка /templates) великим заголовком написано «Not enough rights», текст збігається з критерієм посимвольно. Список шаблонів на кадрі не видно, лише картка з повідомленням і посиланням «Back to templates»; частина «and no template» у ac.md не винесена як окрема видима частина, тому оцінена лише фраза-повідомлення."
+        "notes": "На кадрі сторінки /templates для користувача vendor@example... (роль vendor) видно картку з заголовком «Not enough rights» та посиланням «Back to templates». Список шаблонів на кадрі відсутній, тож частина «and no template» не суперечить кадру, хоча окремо в переліку видимих частин не виділена."
       },
       "agentModel": "claude-haiku-5-5",
       "agentVerdicts": {
@@ -39,9 +39,9 @@
       "verdict": "FAIL",
       "factoryGate": "FAIL",
       "rule": "R1: перевірка впала — FAIL завжди, агент не перекриває",
-      "playwrightMs": 8127,
-      "reviewCostUsd": 0.00186,
-      "reviewWallMs": 10926
+      "playwrightMs": 7913,
+      "reviewCostUsd": 0.00171,
+      "reviewWallMs": 7186
     },
     {
       "id": "NC-2",
@@ -54,7 +54,7 @@
       "vision": {
         "met": false,
         "readable": true,
-        "notes": "На кадрі вендор vendor@example... бачить картку із заголовком «Not enough rights» і посиланням «Back to templates». Шаблонів на сторінці немає. Тексту «Access denied» і посилання «Back to runs» з дослівного критерію на кадрі немає, тому частину оцінено як not-met."
+        "notes": "На кадрі сторінка від імені vendor з карткою «Not enough rights» і посиланням «Back to templates». Шаблонів у списку немає. Текст не збігається з критерієм PM: там «Access denied» і «Back to runs»."
       },
       "agentModel": "claude-sonnet-5-5",
       "agentVerdicts": {
@@ -66,19 +66,19 @@
       "verdict": "NEEDS-HUMAN",
       "factoryGate": "NOT-EARNED",
       "rule": "R3: перевірки пройшли, агент не погоджується — вирішує людина",
-      "playwrightMs": 3372,
-      "reviewCostUsd": 0.04269,
-      "reviewWallMs": 29514
+      "playwrightMs": 3473,
+      "reviewCostUsd": 0.04036,
+      "reviewWallMs": 20643
     }
   ],
   "cleanup": {
-    "at": "2026-11-09T15:36:43.742Z",
+    "at": "2026-11-09T20:08:14.286Z",
     "deleted": [
-      "uat-261109153602-w@example.test",
-      "uat-261109153602-v5@example.test",
-      "uat-261109153602-v1@example.test",
-      "uat-261109153602-v@example.test",
-      "uat-261109153602-a@example.test"
+      "uat-261109200728-w@example.test",
+      "uat-261109200728-v5@example.test",
+      "uat-261109200728-v1@example.test",
+      "uat-261109200728-v@example.test",
+      "uat-261109200728-a@example.test"
     ],
     "remaining": [],
     "leftoverRequests": 0
