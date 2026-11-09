@@ -106,3 +106,18 @@ AC-EDITOR-10…29), переформульовані AC-EDITOR-02 і AC-EDITOR-0
 покривають прямий запит на **зміну** шаблону (AC-EDITOR-08), але не на **читання** старих версій і незбережених змін,
 хоча продукт обіцяє обидва (Q4). Більшість інших дір (порожні назви, порожні списки, збій автозбереження) колеги вже
 поставили — скіл зберіг від дублікатів, а нові випадки пішли коментарями в наявні issues (Q6, Q7).
+
+## Питання до PM (зріз 3)
+
+Вимога: solomchaak/property-workflows-spec#39 (AC-VENDOR-01…10), знімок 2026-10-30. Власні питання Q1–Q3 (Open questions
+зміни `add-ws8-vendor`) колеги команди поставили 02.11 через форму «Питання до вимог» — не дублюю, а посилаюсь:
+
+| # | AC (вимога) | Питання | Наявне issue |
+|---|---|---|---|
+| Q1 | AC-VENDOR-04 (solomchaak/property-workflows-spec#39) | Що вендор бачить на сторінці запуску, крім своїх задач? | solomchaak/property-workflows-spec#41 |
+| Q2 | AC-VENDOR-08 (solomchaak/property-workflows-spec#39) | Чи показувати вендору в навігації «Templates»? | solomchaak/property-workflows-spec#44 (суміжне — #49) |
+| Q3 | AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Де вендор бачить «Your tasks: N of K done» після позначки? | solomchaak/property-workflows-spec#41 (варіант C) |
+
+Інші питання колег до зрізу 3 — solomchaak/property-workflows-spec#42, #43, #45–#48, #50. Станом на 09.11.2026 PM не
+відповів на жодне (вікно уточнень зрізу 3 — до кінця Пт 06.11); `/requirements-sync` 09.11 — «Вимоги актуальні», тож
+зміни `clarify-<зріз3>` немає, специфікація — за текстом AC.
