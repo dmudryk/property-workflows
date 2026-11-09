@@ -109,15 +109,15 @@ AC-EDITOR-10…29), переформульовані AC-EDITOR-02 і AC-EDITOR-0
 
 ## Питання до PM (зріз 3)
 
-Вимога: solomchaak/property-workflows-spec#39 (AC-VENDOR-01…10), знімок 2026-10-30. Власні питання Q1–Q3 (Open questions
+Вимога: [solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39) (AC-VENDOR-01…10), знімок 2026-10-30. Власні питання Q1–Q3 (Open questions
 зміни `add-ws8-vendor`) колеги команди поставили 02.11 через форму «Питання до вимог» — не дублюю, а посилаюсь:
 
 | # | AC (вимога) | Питання | Наявне issue |
 |---|---|---|---|
-| Q1 | AC-VENDOR-04 (solomchaak/property-workflows-spec#39) | Що вендор бачить на сторінці запуску, крім своїх задач? | solomchaak/property-workflows-spec#41 |
-| Q2 | AC-VENDOR-08 (solomchaak/property-workflows-spec#39) | Чи показувати вендору в навігації «Templates»? | solomchaak/property-workflows-spec#44 (суміжне — #49) |
-| Q3 | AC-VENDOR-05 (solomchaak/property-workflows-spec#39) | Де вендор бачить «Your tasks: N of K done» після позначки? | solomchaak/property-workflows-spec#41 (варіант C) |
+| Q1 | AC-VENDOR-04 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Що вендор бачить на сторінці запуску, крім своїх задач? | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) |
+| Q2 | AC-VENDOR-08 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Чи показувати вендору в навігації «Templates»? | [solomchaak/property-workflows-spec#44](https://github.com/solomchaak/property-workflows-spec/issues/44) (суміжне — [#49](https://github.com/solomchaak/property-workflows-spec/issues/49)) |
+| Q3 | AC-VENDOR-05 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Де вендор бачить «Your tasks: N of K done» після позначки? | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) (варіант C) |
 
-Інші питання колег до зрізу 3 — solomchaak/property-workflows-spec#42, #43, #45–#48, #50. Станом на 09.11.2026 PM не
+Інші питання колег до зрізу 3 — [solomchaak/property-workflows-spec#42](https://github.com/solomchaak/property-workflows-spec/issues/42), [#43](https://github.com/solomchaak/property-workflows-spec/issues/43), [#45](https://github.com/solomchaak/property-workflows-spec/issues/45)–[#48](https://github.com/solomchaak/property-workflows-spec/issues/48), [#50](https://github.com/solomchaak/property-workflows-spec/issues/50). Станом на 09.11.2026 PM не
 відповів на жодне (вікно уточнень зрізу 3 — до кінця Пт 06.11); `/requirements-sync` 09.11 — «Вимоги актуальні», тож
 зміни `clarify-<зріз3>` немає, специфікація — за текстом AC.

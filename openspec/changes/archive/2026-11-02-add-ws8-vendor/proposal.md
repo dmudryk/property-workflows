@@ -121,13 +121,13 @@
 - Q1. Що вендор бачить на сторінці запуску, крім своїх задач: назву випадку як заголовок сторінки чи нічого, крім задач?
   Припущення PM каже, що назву випадку й статус запуску показано в списку запусків, а AC-VENDOR-04 перелічує лише поля
   задач. До відповіді PM спираємось лише на поля задач з AC-VENDOR-04. —
-  solomchaak/property-workflows-spec#41 (варіанти A–C: назва випадку як заголовок і «Your tasks: N of K done»).
+  [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) (варіанти A–C: назва випадку як заголовок і «Your tasks: N of K done»).
 - Q2. Чи показувати вендору в навігації розділ «Templates»? Матриця прав каже, що шаблонів вендор не бачить, а
-  AC-VENDOR-08 описує лише пряме посилання. — solomchaak/property-workflows-spec#44 (навігація й перша сторінка вендора);
-  суміжне — solomchaak/property-workflows-spec#49 (які ще сторінки закриті вендору).
+  AC-VENDOR-08 описує лише пряме посилання. — [solomchaak/property-workflows-spec#44](https://github.com/solomchaak/property-workflows-spec/issues/44) (навігація й перша сторінка вендора);
+  суміжне — [solomchaak/property-workflows-spec#49](https://github.com/solomchaak/property-workflows-spec/issues/49) (які ще сторінки закриті вендору).
 - Q3. Де вендор бачить «Your tasks: N of K done» після позначки (AC-VENDOR-05): і на сторінці запуску, чи лише в
   списку запусків? Запис визначено для списку (сценарій вимоги, крок 3); прогрес усього запуску AC-VENDOR-04 вендору
-  забороняє, а власний — ні. — solomchaak/property-workflows-spec#41 (варіант C — «Your tasks» лише в списку запусків).
+  забороняє, а власний — ні. — [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) (варіант C — «Your tasks» лише в списку запусків).
 
 Станом на 09.11.2026 PM на ці питання не відповів (вікно уточнень зрізу 3 закрилось у Пт 06.11): специфікація лишається
 за текстом AC.
