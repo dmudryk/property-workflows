@@ -1,24 +1,24 @@
 # Звіт UAT — 09.11.2026
 
 - **Застосунок:** https://property-workflows-bravo16.vercel.app (/api/health: коміт `0d0c0dd`)
-- **Код тестів:** `task/uat-vendor` @ `d810d5f`
-- **Прогін:** 09.11.2026, 17:40 (Київ), Playwright 106.3 с; AC: 10 — PASS 10, FAIL 0, NEEDS-HUMAN 0
-- **Рецензент:** `claude-haiku-5-5`; суперечки → `claude-sonnet-5-5`. Разом за розбір: $0.0195 (ціни API; за підпискою — у межах ліміту плану)
+- **Код тестів:** `task/uat-vendor` @ `64a928f`
+- **Прогін:** 09.11.2026, 21:59 (Київ), Playwright 133.3 с; AC: 10 — PASS 10, FAIL 0, NEEDS-HUMAN 0
+- **Рецензент:** `claude-haiku-5-5`; суперечки → `claude-sonnet-5-5`. Разом за розбір: $0.0190 (ціни API; за підпискою — у межах ліміту плану)
 - **Прибирання:** синтетичних uat-*@example.test видалено 5, лишилось 0, їхніх рядків, що лишились: 0
 - **Відео й траси:** не в git — `test-results/` локально або артефакт CI; трасу відкриває `npx playwright show-trace <trace.zip>`
 
 | AC | Перевірки | Агент | Підсумок | Чому | Playwright | Розбір |
 |---|---|---|---|---|---|---|
-| AC-VENDOR-01 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 18.4 с | $0.0025, 16.0 с |
-| AC-VENDOR-02 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 8.7 с | $0.0023, 14.8 с |
-| AC-VENDOR-03 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 3.5 с | $0.0019, 11.1 с |
-| AC-VENDOR-04 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 7.0 с | $0.0019, 10.6 с |
-| AC-VENDOR-05 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 8.4 с | $0.0018, 9.9 с |
-| AC-VENDOR-06 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 3.2 с | $0.0019, 13.0 с |
-| AC-VENDOR-07 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 6.7 с | $0.0020, 10.4 с |
-| AC-VENDOR-08 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 3.6 с | $0.0016, 8.1 с |
-| AC-VENDOR-09 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 5.4 с | $0.0018, 8.7 с |
-| AC-VENDOR-10 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 2.8 с | $0.0017, 9.3 с |
+| AC-VENDOR-01 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 28.4 с | $0.0022, 9.9 с |
+| AC-VENDOR-02 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 9.5 с | $0.0023, 11.3 с |
+| AC-VENDOR-03 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 3.2 с | $0.0018, 8.1 с |
+| AC-VENDOR-04 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 6.6 с | $0.0019, 7.4 с |
+| AC-VENDOR-05 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 10.5 с | $0.0019, 8.7 с |
+| AC-VENDOR-06 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 3.6 с | $0.0016, 6.3 с |
+| AC-VENDOR-07 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 7.3 с | $0.0019, 7.4 с |
+| AC-VENDOR-08 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 5.6 с | $0.0017, 6.7 с |
+| AC-VENDOR-09 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 9.7 с | $0.0019, 7.6 с |
+| AC-VENDOR-10 | пройшли | Haiku: PASS | **PASS** | R6: перевірки, агент і цитати збігаються | 2.6 с | $0.0017, 6.9 с |
 
 ## AC-VENDOR-01 — PASS
 
@@ -30,21 +30,16 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-01-then-1.png)
 
-**Кроки:** ✔ Дано: manager A (uat-261109154045-a@example.test), vendor V (uat-261109154045-v1@example.test) and the template "Tenant move-in" with 5 tasks → ✔ Коли: A launches the template for the case "Apartment 12, move-in" and assigns V as the assignee of tasks 3 and 4 → ✔ Тоді: tasks 3 and 4 have V as the assignee, and tasks 1, 2 and 5 have A
+**Кроки:** ✔ Дано: manager A (uat-261109195944-a@example.test), vendor V (uat-261109195944-v1@example.test) and the template "Tenant move-in" with 5 tasks → ✔ Коли: A launches the template for the case "Apartment 12, move-in" and assigns V as the assignee of tasks 3 and 4 → ✔ Тоді: tasks 3 and 4 have V as the assignee, and tasks 1, 2 and 5 have A
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png сторінка запуску «Apartment 12, move-in» з п'ятьма завданнями у двох групах. Біля «Order cleaning» і «Hand over the keys» стоїть uat-261109154045-v1@example.test, а біля «Sign the lease», «Collect the deposit» і «Read the meters» — uat-261109154045-a@example.test, що відповідає критерію. Частини про структуру запуску та базу не оцінювались за правилами.
+**Агент (claude-haiku-5-5, PASS):** На кадрі видно сторінку запуску «Apartment 12, move-in» з п'ятьма завданнями. Біля «Order cleaning» і «Hand over the keys» стоїть uat-261109195944-v1@example.test, а біля «Sign the lease», «Collect the deposit» і «Read the meters» — uat-261109195944-a@example.test. Частини з розділу «Не з кадрів» не оцінювались.
 
 **Цитати агента, звірені зі сторінкою (aria):**
-- «Order cleaning» — є на сторінці
-- «uat-261109154045-v1@example.test» — є на сторінці
-- «Hand over the keys» — є на сторінці
-- «uat-261109154045-v1@example.test» — є на сторінці
-- «Sign the lease» — є на сторінці
-- «uat-261109154045-a@example.test» — є на сторінці
-- «Collect the deposit» — є на сторінці
-- «uat-261109154045-a@example.test» — є на сторінці
-- «Read the meters» — є на сторінці
-- «uat-261109154045-a@example.test» — є на сторінці
+- «uat-261109195944-v1@example.test» — є на сторінці
+- «uat-261109195944-v1@example.test» — є на сторінці
+- «uat-261109195944-a@example.test» — є на сторінці
+- «uat-261109195944-a@example.test» — є на сторінці
+- «uat-261109195944-a@example.test» — є на сторінці
 
 **Правило:** R6: перевірки, агент і цитати збігаються
 
@@ -64,7 +59,7 @@
 
 **Кроки:** ✔ Дано: managers A (manager.a@example.test) and B (manager.b@example.test), an administrator (admin@example.test) and vendor V (vendor@example.test), and A launching a template → ✔ Коли: A opens the assignee picker → ✔ Тоді: A sees the emails of B, of the administrator and of V, and no names, roles or other profile data
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png відкритий список «Assignees» на сторінці /runs/new, і в ньому видно три потрібні адреси: manager.b@example.test, admin@example.test і vendor@example.test. Кожен запис рядка списку на кадрі виглядає як одна адреса (окрім «Me (run manager)»), імен чи ролей у списку не видно. Частини про відсутність профільних даних і імен перевірялися поза кадрами, тому їх я не оцінював.
+**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png (/runs/new) відкритий список виконавців у блоці «Assignees»; усі три видимі частини «Тоді» знайдено дослівно: manager.b@example.test, admin@example.test, vendor@example.test. Видимі пункти списку — лише адреси електронної пошти та «Me (run manager)»; імен профілів (Олена Демо-Адмін, Менеджер B (демо), Вендор V (демо)) на кадрі не видно. Частина пунктів обрізана праворуч (наприклад, uat-261109195944-a@example.te…), але це не стосується трьох перевірених адрес; ознаки «не з кадрів» не оцінювалися.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «manager.b@example.test» — є на сторінці
@@ -87,9 +82,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-03-then-1.png)
 
-**Кроки:** ✔ Дано: vendor V (uat-261109154045-v@example.test) who is the assignee of 2 tasks in the run "Apartment 12, move-in" and of no task in the run "Apartment 14, repair" → ✔ Коли: V opens the list of runs → ✔ Тоді: V sees only the run "Apartment 12, move-in" with its run status and "Your tasks: 0 of 2 done", and does not see "Apartment 14, repair"
+**Кроки:** ✔ Дано: vendor V (uat-261109195944-v@example.test) who is the assignee of 2 tasks in the run "Apartment 12, move-in" and of no task in the run "Apartment 14, repair" → ✔ Коли: V opens the list of runs → ✔ Тоді: V sees only the run "Apartment 12, move-in" with its run status and "Your tasks: 0 of 2 done", and does not see "Apartment 14, repair"
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка Runs для облікового запису з роллю vendor. У таблиці один рядок: «Apartment 12, move-in» зі статусом «in progress» і написом «Your tasks: 0 of 2 done». Фільтри показують All 1 і In progress 1, що узгоджується з одним рядком. «Apartment 14, repair» на кадрі відсутній, але це перевіряють автоматичні перевірки.
+**Агент (claude-haiku-5-5, PASS):** На кадрі сторінки /runs видно один рядок: «Apartment 12, move-in», статус «in progress» і «Your tasks: 0 of 2 done». Вкладки показують «All 1» та «In progress 1», а «Apartment 14, repair» на кадрі не видно. Відсутність другого рядка за кадром не перевіряю, це частина автоматичних перевірок.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Apartment 12, move-in» — є на сторінці
@@ -112,9 +107,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-04-then-1.png)
 
-**Кроки:** ✔ Дано: vendor V (uat-261109154045-v@example.test) who is the assignee of tasks 3 and 4 in the run "Apartment 12, move-in" (5 tasks) → ✔ Коли: V opens this run → ✔ Тоді: V sees exactly tasks 3 and 4, each with its name, its section, the mark "required" or "optional" and its status, and does not see tasks 1, 2 and 5, the emails of other users or the progress of the whole run
+**Кроки:** ✔ Дано: vendor V (uat-261109195944-v@example.test) who is the assignee of tasks 3 and 4 in the run "Apartment 12, move-in" (5 tasks) → ✔ Коли: V opens this run → ✔ Тоді: V sees exactly tasks 3 and 4, each with its name, its section, the mark "required" or "optional" and its status, and does not see tasks 1, 2 and 5, the emails of other users or the progress of the whole run
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі видно два блоки: «Before move-in» з завданням «Order cleaning», позначкою «optional» і статусом «to do», та «Move-in day» з завданням «Hand over the keys», позначкою «required» і статусом «to do». Тексти чіткі, обрізань і завантаження немає, тому обидві видимі частини підтверджено.
+**Агент (claude-haiku-5-5, PASS):** На кадрі видно сторінку «Your tasks» з двома картками: «Before move-in» → «Order cleaning», позначка «optional», статус «to do»; «Move-in day» → «Hand over the keys», позначка «required», статус «to do». Текст читається чітко, назви й позначки збігаються з критерієм. Відсутність інших завдань, чужих email і загального прогресу з кадру не перевіряється (це автоматичні перевірки).
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Before move-in» — є на сторінці
@@ -142,9 +137,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-05-then-1.png)
 
-**Кроки:** ✔ Дано: vendor V (uat-261109154045-v5@example.test) who is the assignee of task 3 with status "to do", which is not the last required task of the run "Apartment 12, move-in" → ✔ Коли: V marks task 3 as done → ✔ Тоді: task 3 has status "done", and V sees "Your tasks: 1 of 2 done"
+**Кроки:** ✔ Дано: vendor V (uat-261109195944-v5@example.test) who is the assignee of task 3 with status "to do", which is not the last required task of the run "Apartment 12, move-in" → ✔ Коли: V marks task 3 as done → ✔ Тоді: task 3 has status "done", and V sees "Your tasks: 1 of 2 done"
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка «Your tasks» з написом «Your tasks: 1 of 2 done». У картці «Before move-in» поруч із «Order cleaning» видно статус «done» (зелений бейдж). Кадр чіткий, без завантаження й обрізання; частини «Не з кадрів» не оцінювались.
+**Агент (claude-haiku-5-5, PASS):** На кадрі в картці «Before move-in» видно рядок «Order cleaning» зі статусом «done» (зелений бейдж), а над картками написано «Your tasks: 1 of 2 done». Номер завдання 3 на кадрі не показано, тож ідентичність задачі зіставлено лише за назвою, яку вказано в ac.md.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Order cleaning» — є на сторінці
@@ -167,9 +162,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-06-then-1.png)
 
-**Кроки:** ✔ Дано: the run "Apartment 14, repair" in which vendor V (uat-261109154045-v@example.test) has no task → ✔ Коли: V opens the page of this run by a direct link → ✔ Тоді: V sees the message "Run not found" and none of the tasks of the run
+**Кроки:** ✔ Дано: the run "Apartment 14, repair" in which vendor V (uat-261109195944-v@example.test) has no task → ✔ Коли: V opens the page of this run by a direct link → ✔ Тоді: V sees the message "Run not found" and none of the tasks of the run
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png (сторінка /runs/...) під посиланням «Back to runs» великим жирним текстом написано «Run not found», регістр і пунктуація збігаються з критерієм. Зліва видно лише меню «Runs», нижче — користувач з роллю vendor; жодних рядків завдань чи назви кейсу на кадрі немає (це не оцінювалося згідно з розділом «Не з кадрів»).
+**Агент (claude-haiku-5-5, PASS):** На кадрі видно сторінку з заголовком «Run not found» під посиланням «Back to runs»; сесія — vendor (uat-26110919594…). Жодних рядків завдань або назви «Apartment 14, repair» на кадрі не видно, але ці частини не з кадрів і я їх не оцінював.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Run not found» — є на сторінці
@@ -190,12 +185,11 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-07-then-1.png)
 
-**Кроки:** ✔ Дано: the run "Apartment 12, move-in" in which task 1 is assigned to manager A (uat-261109154045-a@example.test) and tasks 3 and 4 to vendor V (uat-261109154045-v@example.test) → ✔ Коли: V tries to mark task 1 as done directly, bypassing the pages of the application → ✔ Тоді: task 1 stays "to do"
+**Кроки:** ✔ Дано: the run "Apartment 12, move-in" in which task 1 is assigned to manager A (uat-261109195944-a@example.test) and tasks 3 and 4 to vendor V (uat-261109195944-v@example.test) → ✔ Коли: V tries to mark task 1 as done directly, bypassing the pages of the application → ✔ Тоді: task 1 stays "to do"
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка запуску «Apartment 12, move-in» з рядком «Sign the lease» (обов'язкове, статус «to do»), лічильник «0 of 5 done». У рядку «Run manager» зазначено uat-261109154045-a@example.test, тобто це сторінка менеджера A. Інші частини «Тоді» з розділу «Не з кадрів» не оцінювались.
+**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка «Apartment 12, move-in» з лічильником «0 of 5 done» і статусом «in progress», run manager — uat-261109195944-a@example.test. У рядку «Sign the lease» (Before move-in) бейдж статусу «to do», кнопка «Mark as done» поруч. Кадр чіткий, не обрізаний; інші частини «Тоді» (403, база, перезавантаження) не з кадрів і не оцінювалися.
 
 **Цитати агента, звірені зі сторінкою (aria):**
-- «Apartment 12, move-in» — є на сторінці
 - «Sign the lease» — є на сторінці
 - «to do» — є на сторінці
 
@@ -217,7 +211,7 @@
 
 **Кроки:** ✔ Дано: vendor V (vendor@example.test) signed in → ✔ Коли: V opens the list of templates by a direct link → ✔ Тоді: V sees the message "Not enough rights" and no template
 
-**Агент (claude-haiku-5-5, PASS):** Кадр frame-then-1.png показує картку з заголовком «Not enough rights», що точно збігається з критерієм, і посилання «Back to templates». Ліворуч видно облікові дані vendor@example.test з роллю vendor. Таблиці шаблонів на кадрі немає; відсутність шаблонів та URL сторінки не оцінювались, бо це не видимі частини «Тоді».
+**Агент (claude-haiku-5-5, PASS):** На кадрі frame-then-1.png видно великий заголовок «Not enough rights» з посиланням «Back to templates», а в нижньому лівому куті показано вхід як vendor@example... з роллю vendor. Текст збігається з критерієм посимвольно. Частину «no template» не оцінював, бо за ac.md вона не з кадрів.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Not enough rights» — є на сторінці
@@ -238,9 +232,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-09-then-1.png)
 
-**Кроки:** ✔ Дано: vendor V (uat-261109154045-v@example.test) signed in and the template "Tenant move-in" with current version 1 → ✔ Коли: V tries to launch this template directly, bypassing the pages of the application → ✔ Тоді: no run is created, and the list of runs does not change
+**Кроки:** ✔ Дано: vendor V (uat-261109195944-v@example.test) signed in and the template "Tenant move-in" with current version 1 → ✔ Коли: V tries to launch this template directly, bypassing the pages of the application → ✔ Тоді: no run is created, and the list of runs does not change
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка «Runs» з одним рядком: «Apartment 12, move-in» (Tenant move-in, in progress) і «Your tasks: 0 of 2 done». Лічильник «All 1» і «In progress 1» узгоджуються з тим, що видно лише один запуск. Кадр читабельний і не обрізаний; решта частин критерію (403, відсутність запуску в БД, перезавантаження) не з кадрів і не оцінювалась.
+**Агент (claude-haiku-5-5, PASS):** На кадрі сторінка «Runs» з одним рядком: «Apartment 12, move-in» («Tenant move-in»), статус «in progress», «Your tasks: 0 of 2 done». Лічильники вкладок показують All 1 і In progress 1, тобто список містить лише один запуск. Видима частина «Тоді» підтверджена дослівно; вимоги HTTP 403, відсутності запису в базі та збереження списку після перезавантаження з кадру не оцінювалися.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «Apartment 12, move-in» — є на сторінці
@@ -262,9 +256,9 @@
 
 ![Кадр «Тоді» 1](frames/AC-VENDOR-10-then-1.png)
 
-**Кроки:** ✔ Дано: vendor V (uat-261109154045-w@example.test) to whom no task is assigned → ✔ Коли: V opens the list of runs → ✔ Тоді: V sees the message "No tasks assigned to you yet." and no empty table
+**Кроки:** ✔ Дано: vendor V (uat-261109195944-w@example.test) to whom no task is assigned → ✔ Коли: V opens the list of runs → ✔ Тоді: V sees the message "No tasks assigned to you yet." and no empty table
 
-**Агент (claude-haiku-5-5, PASS):** На кадрі сторінки /runs (заголовок «Runs») видно сірий блок із текстом «No tasks assigned to you yet.», що повністю збігається з критерієм посимвольно. Таблиці на кадрі немає, але частина «no empty table» не з кадрів, тому я її не оцінюю.
+**Агент (claude-haiku-5-5, PASS):** На кадрі /runs з заголовком «Runs» і блоком «No tasks assigned to you yet.» під ним; текст точно збігається з критерієм. Таблиці на кадрі немає, але частину «no empty table» за правилами не оцінюю.
 
 **Цитати агента, звірені зі сторінкою (aria):**
 - «No tasks assigned to you yet.» — є на сторінці
