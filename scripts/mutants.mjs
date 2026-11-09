@@ -12,8 +12,16 @@
 // Гарнес PGlite у репо свій (tests/db/supabase-pglite.ts), тож P1/P2 і profiles-db.test.ts з materials/ не беремо.
 // Мутанти — на правила в SQL за AC-DSYS-02 (менеджер відкриває редактор: шаблон лишається на версії 1 без
 // незбережених змін). AC-DSYS-04 і AC-DSYS-08 правил у SQL не мають (TS і сторінка — Stryker і e2e).
+// Зріз 3 (WS9, openspec/specs/vendor-access): V1–V10 — кожне правило вендора, що живе в SQL; мутуємо ОСТАННЄ
+// визначення функції чи політики (launch_run — 20261026175944_templates_versions.sql, can_see_run і
+// mark_task_done — міграції WS6 без пізніших змін). Доводить їх лише тест бази tests/db/vendor.test.ts.
+const PROFILES = "supabase/migrations/20261012000000_profiles_and_roles.sql";
+const RUNS = "supabase/migrations/20261020123813_runs_launch.sql";
+const COMPLETE = "supabase/migrations/20261020124103_runs_complete_tasks.sql";
 const TEMPLATES = "supabase/migrations/20261026175944_templates_versions.sql";
+const VENDOR = "supabase/migrations/20261102133247_vendor_role.sql";
 const TEMPLATES_DB = "tests/db/templates.test.ts";
+const VENDOR_DB = "tests/db/vendor.test.ts";
 
 export const mutants = [
   {
@@ -27,6 +35,66 @@ export const mutants = [
     what: "template_drafts: політика select послаблена до true — менеджер бачить незбережені зміни",
     find: "create policy template_drafts_select_admin on public.template_drafts\n  for select to authenticated\n  using ((select private.current_app_role()) = 'admin');",
     replace: "create policy template_drafts_select_admin on public.template_drafts\n  for select to authenticated\n  using (true);",
+  },
+  {
+    id: "V1", kind: "sql", ac: "AC-VENDOR-01", file: VENDOR, tests: [VENDOR_DB],
+    what: "is_staff: вендора прибрано з тих, хто може бути виконавцем — запуск з вендором на задачах 3 і 4 відхилено",
+    find: "where p.id = p_user_id and p.role in ('manager', 'admin', 'vendor')",
+    replace: "where p.id = p_user_id and p.role in ('manager', 'admin')",
+  },
+  {
+    id: "V2", kind: "sql", ac: "AC-VENDOR-02", file: VENDOR, tests: [VENDOR_DB],
+    what: "staff(): вендорів прибрано з вибору виконавця — менеджер A не бачить email V",
+    find: "  where p.role in ('manager', 'admin', 'vendor')\n    and (select private.current_app_role()) in ('manager', 'admin')",
+    replace: "  where p.role in ('manager', 'admin')\n    and (select private.current_app_role()) in ('manager', 'admin')",
+  },
+  {
+    id: "V3", kind: "sql", ac: "AC-VENDOR-04", file: VENDOR, tests: [VENDOR_DB],
+    what: "staff(): прибрано перевірку того, хто викликає, — вендор отримує email інших користувачів",
+    find: "\n    and (select private.current_app_role()) in ('manager', 'admin')\n  order by p.email;",
+    replace: "\n  order by p.email;",
+  },
+  {
+    id: "V4", kind: "sql", ac: "AC-VENDOR-04, AC-VENDOR-03", file: VENDOR, tests: [VENDOR_DB],
+    what: "run_tasks_select_visible: прибрано умову «вендор — лише свої задачі» — вендор бачить усі 5 задач запуску",
+    find: "    (select private.can_see_run(run_id))\n    and ((select private.current_app_role()) is distinct from 'vendor' or assignee_id = (select auth.uid()))\n",
+    replace: "    (select private.can_see_run(run_id))\n",
+  },
+  {
+    id: "V5", kind: "sql", ac: "AC-VENDOR-06, AC-VENDOR-10", file: RUNS, tests: [VENDOR_DB],
+    what: "can_see_run: прибрано умову «виконавець — саме цей користувач» — вендор бачить чужий запуск «Apartment 14, repair»",
+    find: "where t.run_id = r.id and t.assignee_id = (select auth.uid())",
+    replace: "where t.run_id = r.id",
+  },
+  {
+    id: "V6", kind: "sql", ac: "AC-VENDOR-07", file: COMPLETE, tests: [VENDOR_DB],
+    what: "mark_task_done: прибрано перевірку прав — вендор напряму позначає задачу 1 менеджера A",
+    find: "    or not (\n      v_task.assignee_id = v_uid\n      or v_task.manager_id = v_uid\n      or (select private.current_app_role()) = 'admin'\n    )\n",
+    replace: "",
+  },
+  {
+    id: "V7", kind: "sql", ac: "AC-VENDOR-08", file: TEMPLATES, tests: [VENDOR_DB],
+    what: "templates_select_visible: вендору дозволено те саме, що менеджеру, — вендор бачить збережені шаблони",
+    find: "or ((select private.current_app_role()) = 'manager' and current_version is not null)",
+    replace: "or ((select private.current_app_role()) in ('manager', 'vendor') and current_version is not null)",
+  },
+  {
+    id: "V8", kind: "sql", ac: "AC-VENDOR-09", file: TEMPLATES, tests: [VENDOR_DB],
+    what: "launch_run: прибрано перевірку ролі — вендор напряму запускає «Tenant move-in»",
+    find: "  v_assignments jsonb := coalesce(p_assignments, '{}'::jsonb);\nbegin\n  if v_uid is null or (select private.current_app_role()) not in ('manager', 'admin') then",
+    replace: "  v_assignments jsonb := coalesce(p_assignments, '{}'::jsonb);\nbegin\n  if v_uid is null then",
+  },
+  {
+    id: "V9", kind: "sql", ac: "AC-VENDOR-05", file: COMPLETE, tests: [VENDOR_DB],
+    what: "mark_task_done: виконавець не може позначити свою задачу — лише менеджер запуску чи адміністратор",
+    find: "      v_task.assignee_id = v_uid\n      or v_task.manager_id = v_uid",
+    replace: "      v_task.manager_id = v_uid",
+  },
+  {
+    id: "V10", kind: "sql", ac: "AC-VENDOR-04", file: PROFILES, tests: [VENDOR_DB],
+    what: "profiles_select_own_or_admin: вендор читає профілі (email) усіх користувачів",
+    find: "    id = (select auth.uid())\n    or (select private.current_app_role()) = 'admin'\n  );",
+    replace: "    id = (select auth.uid())\n    or (select private.current_app_role()) in ('admin', 'vendor')\n  );",
   },
 ];
 
