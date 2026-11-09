@@ -10,7 +10,9 @@
 // (D0.5, *@example.test, supabase/demo-users.json):
 //   admin     — дивиться стан шаблону («Version N», «Unpublished changes») до й після AC-DSYS-02;
 //   manager_a — менеджер запуску «Apartment 12, move-in» (AC-DSYS-08: знаходить адресу запуску);
-//   manager_c — менеджер без жодного запуску (AC-DSYS-04) і менеджер, що відкриває редактор (AC-DSYS-02).
+//   manager_c — менеджер без жодного запуску (AC-DSYS-04) і менеджер, що відкриває редактор (AC-DSYS-02);
+//   vendor    — вендор V (AC-VENDOR-08, NC-1): лише читання, як PM на прийманні.
+// Решта AC зрізу 3 — синтетичні користувачі світу вендора (vendor-world.setup.ts, той самий проєкт setup).
 import { expect, test as setup } from "@playwright/test";
 import { signIn } from "./support/uat";
 
@@ -18,6 +20,7 @@ const ROLES = {
   admin: "admin@example.test",
   manager_a: "manager.a@example.test",
   manager_c: "manager.c@example.test",
+  vendor: "vendor@example.test",
 } as const;
 
 for (const [role, email] of Object.entries(ROLES)) {
