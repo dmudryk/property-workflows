@@ -45,7 +45,7 @@ test(
         clause: 'task 1 stays "to do", and V gets the message "Run not found"',
         visible: [`task 1 «${task1.name}» with the status «to do» on the page of the run «${CASE_APT14}» (run manager A)`],
         hidden: [
-          "V's direct request was refused with the message «Run not found» (HTTP 404, code P0002)",
+          "V's direct request was refused with the message «Run not found» (HTTP 404, code PT404)",
           "in the database task 1 is still to_do and nobody marked it (done_by is empty)",
           "the page was reloaded after the request",
         ],
@@ -55,7 +55,7 @@ test(
         await expect(row1.getByText(task1.name, { exact: true })).toBeVisible();
         await expect(row1.getByTestId("task-status")).toHaveText("to do");
         await expect(row1).toBeInViewport();
-        expect(response).toMatchObject({ status: 404, code: "P0002", message: "Run not found" });
+        expect(response).toMatchObject({ status: 404, code: "PT404", message: "Run not found" });
         expect(await taskRow(run.taskIds[0])).toMatchObject({ status: "to_do", done_by: null });
       },
     );
