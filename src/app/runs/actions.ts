@@ -45,41 +45,52 @@ export async function launchRun(formData: FormData) {
   redirect(`/runs/${runId}`);
 }
 
-// Позначка задачі виконаною (AC-TASK-01…04, AC-TASK-07). Права перевіряє база (private.mark_task_done, ADR 0001);
-// відмова в правах (42501 / NOT_ALLOWED) — повідомлення AC-TASK-03, інші збої — окреме повідомлення.
+type Session = Awaited<ReturnType<typeof requireActor>>;
+type Actor = NonNullable<Session["actor"]>;
+
+// AC-TASK-04, AC-TASK-16: остання обов'язкова задача — лише після підтвердження («This cannot be undone»).
+// Вендор бачить лише свої задачі, тож для нього це вирішує база (public.completes_run; AC-VENDOR-05).
+// null — перевірка не вдалась: тоді не позначаємо, інакше остання обов'язкова задача пройшла б без підтвердження,
+// а запуск безповоротно став би «completed» (рев'ю CodeRabbit #44).
+async function confirmationFirst(
+  supabase: Session["supabase"],
+  actor: Actor,
+  runId: string,
+  taskId: string,
+): Promise<boolean | null> {
+  if (isVendor(actor)) {
+    const { data, error } = await supabase.rpc("completes_run", { p_task_id: taskId });
+    return error ? null : data === true;
+  }
+  const { data: tasks, error } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
+  if (error) return null;
+  const list = (tasks ?? []).map((t) => ({ id: t.id, required: t.required, status: t.status as "to_do" | "done" }));
+  return needsConfirmation(list, taskId);
+}
+
+// Права перевіряє база (private.mark_task_done, ADR 0001); відмова в правах (42501 / NOT_ALLOWED) — повідомлення
+// AC-TASK-03, інші збої — окреме повідомлення.
+async function markTaskDone(supabase: Session["supabase"], taskId: string): Promise<"not_allowed" | "failed" | null> {
+  const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId });
+  if (!error) return null;
+  return error.code === "42501" || error.message.includes("NOT_ALLOWED") ? "not_allowed" : "failed";
+}
+
+// Позначка задачі виконаною (AC-TASK-01…04, AC-TASK-07).
 export async function markDone(formData: FormData) {
   const { supabase, actor } = await requireActor();
   const runId = String(formData.get("run_id") ?? "");
   const taskId = String(formData.get("task_id") ?? "");
   if (!runId || !taskId) redirect("/runs");
+  if (!actor) redirect(`/runs/${runId}?error=not_allowed`);
 
-  // AC-TASK-04, AC-TASK-16: остання обов'язкова задача — лише після підтвердження («This cannot be undone»).
-  // Вендор бачить лише свої задачі, тож для нього це вирішує база (public.completes_run; AC-VENDOR-05).
-  // Збій цієї перевірки — не позначаємо: інакше остання обов'язкова задача пройшла б без підтвердження, а запуск
-  // безповоротно став би «completed» (рев'ю CodeRabbit #44).
-  if (actor && formData.get("confirmed") !== "1") {
-    let confirmFirst: boolean;
-    if (isVendor(actor)) {
-      const { data, error } = await supabase.rpc("completes_run", { p_task_id: taskId });
-      if (error) redirect(`/runs/${runId}?error=failed`);
-      confirmFirst = data === true;
-    } else {
-      const { data: tasks, error } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
-      if (error) redirect(`/runs/${runId}?error=failed`);
-      const list = (tasks ?? []).map((t) => ({ id: t.id, required: t.required, status: t.status as "to_do" | "done" }));
-      confirmFirst = needsConfirmation(list, taskId);
-    }
+  if (formData.get("confirmed") !== "1") {
+    const confirmFirst = await confirmationFirst(supabase, actor, runId, taskId);
+    if (confirmFirst === null) redirect(`/runs/${runId}?error=failed`);
     if (confirmFirst) redirect(`/runs/${runId}?confirm=${encodeURIComponent(taskId)}`);
   }
 
-  let code: "not_allowed" | "failed" | null = actor ? null : "not_allowed";
-  if (actor) {
-    const { error } = await supabase.rpc("mark_task_done", { p_task_id: taskId });
-    if (error) {
-      code = error.code === "42501" || error.message.includes("NOT_ALLOWED") ? "not_allowed" : "failed";
-    }
-  }
-
+  const code = await markTaskDone(supabase, taskId);
   revalidatePath("/runs");
   revalidatePath(`/runs/${runId}`);
   redirect(code ? `/runs/${runId}?error=${code}` : `/runs/${runId}`);
