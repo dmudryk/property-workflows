@@ -2,6 +2,7 @@
 // вендора (asUser) — без моків rpc. Відмовні AC перевіряють і відмову, і незмінні дані (asService — в обхід RLS).
 import { beforeEach, describe, expect, it } from "vitest";
 import { yourTasksLabel } from "@/lib/runs/list-view";
+import { MSG_NOT_ALLOWED_TO_MARK, MSG_RUN_NOT_FOUND } from "@/lib/runs/rules";
 import type { TemplateContent } from "@/lib/templates/content";
 import { createTestDb, type TestDb } from "./supabase-pglite";
 
@@ -43,6 +44,11 @@ async function tasksAsService(runId: string) {
     "select id, position, assignee_id, status from public.run_tasks where run_id = $1 order by position",
     [runId],
   );
+}
+
+async function runStatusOf(runId: string) {
+  const [run] = await t.asService<{ status: string }>("select status from public.runs where id = $1", [runId]);
+  return run.status;
 }
 
 describe("vendor-access", () => {
@@ -150,11 +156,14 @@ describe("vendor-access", () => {
     expect(await tasksAsService(apt14)).toHaveLength(5); // запуск на місці, просто не для вендора
   }, 60_000);
 
-  it("AC-VENDOR-07: вендор напряму позначає задачу 1 менеджера A — відмова, задача 1 лишається «to do»", async () => {
+  it("AC-VENDOR-07: вендор напряму позначає задачу 1 менеджера A — задача 1 лишається «to do», повідомлення AC-TASK-03", async () => {
     const runId = await launchAsA("Apartment 12, move-in", { 3: VENDOR, 4: VENDOR });
     const [task1] = await tasksAsService(runId);
 
-    await expect(t.asUser(VENDOR, "select public.mark_task_done($1)", [task1.id])).rejects.toThrow(/NOT_ALLOWED/);
+    await expect(t.asUser(VENDOR, "select public.mark_task_done($1)", [task1.id])).rejects.toMatchObject({
+      code: "42501",
+      message: MSG_NOT_ALLOWED_TO_MARK,
+    });
 
     const [after] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [task1.id]);
     expect(after.status).toBe("to_do");
@@ -173,6 +182,73 @@ describe("vendor-access", () => {
     const [asManager] = await t.asUser<{ c: boolean }>(MANAGER_A, "select public.completes_run($1) as c", [task4]);
     expect(asVendor.c).toBe(false);
     expect(asManager.c).toBe(true);
+  }, 60_000);
+
+  it("AC-VENDOR-15: вендор напряму позначає задачу 1 «Apartment 14, repair», де не має задач, — «to do» і «Run not found»", async () => {
+    await launchAsA("Apartment 12, move-in", { 3: VENDOR, 4: VENDOR }); // свої задачі в іншому запуску — не рахуються
+    const apt14 = await launchAsA("Apartment 14, repair");
+    const [task1] = await tasksAsService(apt14);
+    expect(task1.assignee_id).toBe(MANAGER_A);
+
+    await expect(t.asUser(VENDOR, "select public.mark_task_done($1)", [task1.id])).rejects.toMatchObject({
+      message: MSG_RUN_NOT_FOUND,
+    });
+    // Задачі, якої немає, — те саме: вендор не відрізнить чужий запуск від неіснуючого.
+    await expect(
+      t.asUser(VENDOR, "select public.mark_task_done($1)", ["00000000-0000-4000-8000-000000000000"]),
+    ).rejects.toMatchObject({ message: MSG_RUN_NOT_FOUND });
+
+    const [after] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [task1.id]);
+    expect(after.status).toBe("to_do");
+  }, 60_000);
+
+  it("AC-VENDOR-16: вендор позначає необов'язкову задачу 3 запуску «completed» — «done», «Your tasks: 1 of 1 done», запуск «completed»", async () => {
+    const runId = await launchAsA("Apartment 12, move-in", { 3: VENDOR });
+    const tasks = await tasksAsService(runId);
+    // Менеджер A виконує обов'язкові 1, 2 і 4 — запуск «completed», необов'язкова задача 3 вендора — «to do».
+    for (const position of [1, 2, 4]) {
+      await t.asUser(MANAGER_A, "select public.mark_task_done($1)", [tasks[position - 1].id]);
+    }
+    expect(await runStatusOf(runId)).toBe("completed");
+
+    // Необов'язкова — без підтвердження.
+    const [{ c }] = await t.asUser<{ c: boolean }>(VENDOR, "select public.completes_run($1) as c", [tasks[2].id]);
+    expect(c).toBe(false);
+    await t.asUser(VENDOR, "select public.mark_task_done($1)", [tasks[2].id]);
+
+    const own = await t.asUser<{ status: "to_do" | "done" }>(VENDOR, "select status from public.run_tasks where run_id = $1", [runId]);
+    expect(yourTasksLabel(own)).toBe("Your tasks: 1 of 1 done");
+    expect(await runStatusOf(runId)).toBe("completed");
+  }, 60_000);
+
+  it("AC-VENDOR-17: вендор напряму запитує задачі «Apartment 12, move-in» — отримує лише задачі 3 і 4", async () => {
+    const runId = await launchAsA("Apartment 12, move-in", { 3: VENDOR, 4: VENDOR });
+    const all = await tasksAsService(runId);
+
+    // Запит напряму — без фільтра за запуском і з фільтром: обидва віддають лише його задачі.
+    const direct = await t.asUser<{ id: string; assignee_id: string }>(VENDOR, "select id, assignee_id from public.run_tasks order by position");
+    expect(direct.map((task) => task.id)).toEqual([all[2].id, all[3].id]);
+    expect(direct.every((task) => task.assignee_id === VENDOR)).toBe(true);
+    const byRun = await t.asUser<{ id: string }>(VENDOR, "select id from public.run_tasks where run_id = $1 order by position", [runId]);
+    expect(byRun.map((task) => task.id)).toEqual([all[2].id, all[3].id]);
+    expect(all).toHaveLength(5);
+  }, 60_000);
+
+  it("AC-VENDOR-18: вендор напряму запитує email і профілі інших і задачі «Apartment 14, repair» — нічого про інших і про цей запуск", async () => {
+    await launchAsA("Apartment 12, move-in", { 3: VENDOR, 4: VENDOR });
+    const apt14 = await launchAsA("Apartment 14, repair", { 2: MANAGER_B });
+
+    // Профілі й email: лише власний профіль; вибір виконавця — порожньо; профілю іншого за id — немає.
+    const profiles = await t.asUser<{ id: string; email: string }>(VENDOR, "select id, email from public.profiles");
+    expect(profiles).toEqual([{ id: VENDOR, email: "vendor@example.test" }]);
+    expect(await t.asUser(VENDOR, "select * from public.list_staff()")).toEqual([]);
+    expect(await t.asUser(VENDOR, "select email from public.profiles where id = $1", [MANAGER_A])).toEqual([]);
+    // «Apartment 14, repair»: ні запуску, ні задач, ні виконавців.
+    expect(await t.asUser(VENDOR, "select id from public.runs where id = $1", [apt14])).toEqual([]);
+    expect(await t.asUser(VENDOR, "select id, assignee_id from public.run_tasks where run_id = $1", [apt14])).toEqual([]);
+    // Дані на місці — просто не для вендора.
+    expect(await tasksAsService(apt14)).toHaveLength(5);
+    expect(await t.asService("select id from public.profiles")).not.toHaveLength(1);
   }, 60_000);
 
   it("AC-VENDOR-08: вендор не бачить жодного шаблону, версії чи незбережених змін", async () => {

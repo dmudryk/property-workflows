@@ -13,15 +13,18 @@
 // Мутанти — на правила в SQL за AC-DSYS-02 (менеджер відкриває редактор: шаблон лишається на версії 1 без
 // незбережених змін). AC-DSYS-04 і AC-DSYS-08 правил у SQL не мають (TS і сторінка — Stryker і e2e).
 // Зріз 3 (WS9, openspec/specs/vendor-access): V1–V10 — кожне правило вендора, що живе в SQL; мутуємо ОСТАННЄ
-// визначення функції чи політики (launch_run — 20261026175944_templates_versions.sql, can_see_run і
-// mark_task_done — міграції WS6 без пізніших змін). Доводить їх лише тест бази tests/db/vendor.test.ts.
+// визначення функції чи політики (launch_run — 20261026175944_templates_versions.sql, can_see_run — міграція WS6 без
+// пізніших змін, mark_task_done — 20261110095932_vendor_refusals.sql). Доводить їх лише тест бази
+// tests/db/vendor.test.ts (V14 — і tests/db/run-tasks.test.ts).
 const PROFILES = "supabase/migrations/20261012000000_profiles_and_roles.sql";
 const RUNS = "supabase/migrations/20261020123813_runs_launch.sql";
-const COMPLETE = "supabase/migrations/20261020124103_runs_complete_tasks.sql";
 const TEMPLATES = "supabase/migrations/20261026175944_templates_versions.sql";
 const VENDOR = "supabase/migrations/20261102133247_vendor_role.sql";
+// Останнє визначення private.mark_task_done — уточнення зрізу 3 (WS9, AC-VENDOR-07, AC-VENDOR-15): V6, V9, V12…V14.
+const REFUSALS = "supabase/migrations/20261110095932_vendor_refusals.sql";
 const TEMPLATES_DB = "tests/db/templates.test.ts";
 const VENDOR_DB = "tests/db/vendor.test.ts";
+const RUN_TASKS_DB = "tests/db/run-tasks.test.ts";
 
 export const mutants = [
   {
@@ -67,7 +70,7 @@ export const mutants = [
     replace: "where t.run_id = r.id",
   },
   {
-    id: "V6", kind: "sql", ac: "AC-VENDOR-07", file: COMPLETE, tests: [VENDOR_DB],
+    id: "V6", kind: "sql", ac: "AC-VENDOR-07", file: REFUSALS, tests: [VENDOR_DB],
     what: "mark_task_done: прибрано перевірку прав — вендор напряму позначає задачу 1 менеджера A",
     find: "    or not (\n      v_task.assignee_id = v_uid\n      or v_task.manager_id = v_uid\n      or (select private.current_app_role()) = 'admin'\n    )\n",
     replace: "",
@@ -85,7 +88,7 @@ export const mutants = [
     replace: "  v_assignments jsonb := coalesce(p_assignments, '{}'::jsonb);\nbegin\n  if v_uid is null then",
   },
   {
-    id: "V9", kind: "sql", ac: "AC-VENDOR-05", file: COMPLETE, tests: [VENDOR_DB],
+    id: "V9", kind: "sql", ac: "AC-VENDOR-05", file: REFUSALS, tests: [VENDOR_DB],
     what: "mark_task_done: виконавець не може позначити свою задачу — лише менеджер запуску чи адміністратор",
     find: "      v_task.assignee_id = v_uid\n      or v_task.manager_id = v_uid",
     replace: "      v_task.manager_id = v_uid",
@@ -101,6 +104,24 @@ export const mutants = [
     what: "completes_run: прибрано перевірку «виконавець, менеджер запуску чи адміністратор» — вендор дізнається стан чужої обов'язкової задачі",
     find: "      and (\n        t.assignee_id = (select auth.uid())\n        or r.manager_id = (select auth.uid())\n        or (select private.current_app_role()) = 'admin'\n      )\n",
     replace: "",
+  },
+  {
+    id: "V12", kind: "sql", ac: "AC-VENDOR-15", file: REFUSALS, tests: [VENDOR_DB],
+    what: "mark_task_done: прибрано «Run not found» для вендора без задач у запуску — відповідь каже, що запуск і задача існують",
+    find: "    raise exception 'Run not found' using errcode = 'P0002';\n",
+    replace: "    null;\n",
+  },
+  {
+    id: "V13", kind: "sql", ac: "AC-VENDOR-07", file: REFUSALS, tests: [VENDOR_DB],
+    what: "mark_task_done: відмова з кодом NOT_ALLOWED замість повідомлення AC-TASK-03 у прямій відповіді",
+    find: "    raise exception 'Only the task''s assignee, the run manager, or an administrator can mark a task as done'\n",
+    replace: "    raise exception 'NOT_ALLOWED'\n",
+  },
+  {
+    id: "V14", kind: "sql", ac: "AC-TASK-19, AC-VENDOR-16", file: REFUSALS, tests: [VENDOR_DB, RUN_TASKS_DB],
+    what: "mark_task_done: позначка лише в запуску «in progress» — необов'язкову задачу завершеного запуску не позначити",
+    find: "  where id = p_task_id and status = 'to_do';\n",
+    replace: "  where id = p_task_id and status = 'to_do'\n    and exists (select 1 from public.runs where id = v_task.run_id and status = 'in_progress');\n",
   },
 ];
 

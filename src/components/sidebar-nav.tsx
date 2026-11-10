@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutTemplateIcon, ListChecksIcon } from "lucide-react";
+import { LayoutTemplateIcon, ListChecksIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "cn";
@@ -8,15 +8,22 @@ import { cn } from "cn";
 const ITEMS = [
   { href: "/runs", label: "Runs", icon: ListChecksIcon, vendor: true },
   { href: "/templates", label: "Templates", icon: LayoutTemplateIcon, vendor: false },
+  { href: "/profile", label: "Profile", icon: UserIcon, vendor: true },
 ];
+
+/** Пункти навігації для ролі: вендору — лише «Runs» і «Profile» (AC-VENDOR-13), іншим — усі. */
+export function navItemsFor(role?: string | null) {
+  return role === "vendor" ? ITEMS.filter((item) => item.vendor) : ITEMS;
+}
 
 // Навігація бічної панелі (DESIGN.md, розділ 4): пункти 44px з іконкою; поточний розділ — тло accent, напівжирний
 // текст і aria-current. Коли панель над вмістом (контейнер AppShell < 50rem), пункти стоять у рядок.
-// Вендору розділу «Templates» не показуємо: шаблонів він не бачить (матриця прав; DESIGN.md — дію, якої роль не має,
-// не показуємо). Відмову за прямим посиланням дає сама сторінка (AC-VENDOR-08).
+// Вендору — лише «Runs» і «Profile» (AC-VENDOR-13; solomchaak/property-workflows-spec#44): шаблонів він не бачить
+// (матриця прав; DESIGN.md — дію, якої роль не має, не показуємо). Відмову за прямим посиланням дає сама сторінка
+// (AC-VENDOR-08, AC-VENDOR-14). «Profile» — у кожної ролі: свій профіль бачить кожна (матриця прав).
 export function SidebarNav({ labelledBy, role }: { labelledBy?: string; role?: string | null }) {
   const pathname = usePathname();
-  const items = role === "vendor" ? ITEMS.filter((item) => item.vendor) : ITEMS;
+  const items = navItemsFor(role);
 
   return (
     <nav aria-labelledby={labelledBy} aria-label={labelledBy ? undefined : "Main"} className="flex gap-1 @min-[50rem]:flex-col">

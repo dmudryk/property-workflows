@@ -12,6 +12,7 @@ export const EMPTY_CONTENT: TemplateContent = { sections: [] };
 export const MSG_NO_REQUIRED_TASK = "A template needs at least one required task"; // AC-EDITOR-04
 export const MSG_NOT_ENOUGH_RIGHTS = "Not enough rights"; // AC-EDITOR-07, AC-DSYS-02
 export const MSG_BACK_TO_TEMPLATES = "Back to templates"; // AC-DSYS-02
+export const MSG_BACK_TO_RUNS = "Back to runs"; // вендору на сторінках шаблонів: AC-VENDOR-08, AC-VENDOR-14
 export const MSG_EMPTY_TEMPLATE_NAME = "Enter a template name"; // AC-EDITOR-19
 export const MSG_EMPTY_NAME = "Every section and task needs a name"; // AC-EDITOR-20
 export const MSG_EMPTY_SECTION = "Every section needs at least one task"; // AC-EDITOR-15

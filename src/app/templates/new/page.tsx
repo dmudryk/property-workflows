@@ -5,14 +5,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { canManageTemplates, requireActor } from "@/lib/auth/actor";
+import { canManageTemplates, isVendor, requireActor } from "@/lib/auth/actor";
 import { templateErrorMessage } from "@/lib/templates/errors";
 import { createTemplate } from "../actions";
 
-// Новий шаблон — лише адміністратор (матриця прав). Менеджеру — та сама відмова, що й на редакторі (AC-DSYS-02).
+// Новий шаблон — лише адміністратор (матриця прав). Менеджеру — та сама відмова, що й на редакторі (AC-DSYS-02);
+// вендору — з «Back to runs», як на редакторі (AC-VENDOR-14).
 export default async function NewTemplatePage({ searchParams }: PageProps<"/templates/new">) {
   const { actor } = await requireActor();
-  if (!canManageTemplates(actor)) return <NotEnoughRights />;
+  if (!canManageTemplates(actor)) return <NotEnoughRights vendor={isVendor(actor)} />;
 
   const { error } = await searchParams;
   const message = templateErrorMessage(error);

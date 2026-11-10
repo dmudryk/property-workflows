@@ -2,16 +2,17 @@ import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
 import { NotEnoughRights } from "@/components/not-enough-rights";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { canManageTemplates, requireActor } from "@/lib/auth/actor";
+import { canManageTemplates, isVendor, requireActor } from "@/lib/auth/actor";
 import { MSG_NO_VERSIONS } from "@/lib/templates/empty-states";
 import { formatKyivDateTime, versionLabel } from "@/lib/templates/format";
 
 // Список версій — лише адміністратор (AC-EDITOR-05); менеджер — «Not enough rights» без версій (AC-EDITOR-07).
 // Роль перевіряємо ДО читання версій; база й сама не віддає версій менеджеру (template_versions_select_admin).
+// Вендору — «Back to runs» (AC-VENDOR-14).
 export default async function TemplateVersionsPage({ params }: PageProps<"/templates/[id]/versions">) {
   const { id } = await params;
   const { supabase, actor } = await requireActor();
-  if (!canManageTemplates(actor)) return <NotEnoughRights />;
+  if (!canManageTemplates(actor)) return <NotEnoughRights vendor={isVendor(actor)} />;
 
   const [{ data: tpl }, { data: versions }] = await Promise.all([
     supabase.from("templates").select("name").eq("id", id).maybeSingle(),
