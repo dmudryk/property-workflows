@@ -55,13 +55,17 @@ export async function markDone(formData: FormData) {
 
   // AC-TASK-04, AC-TASK-16: остання обов'язкова задача — лише після підтвердження («This cannot be undone»).
   // Вендор бачить лише свої задачі, тож для нього це вирішує база (public.completes_run; AC-VENDOR-05).
+  // Збій цієї перевірки — не позначаємо: інакше остання обов'язкова задача пройшла б без підтвердження, а запуск
+  // безповоротно став би «completed» (рев'ю CodeRabbit #44).
   if (actor && formData.get("confirmed") !== "1") {
     let confirmFirst: boolean;
     if (isVendor(actor)) {
-      const { data } = await supabase.rpc("completes_run", { p_task_id: taskId });
+      const { data, error } = await supabase.rpc("completes_run", { p_task_id: taskId });
+      if (error) redirect(`/runs/${runId}?error=failed`);
       confirmFirst = data === true;
     } else {
-      const { data: tasks } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
+      const { data: tasks, error } = await supabase.from("run_tasks").select("id, required, status").eq("run_id", runId);
+      if (error) redirect(`/runs/${runId}?error=failed`);
       const list = (tasks ?? []).map((t) => ({ id: t.id, required: t.required, status: t.status as "to_do" | "done" }));
       confirmFirst = needsConfirmation(list, taskId);
     }

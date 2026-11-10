@@ -160,6 +160,21 @@ describe("vendor-access", () => {
     expect(after.status).toBe("to_do");
   }, 60_000);
 
+  it("AC-VENDOR-07: completes_run про чужу останню обов'язкову задачу — вендору false (нічого не розкрито), менеджеру запуску true", async () => {
+    // Вендор — на необов'язкових задачах 3 і 5; обов'язкові 1, 2, 4 — у менеджера A. A позначає 1 і 2: задача 4
+    // (A) лишається останньою обов'язковою «to do». completes_run — security definer, тож межу «лише виконавець,
+    // менеджер запуску чи адміністратор» тримає сама функція (рев'ю CodeRabbit #44).
+    const runId = await launchAsA("Apartment 12, move-in", { 3: VENDOR, 5: VENDOR });
+    const tasks = await tasksAsService(runId);
+    for (const position of [1, 2]) await t.asUser(MANAGER_A, "select public.mark_task_done($1)", [tasks[position - 1].id]);
+    const task4 = tasks[3].id;
+
+    const [asVendor] = await t.asUser<{ c: boolean }>(VENDOR, "select public.completes_run($1) as c", [task4]);
+    const [asManager] = await t.asUser<{ c: boolean }>(MANAGER_A, "select public.completes_run($1) as c", [task4]);
+    expect(asVendor.c).toBe(false);
+    expect(asManager.c).toBe(true);
+  }, 60_000);
+
   it("AC-VENDOR-08: вендор не бачить жодного шаблону, версії чи незбережених змін", async () => {
     await t.asUser(ADMIN, "select public.save_template_draft($1, current_content) from public.templates where id = $1", [
       TENANT_MOVE_IN,
