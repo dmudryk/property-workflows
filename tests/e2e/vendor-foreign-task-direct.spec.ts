@@ -1,11 +1,15 @@
 // AC-VENDOR-07 — відмова напряму, оминаючи сторінки: вендор V надсилає «позначити задачу 1 виконаною» прямо в Data API
 // Supabase (public.mark_task_done зі своїм токеном), хоча задача 1 — менеджера A. Правило живе в базі
-// (private.mark_task_done) — його доводить tests/db/vendor.test.ts (SQL-мутант V6); тут — виняток WS8: запит напряму
-// і крок, що показує на екрані «що не змінилося» — сторінку запуску очима менеджера A (вендор задачі 1 не бачить).
+// (private.mark_task_done) — його доводить tests/db/vendor.test.ts (SQL-мутанти V6, V13); тут — виняток WS8: запит
+// напряму і крок, що показує на екрані «що не змінилося» — сторінку запуску очима менеджера A (вендор задачі 1 не
+// бачить). Повідомлення у відповіді — уточнення PM 10.11 (solomchaak/property-workflows-spec#48).
 // «Дано» — синтетичний світ (@writes: vendor-world.setup.ts / cleanup.teardown.ts). Сторінка з 5 задачами — вище вікно.
 import { expect, test } from "@playwright/test";
 import { attachRuntimeErrors, given, thenStep, when } from "./support/uat";
 import { CASE_APT12, authFile, directRpc, readWorld, taskRow } from "./support/vendor-world";
+
+/** Повідомлення AC-TASK-03 — дослівно з «Тоді» AC-VENDOR-07. */
+const MSG_NOT_ALLOWED = "Only the task's assignee, the run manager, or an administrator can mark a task as done";
 
 // Два акаунти навмисно: браузер — менеджер A (лише він бачить задачу 1 — екран «що не змінилося»), а запит напряму
 // надсилає вендор V своїм токеном (world.vendorAccessToken) поза браузером.
@@ -14,7 +18,7 @@ test.use({ storageState: authFile("a"), viewport: { width: 1280, height: 1000 } 
 test.afterEach(async ({ page }) => attachRuntimeErrors(page));
 
 test(
-  "AC-VENDOR-07: вендор V напряму позначає виконаною задачу 1 менеджера A — відмова, задача 1 лишається «to do»",
+  "AC-VENDOR-07: вендор V напряму позначає виконаною задачу 1 менеджера A — задача 1 лишається «to do», відповідь — повідомлення AC-TASK-03",
   { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-VENDOR-07" } },
   async ({ page }) => {
     const world = readWorld();
@@ -46,10 +50,10 @@ test(
     await thenStep(
       page,
       {
-        clause: 'task 1 stays "to do"',
+        clause: `task 1 stays "to do", and V gets the message "${MSG_NOT_ALLOWED}"`,
         visible: [`task 1 «${task1.name}» with the status «to do» on the page of the run «${CASE_APT12}» (run manager A)`],
         hidden: [
-          "V's direct request was refused: HTTP 403, code 42501, NOT_ALLOWED",
+          `V's direct request was refused with this message (HTTP 403, code 42501)`,
           "in the database task 1 is still to_do and nobody marked it (done_by is empty)",
           "the page was reloaded after the request",
         ],
@@ -59,7 +63,7 @@ test(
         await expect(row1.getByText(task1.name, { exact: true })).toBeVisible();
         await expect(row1.getByTestId("task-status")).toHaveText("to do");
         await expect(row1).toBeInViewport();
-        expect(response).toMatchObject({ status: 403, code: "42501", message: "NOT_ALLOWED" });
+        expect(response).toMatchObject({ status: 403, code: "42501", message: MSG_NOT_ALLOWED });
         expect(await taskRow(run.taskIds[0])).toMatchObject({ status: "to_do", done_by: null });
       },
     );

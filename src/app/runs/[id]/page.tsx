@@ -79,12 +79,14 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     vendor ? tasks.some((t) => t.id === taskId && t.completesRun) : needsConfirmation(tasks, taskId);
   const confirmTask = typeof confirm === "string" && confirmable(confirm) ? tasks.find((t) => t.id === confirm) : undefined;
 
+  // Вендору — назва випадку заголовком і «Your tasks: N of K done» (RunTasks), без статусу запуску, назви й версії
+  // шаблону (AC-VENDOR-11; solomchaak/property-workflows-spec#41).
   const header = vendor ? (
     <>
       <Link href="/runs" className="text-sm underline-offset-4 hover:underline">
         Back to runs
       </Link>
-      <h1 className="text-2xl font-semibold">Your tasks</h1>
+      <h1 className="text-2xl font-semibold">{run.case_name}</h1>
     </>
   ) : (
     <>

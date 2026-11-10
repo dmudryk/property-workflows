@@ -11,10 +11,10 @@ import { TemplatesTable } from "./templates-table";
 // Список шаблонів (impl-ws7-templates/design.md, U1). Які шаблони видно — вирішує RLS (templates_select_visible):
 // адміністратор — усі, менеджер — лише збережені як версія (AC-EDITOR-02). Позначка «Unpublished changes» — лише
 // адміністратору: незбережені зміни менеджер не читає (template_drafts_select_admin). Вендор шаблонів не бачить —
-// «Not enough rights» і жодного шаблону (AC-VENDOR-08), роль перевіряємо до читання даних.
+// «Not enough rights», «Back to runs» і жодного шаблону (AC-VENDOR-08), роль перевіряємо до читання даних.
 export default async function TemplatesPage() {
   const { supabase, actor } = await requireActor();
-  if (isVendor(actor)) return <NotEnoughRights />;
+  if (isVendor(actor)) return <NotEnoughRights vendor />;
   const admin = canManageTemplates(actor);
 
   const { data: templates } = await supabase.from("templates").select("id, name, current_version").order("name");

@@ -19,9 +19,23 @@ export const CASE_APT14 = "Apartment 14, repair";
  * a — менеджер A (менеджер запуску всіх запусків світу); v — вендор V: задачі 3 і 4 в «Apartment 12, move-in», жодної
  * в «Apartment 14, repair» (AC-VENDOR-03, 04, 06, 07, 09); v1 — вендор, якого A призначає під час запуску (AC-VENDOR-01);
  * v5 — вендор зі своїм запуском, який позначає задачу 3 (AC-VENDOR-05); w — вендор без жодної задачі (AC-VENDOR-10).
- * Окремі вендори — щоб AC, що змінюють дані (01, 05), не міняли «Дано» інших AC, хоч би в якому порядку йшли файли.
+ * Уточнення PM 10.11: v11 — задачі 3 («done») і 4 у своєму «Apartment 12, move-in» (AC-VENDOR-11); v13 — входить
+ * через форму в самій специфікації (AC-VENDOR-13); v16 — лише необов'язкова задача 3 у запуску «completed»
+ * (AC-VENDOR-16); b — менеджер B, виконавець необов'язкової задачі 5 у запуску «completed» (AC-TASK-19).
+ * Окремі користувачі — щоб AC, що змінюють дані (01, 05, 16, TASK-19), не міняли «Дано» інших AC, хоч би в якому
+ * порядку йшли файли.
  */
-export const WORLD_ROLES = { a: "manager", v: "vendor", v1: "vendor", v5: "vendor", w: "vendor" } as const;
+export const WORLD_ROLES = {
+  a: "manager",
+  v: "vendor",
+  v1: "vendor",
+  v5: "vendor",
+  w: "vendor",
+  v11: "vendor",
+  v13: "vendor",
+  v16: "vendor",
+  b: "manager",
+} as const;
 export type WorldUserKey = keyof typeof WORLD_ROLES;
 
 /** Задача шаблону; номер задачі з AC — її місце в порядку секцій (1…5). */
@@ -33,9 +47,21 @@ export type World = {
   run: string;
   template: { id: string; version: number; tasks: WorldTask[] };
   users: Record<WorldUserKey, { email: string; id: string }>;
-  runs: { apt12: WorldRun; apt14: WorldRun; apt12v5: WorldRun };
-  /** Токен доступу V (Supabase Auth, ~1 год) — лише для запитів напряму в AC-VENDOR-07 і AC-VENDOR-09. */
+  runs: {
+    apt12: WorldRun;
+    apt14: WorldRun;
+    apt12v5: WorldRun;
+    apt12v11: WorldRun;
+    apt12v13: WorldRun;
+    /** «completed»: обов'язкові 1, 2, 4 виконав A; необов'язкова задача 3 вендора v16 — «to do». */
+    apt12v16: WorldRun;
+    /** «completed»: обов'язкові 1, 2, 4 виконав A; необов'язкова задача 5 менеджера B — «to do». */
+    task19: WorldRun;
+  };
+  /** Токен доступу V (Supabase Auth, ~1 год) — лише для запитів напряму (AC-VENDOR-07, 09, 15, 17, 18). */
   vendorAccessToken: string;
+  /** Пароль v13 — лише для входу через форму в AC-VENDOR-13 (файл — 0600, у .gitignore; користувача прибирає teardown). */
+  signInPassword: string;
 };
 
 export const authFile = (key: WorldUserKey) => `playwright/.auth/uat_${key}.json`;
@@ -138,6 +164,30 @@ export async function directRpc(token: string, fn: string, args: Record<string, 
   return { status: res.status, code: body?.code ?? null, message: body?.message ?? null, raw: raw.slice(0, 300) };
 }
 
+/**
+ * Читання «напряму, оминаючи сторінки»: запит до таблиці Data API з власним токеном (RLS вирішує, що повернути).
+ * query — рядок PostgREST без «?», наприклад «select=id&run_id=eq.<id>». Тіло — масив рядків або помилка.
+ */
+export async function directSelect(token: string, table: string, query: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    throw new Error("Для запиту напряму потрібні NEXT_PUBLIC_SUPABASE_URL і NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (.env.local)");
+  }
+  const res = await fetch(`${url}/rest/v1/${table}?${query}`, {
+    headers: { apikey: key, Authorization: `Bearer ${token}` },
+  });
+  const raw = await res.text();
+  let rows: Record<string, unknown>[] | null = null;
+  try {
+    const body = JSON.parse(raw) as unknown;
+    rows = Array.isArray(body) ? (body as Record<string, unknown>[]) : null;
+  } catch {
+    rows = null;
+  }
+  return { status: res.status, rows, raw: raw.slice(0, 300) };
+}
+
 // Перевірки «що не змінилося» в базі (секретним ключем, в обхід RLS) — лише читання.
 
 export async function taskRow(taskId: string) {
@@ -169,6 +219,12 @@ export async function tasksAssignedTo(userId: string) {
     .eq("assignee_id", userId);
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function runStatus(runId: string) {
+  const { data, error } = await adminClient().from("runs").select("status").eq("id", runId).single();
+  if (error) throw error;
+  return (data as { status: string }).status;
 }
 
 export async function runManager(runId: string) {

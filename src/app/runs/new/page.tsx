@@ -13,8 +13,9 @@ import { LaunchForm } from "./launch-form";
 // (AC-EDITOR-10; менеджеру його не показує RLS), а вибрати його не можна ні в списку, ні через ?template=.
 export default async function NewRunPage({ searchParams }: PageProps<"/runs/new">) {
   const { supabase, actor } = await requireActor();
-  // Вендор шаблонів не запускає (матриця прав; база — private.launch_run, AC-VENDOR-09): відмова без даних.
-  if (!canLaunch(actor)) return <NotEnoughRights backHref="/runs" backLabel="Back to runs" />;
+  // Вендор шаблонів не запускає (матриця прав; база — private.launch_run, AC-VENDOR-09): «Not enough rights» і «Back
+  // to runs» без даних (AC-VENDOR-14).
+  if (!canLaunch(actor)) return <NotEnoughRights vendor />;
   const { template, error } = await searchParams;
   const templateId = typeof template === "string" ? template : "";
   const message = messageFor(LAUNCH_ERRORS, error);

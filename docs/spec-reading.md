@@ -106,3 +106,39 @@ AC-EDITOR-10…29), переформульовані AC-EDITOR-02 і AC-EDITOR-0
 покривають прямий запит на **зміну** шаблону (AC-EDITOR-08), але не на **читання** старих версій і незбережених змін,
 хоча продукт обіцяє обидва (Q4). Більшість інших дір (порожні назви, порожні списки, збій автозбереження) колеги вже
 поставили — скіл зберіг від дублікатів, а нові випадки пішли коментарями в наявні issues (Q6, Q7).
+
+## Питання до PM (зріз 3)
+
+Вимога: [solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39) (AC-VENDOR-01…10), знімок 2026-10-30. Власні питання Q1–Q3 (Open questions
+зміни `add-ws8-vendor`) колеги команди поставили 02.11 через форму «Питання до вимог» — не дублюю, а посилаюсь:
+
+| # | AC (вимога) | Питання | Наявне issue |
+|---|---|---|---|
+| Q1 | AC-VENDOR-04 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Що вендор бачить на сторінці запуску, крім своїх задач? | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) |
+| Q2 | AC-VENDOR-08 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Чи показувати вендору в навігації «Templates»? | [solomchaak/property-workflows-spec#44](https://github.com/solomchaak/property-workflows-spec/issues/44) (суміжне — [#49](https://github.com/solomchaak/property-workflows-spec/issues/49)) |
+| Q3 | AC-VENDOR-05 ([solomchaak/property-workflows-spec#39](https://github.com/solomchaak/property-workflows-spec/issues/39)) | Де вендор бачить «Your tasks: N of K done» після позначки? | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41) (варіант C) |
+
+Інші питання колег до зрізу 3 — [solomchaak/property-workflows-spec#42](https://github.com/solomchaak/property-workflows-spec/issues/42), [#43](https://github.com/solomchaak/property-workflows-spec/issues/43), [#45](https://github.com/solomchaak/property-workflows-spec/issues/45)–[#48](https://github.com/solomchaak/property-workflows-spec/issues/48), [#50](https://github.com/solomchaak/property-workflows-spec/issues/50). Станом на 09.11.2026 PM не
+відповів на жодне (вікно уточнень зрізу 3 — до кінця Пт 06.11); `/requirements-sync` 09.11 — «Вимоги актуальні», тож
+зміни `clarify-<зріз3>` немає, специфікація — за текстом AC.
+
+## Відповіді PM 2026-11-10 (зріз 3)
+
+PM відповів на всі питання зрізу 3 (solomchaak/property-workflows-spec#41–#50) і закрив їх. Відповіді на мої Q1–Q3:
+
+| # | Відповідь PM | Що стало в специфікації |
+|---|---|---|
+| Q1 | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41), A: на сторінці запуску — назва випадку заголовком і «Your tasks: N of K done», без статусу запуску, назви й версії шаблону | ADDED AC-VENDOR-11 |
+| Q2 | [solomchaak/property-workflows-spec#44](https://github.com/solomchaak/property-workflows-spec/issues/44), A: навігація вендора — лише «Runs» і «Profile», після входу — список запусків | ADDED AC-VENDOR-13 |
+| Q3 | [solomchaak/property-workflows-spec#41](https://github.com/solomchaak/property-workflows-spec/issues/41), A (не C): «Your tasks: N of K done» і на сторінці запуску | ADDED AC-VENDOR-11 |
+
+Решта рішень: #42 — рядок списку без назви шаблону (AC-VENDOR-12); #43 — підтвердження для вендора як написано, вимога
+не змінюється; #45 — роль у застосунку не змінюється (припущення); #46 — необов'язкову задачу завершеного запуску можна
+позначити, для кожної ролі (AC-VENDOR-16, AC-TASK-19); #47 і #49 — «Not enough rights» і «Back to runs» на всіх
+сторінках шаблонів (AC-VENDOR-08, AC-VENDOR-14); #48 — пряма спроба позначити чужу задачу: повідомлення AC-TASK-03, коли
+вендор має інші задачі в запуску (AC-VENDOR-07), і «Run not found», коли не має (AC-VENDOR-15); #50 — прямі запити на
+читання (AC-VENDOR-17, AC-VENDOR-18).
+
+Переклад — зміна специфікації `clarify-ws8-vendor` (ADDED 9 AC, MODIFIED AC-VENDOR-07 і AC-VENDOR-08, ID AC PM без
+змін). Рядки нових і змінених AC у `docs/conformance.md` — «відкладено (чекає реалізації)» до задач реалізації.
+`spec-review`: блокерів 0; нових питань до PM немає.

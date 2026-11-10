@@ -8,7 +8,8 @@ export type RunFilter = "all" | RunStatus;
 export type RunListItem = {
   id: string;
   caseName: string;
-  templateName: string;
+  /** Назва шаблону під назвою випадку; вендору не передаємо (AC-VENDOR-12). */
+  templateName?: string;
   status: RunStatus;
   done: number;
   total: number;
