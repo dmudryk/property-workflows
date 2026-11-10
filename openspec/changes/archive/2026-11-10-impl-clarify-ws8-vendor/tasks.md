@@ -13,6 +13,6 @@ AC-VENDOR-16, AC-VENDOR-17, AC-VENDOR-18, AC-TASK-19 — «реалізован�
 
 Done when: звіт UAT на проді з PASS на кожен AC задачі 1; archive `impl-clarify-ws8-vendor`.
 
-- [ ] 2.1 Специфікації Playwright на кожен новий AC і оновлені AC-VENDOR-07, AC-VENDOR-08; прогін на проді, звіт і
+- [x] 2.1 Специфікації Playwright на кожен новий AC і оновлені AC-VENDOR-07, AC-VENDOR-08; прогін на проді, звіт і
   відео.
-- [ ] 2.2 archive `impl-clarify-ws8-vendor`.
+- [x] 2.2 archive `impl-clarify-ws8-vendor`.
