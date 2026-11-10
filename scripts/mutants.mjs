@@ -96,6 +96,12 @@ export const mutants = [
     find: "    id = (select auth.uid())\n    or (select private.current_app_role()) = 'admin'\n  );",
     replace: "    id = (select auth.uid())\n    or (select private.current_app_role()) in ('admin', 'vendor')\n  );",
   },
+  {
+    id: "V11", kind: "sql", ac: "AC-VENDOR-07", file: VENDOR, tests: [VENDOR_DB],
+    what: "completes_run: прибрано перевірку «виконавець, менеджер запуску чи адміністратор» — вендор дізнається стан чужої обов'язкової задачі",
+    find: "      and (\n        t.assignee_id = (select auth.uid())\n        or r.manager_id = (select auth.uid())\n        or (select private.current_app_role()) = 'admin'\n      )\n",
+    replace: "",
+  },
 ];
 
 // Приклади з демо (інша схема — у вашому репо цих файлів немає, тож не розкоментовуйте як є):

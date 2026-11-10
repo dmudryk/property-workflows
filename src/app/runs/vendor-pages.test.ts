@@ -114,7 +114,21 @@ describe("vendor-access", () => {
     expect(html).not.toContain("<table");
   });
 
-  it("форма запуску для вендора — «Not enough rights» і «Back to runs», без шаблонів (матриця прав: вендор не запускає)", async () => {
+  it("AC-VENDOR-05: остання обов'язкова задача вендора — на сторінці підтвердження «This cannot be undone» з назвою задачі", async () => {
+    db.tables.runs = [
+      { id: RUN_ID, case_name: "Apartment 12, move-in", template_name: "Tenant move-in", template_version: 1, status: "in_progress", manager_id: "manager-a" },
+    ];
+    db.tables.run_tasks = OWN_TASKS;
+    db.rpc.completes_run = true; // база: задача 4 — остання обов'язкова «to do» у запуску (вендор інших задач не бачить)
+
+    const html = renderToStaticMarkup(await RunPage({ params: params(RUN_ID), searchParams: Promise.resolve({ confirm: "t4" }) }));
+
+    expect(html).toContain('data-testid="confirm-done"');
+    expect(html).toContain("Mark &quot;Hand over the keys&quot; as done?");
+    expect(html).toContain("This cannot be undone");
+  });
+
+  it("AC-VENDOR-09: форма запуску для вендора — «Not enough rights» і «Back to runs», без шаблонів (матриця прав: вендор не запускає)", async () => {
     db.tables.templates = [{ id: "a1", name: "Tenant move-in", current_version: 1, current_content: null }];
 
     const html = renderToStaticMarkup(await NewRunPage({ params: Promise.resolve({}), searchParams: noSearch }));
