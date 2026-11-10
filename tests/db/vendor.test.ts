@@ -190,13 +190,15 @@ describe("vendor-access", () => {
     const [task1] = await tasksAsService(apt14);
     expect(task1.assignee_id).toBe(MANAGER_A);
 
+    // Код PT404 — PostgREST відповідає HTTP 404 (з P0002 була б HTTP 500 — так показав UAT на проді 10.11).
     await expect(t.asUser(VENDOR, "select public.mark_task_done($1)", [task1.id])).rejects.toMatchObject({
+      code: "PT404",
       message: MSG_RUN_NOT_FOUND,
     });
     // Задачі, якої немає, — те саме: вендор не відрізнить чужий запуск від неіснуючого.
     await expect(
       t.asUser(VENDOR, "select public.mark_task_done($1)", ["00000000-0000-4000-8000-000000000000"]),
-    ).rejects.toMatchObject({ message: MSG_RUN_NOT_FOUND });
+    ).rejects.toMatchObject({ code: "PT404", message: MSG_RUN_NOT_FOUND });
 
     const [after] = await t.asService<{ status: string }>("select status from public.run_tasks where id = $1", [task1.id]);
     expect(after.status).toBe("to_do");
