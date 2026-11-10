@@ -23,8 +23,8 @@ export default async function TemplatePage({ params, searchParams }: PageProps<"
   const { id } = await params;
   const { saved: savedParam } = await searchParams;
   const { supabase, actor } = await requireActor();
-  // Вендор шаблонів не бачить (матриця прав) — та сама відмова, що й на списку шаблонів (AC-VENDOR-08).
-  if (isVendor(actor)) return <NotEnoughRights />;
+  // Вендор шаблонів не бачить (матриця прав) — та сама відмова з «Back to runs», що й на списку шаблонів (AC-VENDOR-14).
+  if (isVendor(actor)) return <NotEnoughRights vendor />;
   const admin = canManageTemplates(actor);
 
   const { data: tpl } = await supabase

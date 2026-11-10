@@ -81,7 +81,9 @@ export function RunsTable({ runs }: { runs: RunListItem[] }) {
               <TableRow key={run.id} data-testid="run-row" className={`${ROW_LINK_ROW} border-border/60 hover:bg-muted`}>
                 <TableCell className={`${CELL} whitespace-normal`}>
                   <RowLink href={`/runs/${run.id}`}>{run.caseName}</RowLink>
-                  <span className="block text-sm text-muted-foreground">{run.templateName}</span>
+                  {run.templateName ? (
+                    <span className="block text-sm text-muted-foreground">{run.templateName}</span>
+                  ) : null}
                 </TableCell>
                 <TableCell className={CELL}>
                   <StatusBadge data-testid="run-status" kind={run.status} />

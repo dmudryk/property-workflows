@@ -23,6 +23,7 @@ import { RunsTable } from "./runs-table";
 // (ті самі слова й колір, що на сторінці запуску, AC-DSYS-01); без запусків — порожній стан без таблиці (AC-DSYS-04).
 // Вендор: лише запуски зі своїми задачами й «Your tasks: N of K done» — RLS віддає йому лише його задачі
 // (AC-VENDOR-03); без задач — «No tasks assigned to you yet.» без посилання й таблиці (AC-VENDOR-10); запуску немає.
+// Рядок вендора — випадок, статус і «Your tasks», без назви шаблону (AC-VENDOR-12; solomchaak/property-workflows-spec#42).
 export default async function RunsPage() {
   const { supabase, actor } = await requireActor();
   const vendor = isVendor(actor);
@@ -33,7 +34,7 @@ export default async function RunsPage() {
     (run): RunListItem => ({
       id: run.id,
       caseName: run.case_name,
-      templateName: run.template_name,
+      templateName: vendor ? undefined : run.template_name,
       status: runStatusKind(run.status),
       ...progressCounts(run.run_tasks ?? []),
       progress: vendor ? yourTasksLabel(run.run_tasks ?? []) : progressLabel(run.run_tasks ?? []),
