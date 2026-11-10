@@ -14,14 +14,14 @@
 // незбережених змін). AC-DSYS-04 і AC-DSYS-08 правил у SQL не мають (TS і сторінка — Stryker і e2e).
 // Зріз 3 (WS9, openspec/specs/vendor-access): V1–V10 — кожне правило вендора, що живе в SQL; мутуємо ОСТАННЄ
 // визначення функції чи політики (launch_run — 20261026175944_templates_versions.sql, can_see_run — міграція WS6 без
-// пізніших змін, mark_task_done — 20261110095932_vendor_refusals.sql). Доводить їх лише тест бази
+// пізніших змін, mark_task_done — 20261110121936_vendor_run_not_found_status.sql). Доводить їх лише тест бази
 // tests/db/vendor.test.ts (V14 — і tests/db/run-tasks.test.ts).
 const PROFILES = "supabase/migrations/20261012000000_profiles_and_roles.sql";
 const RUNS = "supabase/migrations/20261020123813_runs_launch.sql";
 const TEMPLATES = "supabase/migrations/20261026175944_templates_versions.sql";
 const VENDOR = "supabase/migrations/20261102133247_vendor_role.sql";
 // Останнє визначення private.mark_task_done — уточнення зрізу 3 (WS9, AC-VENDOR-07, AC-VENDOR-15): V6, V9, V12…V14.
-const REFUSALS = "supabase/migrations/20261110095932_vendor_refusals.sql";
+const REFUSALS = "supabase/migrations/20261110121936_vendor_run_not_found_status.sql";
 const TEMPLATES_DB = "tests/db/templates.test.ts";
 const VENDOR_DB = "tests/db/vendor.test.ts";
 const RUN_TASKS_DB = "tests/db/run-tasks.test.ts";
@@ -108,7 +108,7 @@ export const mutants = [
   {
     id: "V12", kind: "sql", ac: "AC-VENDOR-15", file: REFUSALS, tests: [VENDOR_DB],
     what: "mark_task_done: прибрано «Run not found» для вендора без задач у запуску — відповідь каже, що запуск і задача існують",
-    find: "    raise exception 'Run not found' using errcode = 'P0002';\n",
+    find: "    raise exception 'Run not found' using errcode = 'PT404';\n",
     replace: "    null;\n",
   },
   {
