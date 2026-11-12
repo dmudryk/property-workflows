@@ -17,6 +17,8 @@ import RunsPage from "./page";
 const db = vi.hoisted(() => ({
   tables: {} as Record<string, unknown[]>,
   rpc: {} as Record<string, unknown>,
+  /** Функції, які мають повернути помилку (збій бази). */
+  rpcErrors: {} as Record<string, string>,
 }));
 
 /** Як функції бази vendor_runs і vendor_tasks: лише колонки з білого списку. */
@@ -63,10 +65,10 @@ vi.mock("@/lib/supabase/server", () => {
     createClient: async () => ({
       auth: { getClaims: async () => ({ data: { claims: { sub: "vendor-v" } }, error: null }) },
       from: (table: string) => query(table === "profiles" ? vendorProfile : (db.tables[table] ?? [])),
-      rpc: async (name: string) => ({
-        data: db.rpc[name] ?? vendorFunctions[name as keyof typeof vendorFunctions]?.() ?? null,
-        error: null,
-      }),
+      rpc: async (name: string) =>
+        db.rpcErrors[name]
+          ? { data: null, error: { message: db.rpcErrors[name] } }
+          : { data: db.rpc[name] ?? vendorFunctions[name as keyof typeof vendorFunctions]?.() ?? null, error: null },
     }),
   };
 });
@@ -83,6 +85,7 @@ const noSearch = Promise.resolve({});
 beforeEach(() => {
   db.tables = {};
   db.rpc = {};
+  db.rpcErrors = {};
 });
 
 describe("vendor-access", () => {
@@ -256,5 +259,16 @@ describe("vendor-access", () => {
     expect(html).toContain("Not enough rights");
     expect(html).toContain("Back to runs");
     expect(html).not.toContain("Tenant move-in");
+  });
+
+  it("AC-VENDOR-03: збій vendor_tasks — помилка сторінки, а не «Your tasks: 0 of 0 done» (запит задач окремий від запусків)", async () => {
+    db.tables.runs = [
+      { id: RUN_ID, case_name: "Apartment 12, move-in", template_name: "Tenant move-in", template_version: 1, status: "in_progress", manager_id: "manager-a", created_at: "2026-11-02T10:00:00Z" },
+    ];
+    db.tables.run_tasks = OWN_TASKS;
+    db.rpcErrors.vendor_tasks = "connection lost";
+
+    await expect(RunsPage()).rejects.toThrow("connection lost");
+    await expect(RunPage({ params: params(RUN_ID), searchParams: noSearch })).rejects.toThrow("connection lost");
   });
 });
