@@ -12,6 +12,7 @@ import {
   runsListView,
   yourTasksLabel,
 } from "@/lib/runs/list-view";
+import { listRuns } from "@/lib/runs/run-reads";
 import { newestFirst, progressLabel } from "@/lib/runs/rules";
 import { runStatusKind } from "@/lib/status";
 import { canLaunch, isVendor, requireActor } from "@/lib/auth/actor";
@@ -21,20 +22,19 @@ import { RunsTable } from "./runs-table";
 // AC-TASK-17), від найновішого (AC-TASK-14). Які запуски видно — вирішує RLS (private.can_see_run): адміністратор —
 // усі; менеджер — ті, де він менеджер запуску або виконавець хоча б однієї задачі (AC-TASK-06). Статус — StatusBadge
 // (ті самі слова й колір, що на сторінці запуску, AC-DSYS-01); без запусків — порожній стан без таблиці (AC-DSYS-04).
-// Вендор: лише запуски зі своїми задачами й «Your tasks: N of K done» — RLS віддає йому лише його задачі
-// (AC-VENDOR-03); без задач — «No tasks assigned to you yet.» без посилання й таблиці (AC-VENDOR-10); запуску немає.
-// Рядок вендора — випадок, статус і «Your tasks», без назви шаблону (AC-VENDOR-12; solomchaak/property-workflows-spec#42).
+// Вендор: лише запуски зі своїми задачами й «Your tasks: N of K done» (AC-VENDOR-03); без задач — «No tasks assigned
+// to you yet.» без посилання й таблиці (AC-VENDOR-10); запуску немає. Рядок вендора — випадок, статус і «Your tasks»,
+// без назви шаблону (AC-VENDOR-12). Таблиці runs і run_tasks вендору закрито — його рядки приходять з функцій бази
+// vendor_runs і vendor_tasks, де назви шаблону немає взагалі (listRuns; ADR 0005).
 export default async function RunsPage() {
   const { supabase, actor } = await requireActor();
   const vendor = isVendor(actor);
-  const { data: rows } = await supabase
-    .from("runs")
-    .select("id, case_name, template_name, status, created_at, run_tasks(status)");
-  const runs = newestFirst((rows ?? []).map((r) => ({ ...r, createdAt: r.created_at }))).map(
+  const rows = await listRuns(supabase, vendor);
+  const runs = newestFirst(rows.map((r) => ({ ...r, createdAt: r.created_at }))).map(
     (run): RunListItem => ({
       id: run.id,
       caseName: run.case_name,
-      templateName: vendor ? undefined : run.template_name,
+      templateName: run.template_name,
       status: runStatusKind(run.status),
       ...progressCounts(run.run_tasks ?? []),
       progress: vendor ? yourTasksLabel(run.run_tasks ?? []) : progressLabel(run.run_tasks ?? []),
