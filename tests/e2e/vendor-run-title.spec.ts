@@ -1,9 +1,12 @@
 // AC-VENDOR-11 — сторінка запуску очима вендора: назва випадку заголовком і «Your tasks: 1 of 2 done», без статусу
 // запуску, назви й версії шаблону. Сторінка лише читає; «Дано» — синтетичний світ (@writes: vendor-world.setup.ts /
 // cleanup.teardown.ts): v11 — виконавець задач 3 (уже «done», позначив сам) і 4 у своєму «Apartment 12, move-in».
+// «Не бачить» діє й для запиту напряму (правило під матрицею прав PM; ADR 0005): прихований крок — той самий запит, що з
+// DevTools, токеном вендора V світу (у нього теж свій «Apartment 12, move-in»): runs?select=* → 0 рядків, а функція
+// vendor_runs — лише id, назва випадку, статус і час запуску.
 import { expect, test } from "@playwright/test";
 import { attachRuntimeErrors, given, thenStep, when } from "./support/uat";
-import { CASE_APT12, TEMPLATE_NAME, authFile, readWorld, runTaskRows } from "./support/vendor-world";
+import { CASE_APT12, TEMPLATE_NAME, authFile, directSelect, readWorld, runTaskRows } from "./support/vendor-world";
 
 test.use({ storageState: authFile("v11") });
 
@@ -40,6 +43,7 @@ test(
         hidden: [
           "no run status: no status badge of the run and no «in progress» / «completed» on the page",
           `no template name «${TEMPLATE_NAME}» and no «Template version» on the page`,
+          "directly, bypassing the pages (token of the world's vendor V): runs?select=* — 0 rows; rpc vendor_runs — only id, case_name, status, created_at, without the template name and version",
         ],
       },
       async () => {
@@ -49,6 +53,11 @@ test(
         await expect(page.getByRole("main").getByText(/in progress|completed/)).toHaveCount(0);
         await expect(page.getByText(TEMPLATE_NAME, { exact: true })).toHaveCount(0);
         await expect(page.getByText(/Template version/)).toHaveCount(0);
+        expect(await directSelect(world.vendorAccessToken, "runs", "select=*")).toMatchObject({ status: 200, rows: [] });
+        const own = await directSelect(world.vendorAccessToken, "rpc/vendor_runs", "");
+        expect(own.rows?.length).toBeGreaterThan(0);
+        expect(Object.keys(own.rows?.[0] ?? {}).sort()).toEqual(["case_name", "created_at", "id", "status"]);
+        expect(JSON.stringify(own.rows)).not.toContain(TEMPLATE_NAME);
       },
     );
   },

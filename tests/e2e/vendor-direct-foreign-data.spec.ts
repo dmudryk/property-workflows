@@ -25,6 +25,10 @@ test(
     let staff: Awaited<ReturnType<typeof directRpc>> | null = null;
     let runs: Awaited<ReturnType<typeof directSelect>> | null = null;
     let tasks: Awaited<ReturnType<typeof directSelect>> | null = null;
+    let allRuns: Awaited<ReturnType<typeof directSelect>> | null = null;
+    let allTasks: Awaited<ReturnType<typeof directSelect>> | null = null;
+    let ownRuns: Awaited<ReturnType<typeof directSelect>> | null = null;
+    let ownTasks: Awaited<ReturnType<typeof directSelect>> | null = null;
 
     await given(
       `vendor V (${V.email}) who is the assignee of tasks 3 and 4 in the run "Apartment 12, move-in" and of no task in the run "Apartment 14, repair"`,
@@ -45,6 +49,11 @@ test(
         staff = await directRpc(token, "list_staff", {});
         runs = await directSelect(token, "runs", `select=id,case_name&id=eq.${apt14.id}`);
         tasks = await directSelect(token, "run_tasks", `select=id,name,assignee_id&run_id=eq.${apt14.id}`);
+        // Той самий запит, що з DevTools, — усі рядки й колонки обох таблиць; і функції вендора без фільтра.
+        allRuns = await directSelect(token, "runs", "select=*");
+        allTasks = await directSelect(token, "run_tasks", "select=*");
+        ownRuns = await directSelect(token, "rpc/vendor_runs", "");
+        ownTasks = await directSelect(token, "rpc/vendor_tasks", "");
       },
     );
 
@@ -57,6 +66,8 @@ test(
           `profiles: only V's own profile (${V.email}); the profile of manager A by its id — no rows`,
           "the assignee picker (list_staff) — no rows",
           `the run «${CASE_APT14}» and its tasks — no rows`,
+          "runs?select=* and run_tasks?select=* — 0 rows (the tables are closed to the vendor)",
+          `rpc vendor_runs / vendor_tasks — only V's own runs and tasks, without «${CASE_APT14}» and without the id of manager A`,
         ],
       },
       async () => {
@@ -67,6 +78,13 @@ test(
         expect(JSON.parse(staff?.raw ?? "null")).toEqual([]);
         expect(runs?.rows).toEqual([]);
         expect(tasks?.rows).toEqual([]);
+        expect(allRuns).toMatchObject({ status: 200, rows: [] });
+        expect(allTasks).toMatchObject({ status: 200, rows: [] });
+        expect(ownRuns?.status).toBe(200);
+        expect(ownRuns?.rows?.map((r) => r.id)).toEqual(expect.arrayContaining([world.runs.apt12.id]));
+        expect(ownRuns?.rows?.map((r) => r.id)).not.toContain(apt14.id);
+        expect(ownTasks?.rows?.length).toBeGreaterThan(0);
+        expect(JSON.stringify([ownRuns?.rows, ownTasks?.rows])).not.toContain(A.id);
         await page.goto(`/runs/${apt14.id}`);
         await expect(page.getByTestId("user-email")).toHaveText(V.email);
         await expect(page.getByTestId("run-not-found")).toHaveText("Run not found");
