@@ -10,12 +10,23 @@ import { existsSync, readFileSync } from "node:fs";
 const URL = "https://openrouter.ai/api/v1/models";
 const MODELS_FILE = "src/lib/ai/models.ts";
 
-const res = await fetch(URL);
-if (!res.ok) {
-  console.error(`GET ${URL} → HTTP ${res.status}`);
+// Мережа чи відповідь не JSON — зрозуміле повідомлення й код 1 (рев'ю CodeRabbit #55).
+let data;
+try {
+  const res = await fetch(URL);
+  if (!res.ok) {
+    console.error(`ai:models — GET ${URL} → HTTP ${res.status}`);
+    process.exit(1);
+  }
+  ({ data } = await res.json());
+} catch (error) {
+  console.error(`ai:models — не вдалося отримати список моделей OpenRouter: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }
-const { data } = await res.json();
+if (!Array.isArray(data)) {
+  console.error("ai:models — у відповіді OpenRouter немає списку моделей (формат змінився?).");
+  process.exit(1);
+}
 
 const isZero = (v) => v === undefined || v === null || Number(v) === 0;
 const rows = data

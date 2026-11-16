@@ -26,7 +26,9 @@ export type ProposeState =
   | { status: "proposed"; proposal: Proposal; seq: number }
   | { status: "refused" | "unavailable" | "error"; message: string; seq: number };
 
-export type SaveState = { status: "idle" } | { status: "saved"; seq: number } | { status: "error"; message: string; seq: number };
+// savedSeq — номер останнього УСПІШНОГО збереження: форма починається заново лише після нього, а після помилки
+// введене лишається (рев'ю CodeRabbit #55).
+export type SaveState = { status: "idle" | "saved" | "error"; seq: number; savedSeq: number; message?: string };
 
 type Session = Awaited<ReturnType<typeof requireActor>>;
 
@@ -45,14 +47,13 @@ async function begin(prev: ProposeState | SaveState, formData: FormData) {
   const seq = ("seq" in prev ? prev.seq : 0) + 1;
   const session = await requireActor();
   const runId = String(formData.get("run_id") ?? "");
-  const denied = (await mayParse(session, runId)) ? null : ({ status: "error", message: MSG_NOT_ENOUGH_RIGHTS, seq } as const);
-  return { seq, session, runId, denied };
+  return { seq, session, runId, allowed: await mayParse(session, runId) };
 }
 
 export async function requestDocumentDraft(prev: ProposeState, formData: FormData): Promise<ProposeState> {
   // 0. Авторизація ДО виклику моделі: інакше будь-хто витратить денний ліміт (50 запитів).
-  const { seq, denied } = await begin(prev, formData);
-  if (denied) return denied;
+  const { seq, allowed } = await begin(prev, formData);
+  if (!allowed) return { status: "error", message: MSG_NOT_ENOUGH_RIGHTS, seq };
 
   const text = String(formData.get("text") ?? "");
   if (!text.trim()) return { status: "error", message: MSG_EMPTY_DOCUMENT, seq };
@@ -81,16 +82,19 @@ function parseValues(formData: FormData): { values: SaveValues } | { error: stri
 }
 
 export async function saveDocumentValues(prev: SaveState, formData: FormData): Promise<SaveState> {
-  const { seq, session, runId, denied } = await begin(prev, formData);
-  if (denied) return denied;
+  const { seq, session, runId, allowed } = await begin(prev, formData);
+  const failed = (message: string): SaveState => ({ status: "error", message, seq, savedSeq: prev.savedSeq });
+  if (!allowed) return failed(MSG_NOT_ENOUGH_RIGHTS);
 
   const checked = parseValues(formData);
-  if ("error" in checked) return { status: "error", message: checked.error, seq };
+  if ("error" in checked) return failed(checked.error);
   const { values } = checked;
 
   // Попередження суми рахує код за значеннями, які людина зберігає (AC-DOCAI-06), а не те, що бачила модель.
   const warning = totalWarning(values.lineItems, values.statedTotal);
-  const notes = [...values.notes.filter((n) => !n.startsWith("items add up to")), ...(warning ? [warning] : [])].slice(0, 6);
+  // Місце для попередження лишаємо завжди: звичайні нотатки обрізаємо ДО нього (рев'ю CodeRabbit #55).
+  const ordinary = values.notes.filter((n) => !n.startsWith("items add up to")).slice(0, warning ? 5 : 6);
+  const notes = warning ? [...ordinary, warning] : ordinary;
 
   // Запис — функцією бази під сесією користувача; права вирішує база (private.save_run_document, AC-DOCAI-11).
   const { error } = await session.supabase.rpc("save_run_document", {
@@ -104,8 +108,8 @@ export async function saveDocumentValues(prev: SaveState, formData: FormData): P
     p_stated_total: values.statedTotal,
     p_notes: notes,
   });
-  if (error) return { status: "error", message: error.code === "42501" ? MSG_NOT_ENOUGH_RIGHTS : MSG_SAVE_FAILED, seq };
+  if (error) return failed(error.code === "42501" ? MSG_NOT_ENOUGH_RIGHTS : MSG_SAVE_FAILED);
 
   revalidatePath(`/runs/${runId}`);
-  return { status: "saved", seq };
+  return { status: "saved", seq, savedSeq: seq };
 }

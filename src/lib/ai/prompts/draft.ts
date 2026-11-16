@@ -2,7 +2,10 @@
 // Взято за зразком koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature/src/lib/ai/prompts/draft.ts.
 // Змінили промпт — збільште версію, запустіть `npm run eval` і перезапишіть записи (RECORD=1).
 
-export const DRAFT_PROMPT_VERSION = "docai-v1";
+// docai-v2 (16.11): опис зберігає обставину, що пояснює терміновість чи ризик (живий прогін docai-v1 — 9/10: GC-03
+// загубив «minus ten outside», evals/reports/2026-11-16T14-37-32-102Z.md); statedTotal у шаблоні відповіді — число,
+// а не рядок «number or null» (рев'ю CodeRabbit #55).
+export const DRAFT_PROMPT_VERSION = "docai-v2";
 
 // Межа довжини документа: довший текст обрізаємо (і запит дешевший, і менше місця для ін'єкції).
 export const MAX_DOCUMENT_CHARS = 8_000;
@@ -17,7 +20,7 @@ export const DRAFT_INSTRUCTIONS = [
   "",
   'Maintenance request (kind "request"):',
   "- phone: digits in one normal form ddd-dddd (a spoken number like \"five five five, zero one, zero three\" is 555-0103); null if there is no phone.",
-  "- description: one short sentence in plain English about the problem and where it is; drop greetings, filler words, names and the phone.",
+  "- description: one short sentence in plain English about the problem, where it is, and any stated circumstance that makes it urgent or risky (for example the outside temperature, water already on the floor); drop greetings, filler words, names and the phone.",
   "- category: one of plumbing | electrical | heating and cooling | appliance | structure and doors | other. If no category fits, use other.",
   "- Two problems in one document: the description mentions both, the category follows the more serious problem, and add a note that the document has two problems.",
   '- urgency: "urgent" only for active damage or a risk to people or the property (water pouring, no heating in freezing weather, a gas smell, sparks, no power); otherwise "not urgent". An exclamation mark or "please hurry" alone does not make it urgent.',
@@ -33,7 +36,7 @@ export const DRAFT_INSTRUCTIONS = [
   "Answer with ONE JSON object and nothing else, with exactly these fields:",
   '{"status":"ok|refused","kind":"request|estimate|null","phone":"ddd-dddd or null","description":"string or null",',
   '"category":"plumbing|electrical|heating and cooling|appliance|structure and doors|other|null","urgency":"urgent|not urgent|null",',
-  '"lineItems":[{"description":"string","quantity":number,"unitPrice":number}],"statedTotal":"number or null",',
+  '"lineItems":[{"description":"string","quantity":number,"unitPrice":number}],"statedTotal":number|null,',
   '"notes":["string"],"injectionIgnored":true|false}',
 ].join("\n");
 

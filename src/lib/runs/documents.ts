@@ -67,3 +67,4 @@ export const money = (n: number) => n.toFixed(2);
 
 export const MSG_EMPTY_DOCUMENT = "Paste the text of a document first.";
 export const MSG_SAVE_FAILED = "The values could not be saved. Try again.";
+export const MSG_DOCUMENTS_LOAD_FAILED = "Saved documents could not be loaded. Reload the page to try again.";

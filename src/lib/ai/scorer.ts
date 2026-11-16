@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { Output, generateText, type LanguageModel } from "ai";
 import { z } from "zod";
 import type { Proposal } from "./document-rules";
@@ -21,7 +22,8 @@ export type GoldenCase = {
 
 type Mismatch = { field: string; expected: unknown; actual: unknown };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+// Структурне порівняння: порядок ключів об'єкта не важить, порядок позицій у масиві — важить (рев'ю CodeRabbit #55).
+const same = (a: unknown, b: unknown) => isDeepStrictEqual(a, b);
 
 // (1) Детермінована частина: точний збіг полів, зафіксованих PM у golden case.
 export function scoreFields(expected: GoldenCase["expected"], actual: Proposal) {

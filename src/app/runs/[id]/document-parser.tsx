@@ -247,7 +247,7 @@ function ValuesForm({
         </div>
       )}
 
-      {saveState.status === "error" ? (
+      {saveState.status === "error" && saveState.message ? (
         <Alert variant="destructive" data-testid="docai-save-error">
           <AlertDescription className="text-destructive">{saveState.message}</AlertDescription>
         </Alert>
@@ -261,12 +261,13 @@ function ValuesForm({
 
 export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
-  const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle" });
+  const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
 
   const proposed = proposeState.status === "proposed";
   const initial = proposed ? fromProposal(proposeState.proposal) : EMPTY;
   // Нова пропозиція, відмова, «недоступний» чи збереження — форма починається заново з нових значень.
-  const formKey = `${"seq" in proposeState ? proposeState.seq : 0}-${saveState.status === "saved" ? saveState.seq : 0}`;
+  // Після помилки збереження ключ не змінюється: введене лишається для повторної спроби (рев'ю CodeRabbit #55).
+  const formKey = `${"seq" in proposeState ? proposeState.seq : 0}-${saveState.savedSeq}`;
   const message = proposeState.status === "refused" || proposeState.status === "unavailable" || proposeState.status === "error" ? proposeState : null;
 
   return (

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UNAVAILABLE_MESSAGE } from "@/lib/ai/document-rules";
-import { requestDocumentDraft, saveDocumentValues } from "@/app/runs/[id]/document-actions";
+import { requestDocumentDraft, saveDocumentValues, type SaveState } from "@/app/runs/[id]/document-actions";
+import { loadRunDocuments } from "@/app/runs/[id]/run-documents";
 
 // Дії AI-розбору документа — справжні requestDocumentDraft / saveDocumentValues, справжній requireActor() і справжня
 // обгортка моделі (src/lib/ai/openrouter.ts). Замокано лише клієнт Supabase (роль у profiles, менеджер запуску в runs,
@@ -9,6 +10,7 @@ import { requestDocumentDraft, saveDocumentValues } from "@/app/runs/[id]/docume
 // (tests/db/run-documents.test.ts); тут — що дія НЕ кличе модель і НЕ пише, коли не має, і що пише лише після
 // «Save values» з повторною перевіркою.
 const MANAGER_A = "manager-a";
+const SAVE_IDLE: SaveState = { status: "idle", seq: 0, savedSeq: 0 };
 const RUN_ID = "acde19d4-83ed-432b-a9e0-c75e12ab2d1e";
 
 const state = vi.hoisted(() => ({
@@ -138,7 +140,7 @@ describe("document-parsing: дії", () => {
   });
 
   it("AC-DOCAI-09: «Save values» зберігає значення, як їх виправила людина, — urgency urgent", async () => {
-    const result = await saveDocumentValues({ status: "idle" }, saveForm(tapValues));
+    const result = await saveDocumentValues(SAVE_IDLE, saveForm(tapValues));
 
     expect(result).toMatchObject({ status: "saved" });
     expect(state.rpc).toEqual([
@@ -150,7 +152,7 @@ describe("document-parsing: дії", () => {
   });
 
   it("AC-DOCAI-09: значення не за схемою від клієнта не зберігаємо", async () => {
-    const result = await saveDocumentValues({ status: "idle" }, saveForm({ ...tapValues, category: "dragons" }));
+    const result = await saveDocumentValues(SAVE_IDLE, saveForm({ ...tapValues, category: "dragons" }));
 
     expect(result).toMatchObject({ status: "error" });
     expect(state.rpc).toEqual([]);
@@ -163,7 +165,7 @@ describe("document-parsing: дії", () => {
       { description: "Labour", quantity: 1, unitPrice: 60 },
     ];
     await saveDocumentValues(
-      { status: "idle" },
+      SAVE_IDLE,
       saveForm({ ...tapValues, kind: "estimate", category: null, urgency: null, lineItems: items, statedTotal: 200, notes: ["items add up to 1.00, the stated total is 2.00"] }),
     );
 
@@ -175,11 +177,50 @@ describe("document-parsing: дії", () => {
     ]);
   });
 
+  it("AC-DOCAI-06: шість нотаток людини не витісняють попередження суми — воно збережене", async () => {
+    const items = [
+      { description: "Inspection", quantity: 1, unitPrice: 90 },
+      { description: "Labour", quantity: 1, unitPrice: 60 },
+    ];
+    const six = ["n1", "n2", "n3", "n4", "n5", "n6"];
+    await saveDocumentValues(SAVE_IDLE, saveForm({ ...tapValues, kind: "estimate", category: null, urgency: null, lineItems: items, statedTotal: 200, notes: six }));
+
+    expect(state.rpc[0].args.p_notes).toEqual(["n1", "n2", "n3", "n4", "n5", "items add up to 150.00, the stated total is 200.00"]);
+  });
+
+  it("AC-DOCAI-09: після невдалого збереження номер останнього успішного не змінюється — форма лишає введене", async () => {
+    state.rpcError = { code: "XX000", message: "boom" };
+    const saved: SaveState = { status: "saved", seq: 1, savedSeq: 1 };
+
+    expect(await saveDocumentValues(saved, saveForm(tapValues))).toEqual({
+      status: "error",
+      message: "The values could not be saved. Try again.",
+      seq: 2,
+      savedSeq: 1,
+    });
+  });
+
+  it("AC-DOCAI-09: збій читання збережених документів — окремий стан, а не порожній список", async () => {
+    const failing = {
+      from: () => {
+        const q = {
+          select: () => q,
+          eq: () => q,
+          order: async () => ({ data: null, error: { code: "57014", message: "statement timeout" } }),
+        };
+        return q;
+      },
+    } as unknown as Parameters<typeof loadRunDocuments>[0];
+
+    expect(await loadRunDocuments(failing, { id: MANAGER_A, role: "manager" }, RUN_ID, MANAGER_A)).toEqual({ documents: [], loadFailed: true });
+    expect(await loadRunDocuments(failing, { id: "vendor-v", role: "vendor" }, RUN_ID, null)).toBeNull();
+  });
+
   it("AC-DOCAI-11: виконавець B (не менеджер запуску) — «Not enough rights», модель не викликано, нічого не записано", async () => {
     state.userId = "manager-b";
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "error", message: "Not enough rights" });
-    expect(await saveDocumentValues({ status: "idle" }, saveForm(tapValues))).toMatchObject({ status: "error", message: "Not enough rights" });
+    expect(await saveDocumentValues(SAVE_IDLE, saveForm(tapValues))).toMatchObject({ status: "error", message: "Not enough rights" });
     expect(modelCalls).toEqual([]);
     expect(state.rpc).toEqual([]);
   });
@@ -190,7 +231,7 @@ describe("document-parsing: дії", () => {
     state.runManager = null; // таблицю runs вендору закрито (ADR 0005)
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "error", message: "Not enough rights" });
-    expect(await saveDocumentValues({ status: "idle" }, saveForm(tapValues))).toMatchObject({ status: "error", message: "Not enough rights" });
+    expect(await saveDocumentValues(SAVE_IDLE, saveForm(tapValues))).toMatchObject({ status: "error", message: "Not enough rights" });
     expect(modelCalls).toEqual([]);
     expect(state.rpc).toEqual([]);
   });
@@ -219,7 +260,7 @@ describe("document-parsing: дії", () => {
     answerWith("not json at all");
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "unavailable", message: UNAVAILABLE_MESSAGE });
-    expect(await saveDocumentValues({ status: "idle" }, saveForm(tapValues))).toMatchObject({ status: "saved" });
+    expect(await saveDocumentValues(SAVE_IDLE, saveForm(tapValues))).toMatchObject({ status: "saved" });
   });
 
   it("AC-DOCAI-07: документ не заявка й не кошторис — текст відмови, жодних значень", async () => {

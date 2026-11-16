@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  type Proposal,
   finalizeDraft,
   hasAnyValue,
   INJECTION_NOTE,
@@ -10,6 +11,7 @@ import {
   totalWarning,
 } from "@/lib/ai/document-rules";
 import { MAX_DOCUMENT_CHARS, wrapDocument } from "@/lib/ai/prompts/draft";
+import { scoreFields } from "@/lib/ai/scorer";
 import type { Draft } from "@/lib/ai/schema";
 
 // Правила, які перевіряє код після моделі (impl-ws10-docai/design.md, D9): модель пропонує, сервер перевіряє.
@@ -57,6 +59,28 @@ describe("кошторис", () => {
       { description: "Disposal fee", quantity: 1, unitPrice: 15 },
     ];
     expect(totalWarning(tap, 220)).toBeNull();
+  });
+
+  it("AC-DOCAI-05: оцінювач порівнює позиції за полями — порядок ключів не важить, порядок позицій важить", () => {
+    const answer: Proposal = {
+      status: "ok",
+      kind: "estimate",
+      phone: null,
+      description: null,
+      category: null,
+      urgency: null,
+      statedTotal: 220,
+      notes: [],
+      warnings: [],
+      message: null,
+      lineItems: [
+        { description: "Labour", quantity: 2, unitPrice: 60 },
+        { description: "Disposal fee", quantity: 1, unitPrice: 15 },
+      ],
+    };
+    const sameItemsOtherKeyOrder = [{ unitPrice: 60, quantity: 2, description: "Labour" }, { quantity: 1, description: "Disposal fee", unitPrice: 15 }];
+    expect(scoreFields({ lineItems: sameItemsOtherKeyOrder }, answer).mismatches).toEqual([]);
+    expect(scoreFields({ lineItems: [...sameItemsOtherKeyOrder].reverse() }, answer).pass).toBe(false);
   });
 
   it("AC-DOCAI-06: сума позицій ≠ total — «items add up to 220.00, the stated total is 200.00», значення як у документі", () => {
