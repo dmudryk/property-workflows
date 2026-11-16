@@ -22,6 +22,9 @@ const TEMPLATES = "supabase/migrations/20261026175944_templates_versions.sql";
 const VENDOR = "supabase/migrations/20261102133247_vendor_role.sql";
 // Останнє визначення private.mark_task_done — уточнення зрізу 3 (WS9, AC-VENDOR-07, AC-VENDOR-15): V6, V9, V12…V14.
 const REFUSALS = "supabase/migrations/20261110121936_vendor_run_not_found_status.sql";
+// Читання вендора напряму (розбір викладача 12.11, ADR 0005): таблиці runs і run_tasks закрито, функції vendor_runs і
+// vendor_tasks — білий список колонок. V4 (нове визначення run_tasks_select_visible), V15–V19.
+const DIRECT = "supabase/migrations/20261112145356_vendor_direct_reads.sql";
 const TEMPLATES_DB = "tests/db/templates.test.ts";
 const VENDOR_DB = "tests/db/vendor.test.ts";
 const RUN_TASKS_DB = "tests/db/run-tasks.test.ts";
@@ -58,10 +61,10 @@ export const mutants = [
     replace: "\n  order by p.email;",
   },
   {
-    id: "V4", kind: "sql", ac: "AC-VENDOR-04, AC-VENDOR-03", file: VENDOR, tests: [VENDOR_DB],
-    what: "run_tasks_select_visible: прибрано умову «вендор — лише свої задачі» — вендор бачить усі 5 задач запуску",
-    find: "    (select private.can_see_run(run_id))\n    and ((select private.current_app_role()) is distinct from 'vendor' or assignee_id = (select auth.uid()))\n",
-    replace: "    (select private.can_see_run(run_id))\n",
+    id: "V4", kind: "sql", ac: "AC-VENDOR-17, AC-VENDOR-18", file: DIRECT, tests: [VENDOR_DB],
+    what: "run_tasks_select_visible: вендору знову відкрито таблицю задач — select * віддає задачі запуску з усіма колонками (done_by)",
+    find: "  using ((select private.current_app_role()) is distinct from 'vendor' and (select private.can_see_run(run_id)));\n",
+    replace: "  using ((select private.can_see_run(run_id)));\n",
   },
   {
     id: "V5", kind: "sql", ac: "AC-VENDOR-06, AC-VENDOR-10", file: RUNS, tests: [VENDOR_DB],
@@ -122,6 +125,36 @@ export const mutants = [
     what: "mark_task_done: позначка лише в запуску «in progress» — необов'язкову задачу завершеного запуску не позначити",
     find: "  where id = p_task_id and status = 'to_do';\n",
     replace: "  where id = p_task_id and status = 'to_do'\n    and exists (select 1 from public.runs where id = v_task.run_id and status = 'in_progress');\n",
+  },
+  {
+    id: "V15", kind: "sql", ac: "AC-VENDOR-11, AC-VENDOR-18", file: DIRECT, tests: [VENDOR_DB],
+    what: "runs_select_visible: вендору знову відкрито таблицю запусків — select * віддає template_name, template_version, manager_id",
+    find: "  using ((select private.current_app_role()) is distinct from 'vendor' and (select private.can_see_run(id)));\n",
+    replace: "  using ((select private.can_see_run(id)));\n",
+  },
+  {
+    id: "V16", kind: "sql", ac: "AC-VENDOR-04, AC-VENDOR-17", file: DIRECT, tests: [VENDOR_DB],
+    what: "vendor_tasks: прибрано «лише свої задачі» — вендор отримує всі задачі запусків",
+    find: "    and t.assignee_id = (select auth.uid())\n",
+    replace: "",
+  },
+  {
+    id: "V17", kind: "sql", ac: "AC-VENDOR-11", file: DIRECT, tests: [VENDOR_DB],
+    what: "vendor_runs: у колонці назви випадку — назва шаблону",
+    find: "  select r.id, r.case_name, r.status, r.created_at\n",
+    replace: "  select r.id, r.template_name, r.status, r.created_at\n",
+  },
+  {
+    id: "V18", kind: "sql", ac: "AC-VENDOR-18", file: DIRECT, tests: [VENDOR_DB],
+    what: "vendor_tasks: у колонці назви задачі — id того, хто позначив (менеджер)",
+    find: "  select t.id, t.run_id, t.section_name, t.name, t.required, t.position, t.status\n",
+    replace: "  select t.id, t.run_id, t.section_name, coalesce(t.done_by::text, t.name), t.required, t.position, t.status\n",
+  },
+  {
+    id: "V19", kind: "sql", ac: "AC-VENDOR-06, AC-VENDOR-10, AC-VENDOR-18", file: DIRECT, tests: [VENDOR_DB],
+    what: "vendor_runs: прибрано can_see_run — вендор отримує всі запуски, зокрема «Apartment 14, repair»",
+    find: "    and (select private.can_see_run(r.id))\n",
+    replace: "",
   },
 ];
 

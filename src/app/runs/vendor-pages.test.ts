@@ -9,12 +9,41 @@ import RunPage from "./[id]/page";
 import NewRunPage from "./new/page";
 import RunsPage from "./page";
 
-// Сторінки очима вендора: справжній requireActor() і справжні сторінки, замокано лише клієнт Supabase. Таблиці
-// містять рівно ті рядки, які вендор отримав би від бази: RLS віддає йому лише запуски й задачі, де він виконавець
-// (це доводить tests/db/vendor.test.ts); тут — що сторінка показує з цими рядками.
+// Сторінки очима вендора: справжній requireActor() і справжні сторінки, замокано лише клієнт Supabase. Рядки запусків
+// і задач — повні (з назвою, версією шаблону й менеджером), як у таблицях. Вендор читає лише через функції бази
+// vendor_runs і vendor_tasks (ADR 0005), тож мок rpc віддає з цих рядків рівно колонки білого списку функцій
+// (міграція 20261112145356_vendor_direct_reads.sql), а з таблиць напряму — повні рядки: якби сторінка вендора читала
+// таблицю, назва шаблону потрапила б на сторінку. Що функції віддають саме це, доводить tests/db/vendor.test.ts.
 const db = vi.hoisted(() => ({
   tables: {} as Record<string, unknown[]>,
   rpc: {} as Record<string, unknown>,
+  /** Функції, які мають повернути помилку (збій бази). */
+  rpcErrors: {} as Record<string, string>,
+}));
+
+/** Як функції бази vendor_runs і vendor_tasks: лише колонки з білого списку. */
+const vendorFunctions = vi.hoisted(() => ({
+  vendor_runs: () =>
+    (db.tables.runs ?? []).map((row) => {
+      const { id, case_name, status, created_at } = row as Record<string, unknown>;
+      return { id, case_name, status, created_at };
+    }),
+  vendor_tasks: () => {
+    const runs = (db.tables.runs ?? []) as { id: string; run_tasks?: Record<string, unknown>[] }[];
+    // Задачі — з «таблиці» задач або, у тестах списку, вкладені в рядок запуску (select … run_tasks(status)).
+    const rows: Record<string, unknown>[] = db.tables.run_tasks
+      ? (db.tables.run_tasks as Record<string, unknown>[]).map((task) => ({ ...task, run_id: runs[0]?.id }))
+      : runs.flatMap((run) => (run.run_tasks ?? []).map((task) => ({ ...task, run_id: run.id })));
+    return rows.map(({ id, run_id, section_name, name, required, position, status }) => ({
+      id,
+      run_id,
+      section_name,
+      name,
+      required,
+      position,
+      status,
+    }));
+  },
 }));
 
 vi.mock("@/lib/supabase/server", () => {
@@ -36,7 +65,10 @@ vi.mock("@/lib/supabase/server", () => {
     createClient: async () => ({
       auth: { getClaims: async () => ({ data: { claims: { sub: "vendor-v" } }, error: null }) },
       from: (table: string) => query(table === "profiles" ? vendorProfile : (db.tables[table] ?? [])),
-      rpc: async (name: string) => ({ data: db.rpc[name] ?? null, error: null }),
+      rpc: async (name: string) =>
+        db.rpcErrors[name]
+          ? { data: null, error: { message: db.rpcErrors[name] } }
+          : { data: db.rpc[name] ?? vendorFunctions[name as keyof typeof vendorFunctions]?.() ?? null, error: null },
     }),
   };
 });
@@ -53,6 +85,7 @@ const noSearch = Promise.resolve({});
 beforeEach(() => {
   db.tables = {};
   db.rpc = {};
+  db.rpcErrors = {};
 });
 
 describe("vendor-access", () => {
@@ -226,5 +259,16 @@ describe("vendor-access", () => {
     expect(html).toContain("Not enough rights");
     expect(html).toContain("Back to runs");
     expect(html).not.toContain("Tenant move-in");
+  });
+
+  it("AC-VENDOR-03: збій vendor_tasks — помилка сторінки, а не «Your tasks: 0 of 0 done» (запит задач окремий від запусків)", async () => {
+    db.tables.runs = [
+      { id: RUN_ID, case_name: "Apartment 12, move-in", template_name: "Tenant move-in", template_version: 1, status: "in_progress", manager_id: "manager-a", created_at: "2026-11-02T10:00:00Z" },
+    ];
+    db.tables.run_tasks = OWN_TASKS;
+    db.rpcErrors.vendor_tasks = "connection lost";
+
+    await expect(RunsPage()).rejects.toThrow("connection lost");
+    await expect(RunPage({ params: params(RUN_ID), searchParams: noSearch })).rejects.toThrow("connection lost");
   });
 });

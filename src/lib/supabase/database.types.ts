@@ -236,6 +236,22 @@ export type Database = {
         Args: { p_task_id: string };
         Returns: boolean;
       };
+      vendor_runs: {
+        Args: { p_run_id?: string };
+        Returns: { id: string; case_name: string; status: string; created_at: string }[];
+      };
+      vendor_tasks: {
+        Args: { p_run_id?: string };
+        Returns: {
+          id: string;
+          run_id: string;
+          section_name: string;
+          name: string;
+          required: boolean;
+          position: number;
+          status: string;
+        }[];
+      };
       list_staff: {
         Args: Record<PropertyKey, never>;
         Returns: { id: string; email: string | null }[];

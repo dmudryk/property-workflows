@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
 import { MSG_CANNOT_UNDO, MSG_RUN_NOT_FOUND, canMarkDone, needsConfirmation, staffLabel } from "@/lib/runs/rules";
 import { isVendor, requireActor } from "@/lib/auth/actor";
+import { loadRun } from "@/lib/runs/run-reads";
 import { runStatusKind, taskStatusKind } from "@/lib/status";
 import { templateVersionLabel } from "@/lib/templates/format";
 import { markDone } from "../actions";
@@ -17,9 +18,11 @@ import { RunTasks, type RunTaskView } from "./run-tasks";
 // й база, відмова — повідомлення AC-TASK-03. Запуск, якого користувач не бачить (RLS), — «Run not found» (AC-TASK-10).
 // Версія шаблону, з якої створено запуск, — «Template version N» (AC-EDITOR-06). Прогрес і задачі показує RunTasks
 // (позначка «Mark as done» — оптимістично, DESIGN.md, розділ 6).
-// Вендор бачить лише свої задачі (RLS) — назву, секцію, «required»/«optional», статус — і «Your tasks: N of K done»;
-// без шаблону, версії, менеджера запуску, email і прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05). Запуск без його
-// задач RLS не віддає — «Run not found» (AC-VENDOR-06). Підтвердження останньої обов'язкової — за public.completes_run.
+// Вендор бачить лише свої задачі — назву, секцію, «required»/«optional», статус — і «Your tasks: N of K done»;
+// без шаблону, версії, менеджера запуску, email і прогресу всього запуску (AC-VENDOR-04, AC-VENDOR-05). Таблиці runs і
+// run_tasks вендору закрито: запуск і задачі приходять з функцій бази vendor_runs і vendor_tasks, де шаблону, версії й
+// менеджера немає взагалі (loadRun; ADR 0005). Запуск без його задач функція не віддає — «Run not found» (AC-VENDOR-06).
+// Підтвердження останньої обов'язкової — за public.completes_run.
 export default async function RunPage({ params, searchParams }: PageProps<"/runs/[id]">) {
   const { id } = await params;
   const { error, confirm } = await searchParams;
@@ -27,12 +30,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   const { supabase, actor } = await requireActor();
   const vendor = isVendor(actor);
 
-  const { data: run } = await supabase
-    .from("runs")
-    .select("id, case_name, template_name, template_version, status, manager_id")
-    .eq("id", id)
-    .maybeSingle();
-  if (!run) {
+  const loaded = await loadRun(supabase, id, vendor && actor ? actor.id : null);
+  if (!loaded) {
     return (
       <main className="flex flex-col gap-4">
         <Link href="/runs" className="text-sm underline-offset-4 hover:underline">
@@ -45,15 +44,10 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     );
   }
 
-  const [{ data: rows }, { data: staff }] = await Promise.all([
-    supabase
-      .from("run_tasks")
-      .select("id, section_name, name, required, position, assignee_id, status")
-      .eq("run_id", id)
-      .order("position"),
-    // Вендору email інших користувачів не показуємо (і база йому їх не віддає).
-    vendor ? Promise.resolve({ data: [] }) : supabase.rpc("list_staff"),
-  ]);
+  const { run, tasks: rows } = loaded;
+  const managerId = loaded.vendor ? null : loaded.run.manager_id;
+  // Вендору email інших користувачів не показуємо (і база йому їх не віддає).
+  const { data: staff } = vendor ? { data: [] } : await supabase.rpc("list_staff");
   const people = new Map((staff ?? []).map((member) => [member.id, member]));
   // Вендор сам не бачить, чи його задача — остання обов'язкова «to do» у запуску: це каже база.
   const completes = new Map(
@@ -71,7 +65,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     position: t.position,
     status: taskStatusKind(t.status),
     assigneeLabel: vendor ? "" : staffLabel(people.get(t.assignee_id)),
-    canMark: actor ? canMarkDone(actor, { managerId: run.manager_id }, { assigneeId: t.assignee_id }) : false,
+    canMark: actor ? canMarkDone(actor, { managerId: managerId ?? "" }, { assigneeId: t.assignee_id }) : false,
     completesRun: completes.get(t.id),
   }));
 
@@ -81,7 +75,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
 
   // Вендору — назва випадку заголовком і «Your tasks: N of K done» (RunTasks), без статусу запуску, назви й версії
   // шаблону (AC-VENDOR-11; solomchaak/property-workflows-spec#41).
-  const header = vendor ? (
+  const header = loaded.vendor ? (
     <>
       <Link href="/runs" className="text-sm underline-offset-4 hover:underline">
         Back to runs
@@ -95,13 +89,13 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
       </Link>
       <h1 className="text-2xl font-semibold">{run.case_name}</h1>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-        <span>{run.template_name}</span>
+        <span>{loaded.run.template_name}</span>
         <span data-testid="template-version" className="tabular-nums">
-          {templateVersionLabel(run.template_version)}
+          {templateVersionLabel(loaded.run.template_version)}
         </span>
         <StatusBadge data-testid="run-status" kind={runStatusKind(run.status)} />
         <span>
-          Run manager: <span data-testid="run-manager">{staffLabel(people.get(run.manager_id))}</span>
+          Run manager: <span data-testid="run-manager">{staffLabel(people.get(loaded.run.manager_id))}</span>
         </span>
       </div>
     </>
