@@ -25,10 +25,10 @@ Done when: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-03, AC-DOCAI-04, AC-DOCAI-05, AC-D
 
 - [x] 3.1 `RECORD=1 npm run eval` (вручну) і звіт.
 
-## 4. Прод і UAT (PR «Реалізація» `task/docai-uat`)
+## 4. Прод і UAT (PR «Реалізація» `task/docai-uat` — специфікації й виправлення; `task/docai-uat-report` — звіт і archive)
 
 Done when: UAT на проді — AC-DOCAI-09 і AC-DOCAI-07; `docs/conformance.md` з чесними статусами; archive
 `impl-ws10-docai`.
 
-- [ ] 4.1 Специфікації Playwright, прогін на проді, звіт `docs/qa/uat/2026-11-16/`.
-- [ ] 4.2 archive `impl-ws10-docai`.
+- [x] 4.1 Специфікації Playwright, прогін на проді, звіт `docs/qa/uat/2026-11-16/`.
+- [x] 4.2 archive `impl-ws10-docai`.
