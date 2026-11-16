@@ -284,31 +284,128 @@ function useCurrentSave(save: SaveState, proposeSeq: number): SaveState {
 }
 
 const seqOf = (state: ProposeState) => ("seq" in state ? state.seq : 0);
+const proposalOf = (state: ProposeState, shown: boolean) => (shown && state.status === "proposed" ? state.proposal : null);
 
-// Відмова (AC-DOCAI-09), «недоступний» (AC-DOCAI-13), помилка дії (AC-DOCAI-11, AC-DOCAI-16) чи файл не .txt
-// (AC-DOCAI-12) — повідомлення під полем тексту.
-function BlockMessage({ text, error }: { text: string; error: boolean }) {
+type BlockText = { text: string; error: boolean };
+
+// Повідомлення під полем тексту: файл не .txt (AC-DOCAI-12); інакше — відмова (AC-DOCAI-09), «недоступний»
+// (AC-DOCAI-13) чи помилка дії (AC-DOCAI-11, AC-DOCAI-16). Поки AI читає, повідомлень немає (AC-DOCAI-03).
+function messageFor(state: ProposeState, shown: boolean, fileError: string | null, proposing: boolean): BlockText | null {
+  if (proposing) return null;
+  if (fileError) return { text: fileError, error: true };
+  if (!shown || !("message" in state)) return null;
+  return { text: state.message, error: state.status === "error" };
+}
+
+// «Reading the document…» (AC-DOCAI-03) і повідомлення блоку.
+function BlockStatus({ reading, message }: { reading: boolean; message: BlockText | null }) {
   return (
-    <Alert variant={error ? "destructive" : "default"} data-testid="docai-message">
-      <AlertDescription className={error ? "text-destructive" : "text-foreground"}>{text}</AlertDescription>
-    </Alert>
+    <>
+      {reading ? (
+        <p role="status" aria-live="polite" data-testid="docai-reading" className="text-sm text-muted-foreground">
+          {MSG_READING}
+        </p>
+      ) : null}
+      {message ? (
+        <Alert variant={message.error ? "destructive" : "default"} data-testid="docai-message">
+          <AlertDescription className={message.error ? "text-destructive" : "text-foreground"}>{message.text}</AlertDescription>
+        </Alert>
+      ) : null}
+    </>
   );
 }
 
 // Файл може бути великим: читаємо лише початок, а сервер однаково обрізає документ до MAX_DOCUMENT_CHARS.
 const FILE_READ_LIMIT = 64_000;
 
+// AC-DOCAI-12: «Upload a text file» — лише простий текстовий файл; його текст іде в поле тексту, звідки його розбирають
+// як вставлений.
+function UploadTextFile({ disabled, onText, onError }: { disabled: boolean; onText: (text: string) => void; onError: (message: string) => void }) {
+  const input = useRef<HTMLInputElement>(null);
+
+  async function onFile(file: File | undefined) {
+    if (!file) return;
+    if (!isPlainTextFile(file)) {
+      onError(MSG_TEXT_FILES_ONLY);
+      return;
+    }
+    onText(await file.slice(0, FILE_READ_LIMIT).text());
+  }
+
+  return (
+    <>
+      <input
+        ref={input}
+        type="file"
+        accept=".txt,text/plain"
+        hidden
+        data-testid="docai-file"
+        onChange={(e) => {
+          void onFile(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      <Button type="button" variant="outline" data-testid="docai-upload" disabled={disabled} onClick={() => input.current?.click()}>
+        Upload a text file
+      </Button>
+    </>
+  );
+}
+
+// Поле тексту, «Upload a text file» і «Propose values». Текст документа — керований: React 19 після дії форми очищає
+// некеровані поля, а людина звіряє пропозицію з оригіналом і при «недоступний» переносить значення з нього вручну.
+function ProposeForm({
+  runId,
+  text,
+  proposing,
+  action,
+  onTextChange,
+  onSubmit,
+  onFileText,
+  onFileError,
+}: {
+  runId: string;
+  text: string;
+  proposing: boolean;
+  action: (formData: FormData) => void;
+  onTextChange: (text: string) => void;
+  onSubmit: () => void;
+  onFileText: (text: string) => void;
+  onFileError: (message: string) => void;
+}) {
+  return (
+    <form action={action} onSubmit={onSubmit} className="flex flex-col gap-4">
+      <input type="hidden" name="run_id" value={runId} />
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="docai-text">Document text</Label>
+        <Textarea
+          id="docai-text"
+          data-testid="docai-text"
+          name="text"
+          rows={5}
+          maxLength={8000}
+          value={text}
+          onChange={(e) => onTextChange(e.target.value)}
+        />
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <UploadTextFile disabled={proposing} onText={onFileText} onError={onFileError} />
+        {/* AC-DOCAI-03: поки AI читає, кнопка лишається «Propose values», але вимкнена. */}
+        <SubmitButton data-testid="docai-propose" variant="outline" pendingLabel="Propose values">
+          Propose values
+        </SubmitButton>
+      </div>
+    </form>
+  );
+}
+
 export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction, proposing] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
   const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
-
-  // Текст документа — керований: React 19 після дії форми очищає некеровані поля, а людина звіряє пропозицію з
-  // оригіналом і при «недоступний» переносить значення з нього вручну (code-review 16.11).
   const [text, setText] = useState("");
   const [fileError, setFileError] = useState<string | null>(null);
   // Номер відповіді, після якої блок закрито: «Discard» чи новий файл. Нова відповідь «Propose values» його відкриває.
   const [closedSeq, setClosedSeq] = useState(0);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const proposeSeq = seqOf(proposeState);
   const consumedSeq = useConsumedProposal(saveState, proposeSeq);
@@ -318,32 +415,22 @@ export function DocumentParser({ runId }: { runId: string }) {
     pending: proposing,
     closed: proposeSeq <= Math.max(closedSeq, consumedSeq),
   });
+  const proposal = proposalOf(proposeState, view.values);
 
-  const close = () => setClosedSeq(proposeSeq);
-  const discard = () => {
+  function fileText(content: string) {
+    setClosedSeq(proposeSeq);
+    setFileError(null);
+    setText(content);
+  }
+  function fileRejected(message: string) {
+    setClosedSeq(proposeSeq);
+    setFileError(message);
+  }
+  function discard() {
     setText("");
     setFileError(null);
-    close();
-  };
-
-  // AC-DOCAI-12: лише простий текстовий файл; його текст — у поле тексту, звідки його розбирають як вставлений.
-  async function onFile(file: File | undefined) {
-    if (!file) return;
-    close();
-    if (!isPlainTextFile(file)) {
-      setFileError(MSG_TEXT_FILES_ONLY);
-      return;
-    }
-    setFileError(null);
-    setText(await file.slice(0, FILE_READ_LIMIT).text());
+    setClosedSeq(proposeSeq);
   }
-
-  const proposal = view.values && proposeState.status === "proposed" ? proposeState.proposal : null;
-  const message = !proposing && fileError ? { text: fileError, error: true } : null;
-  const actionMessage =
-    !message && view.message && "message" in proposeState
-      ? { text: proposeState.message, error: proposeState.status === "error" }
-      : null;
 
   return (
     <Card data-testid="document-parser" className="bg-background">
@@ -355,51 +442,18 @@ export function DocumentParser({ runId }: { runId: string }) {
         </p>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <form action={proposeAction} onSubmit={() => setFileError(null)} className="flex flex-col gap-4">
-          <input type="hidden" name="run_id" value={runId} />
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="docai-text">Document text</Label>
-            <Textarea
-              id="docai-text"
-              data-testid="docai-text"
-              name="text"
-              rows={5}
-              maxLength={8000}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </div>
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".txt,text/plain"
-            hidden
-            data-testid="docai-file"
-            onChange={(e) => {
-              void onFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <div className="flex flex-wrap gap-3">
-            <Button type="button" variant="outline" data-testid="docai-upload" disabled={proposing} onClick={() => fileInput.current?.click()}>
-              Upload a text file
-            </Button>
-            {/* AC-DOCAI-03: поки AI читає, кнопка лишається «Propose values», але вимкнена. */}
-            <SubmitButton data-testid="docai-propose" variant="outline" pendingLabel="Propose values">
-              Propose values
-            </SubmitButton>
-          </div>
-        </form>
-
-        {view.reading ? (
-          <p role="status" aria-live="polite" data-testid="docai-reading" className="text-sm text-muted-foreground">
-            {MSG_READING}
-          </p>
-        ) : null}
-        {message ? <BlockMessage {...message} /> : null}
-        {actionMessage ? <BlockMessage {...actionMessage} /> : null}
-
-        {view.values && !message ? (
+        <ProposeForm
+          runId={runId}
+          text={text}
+          proposing={proposing}
+          action={proposeAction}
+          onTextChange={setText}
+          onSubmit={() => setFileError(null)}
+          onFileText={fileText}
+          onFileError={fileRejected}
+        />
+        <BlockStatus reading={view.reading} message={messageFor(proposeState, view.message, fileError, proposing)} />
+        {view.values && !fileError ? (
           <ValuesForm
             key={proposeSeq}
             runId={runId}
@@ -410,7 +464,6 @@ export function DocumentParser({ runId }: { runId: string }) {
             onDiscard={discard}
           />
         ) : null}
-
         <p aria-live="polite" data-testid="docai-saved" className="text-sm">
           {shownSave.status === "saved" ? "Values saved" : ""}
         </p>
