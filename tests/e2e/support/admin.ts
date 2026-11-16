@@ -21,6 +21,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 // задачами вендорів uat-…-v…: спершу запуски користувача (їхні задачі йдуть каскадом), потім його задачі в запусках
 // інших синтетичних користувачів. Запусків і задач справжніх акаунтів синтетичні користувачі не мають.
 const OWNED_ROWS: { table: string; column: string }[] = [
+  // Зріз 4: документи, які синтетичний менеджер зберіг (created_by → profiles без каскаду), — до запусків і користувачів.
+  { table: "run_documents", column: "created_by" },
   { table: "runs", column: "manager_id" },
   { table: "run_tasks", column: "assignee_id" },
   { table: "run_tasks", column: "done_by" },

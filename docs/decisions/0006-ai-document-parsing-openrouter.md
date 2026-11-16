@@ -2,7 +2,7 @@
 
 Взято з заготовки `koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature/docs/decisions/NNNN-ai-feature-openrouter.md`.
 
-- Статус: прийнято
+- Статус: прийнято (доповнює правило «Секрети» в `AGENTS.md`: ключ моделі `OPENROUTER_API_KEY` — і у Vercel)
 - Дата: 2026-11-16
 - AC: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-03, AC-DOCAI-04, AC-DOCAI-05, AC-DOCAI-06, AC-DOCAI-07, AC-DOCAI-08,
   AC-DOCAI-09, AC-DOCAI-10, AC-DOCAI-11
@@ -24,6 +24,11 @@
 ## Рішення
 
 - Нові залежності (точні версії): `ai@7.0.162`, `@openrouter/ai-sdk-provider@3.1.0`, `zod@4.6.7`, `server-only@0.0.1`.
+- **Секрет моделі у Vercel.** Правило «Секрети» шаблону (`AGENTS.md`) дозволяє у Vercel лише
+  `NEXT_PUBLIC_SUPABASE_URL` і `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Функція працює на проді, тож серверний ключ
+  `OPENROUTER_API_KEY` теж живе у Vercel (Production + Preview), як вимагає D0 курсу WS10. Це доповнення правила, а не
+  послаблення: ключ лише серверний (ніколи `NEXT_PUBLIC_`, читає один файл з `server-only`, тест
+  `tests/ai-key.test.ts`), а `SUPABASE_SECRET_KEY` у Vercel, як і раніше, не додаємо ніколи.
 - Виклик — `generateText` + `Output.object({ schema })` (AI SDK 7). Схема zod (`src/lib/ai/schema.ts`):
   `status: ok | refused`, тип документа, поля заявки (переліки PM), позиції кошторису й total, нотатки, прапорець
   `injectionIgnored`; «невідоме» = `null`. Відповідь не за схемою — помилка, а не чернетка.

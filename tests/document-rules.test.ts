@@ -37,6 +37,11 @@ describe("телефон", () => {
     expect(normalizePhone("5550103", text)).toBe("555-0103");
   });
 
+  it("AC-DOCAI-01: той самий десятизначний номер із кодом країни і без — одна форма", () => {
+    expect(normalizePhone("1 555 010 1234", "call me at 1 555 010 1234")).toBe("555-010-1234");
+    expect(normalizePhone("555 010 1234", "call me at 555 010 1234")).toBe("555-010-1234");
+  });
+
   it("AC-DOCAI-02: телефона, якого немає в документі, не вигадуємо — порожнє поле", () => {
     const text = "The oven in apartment 5 does not heat up anymore. Thanks, Maria Demo";
     expect(normalizePhone("555-0100", text)).toBeNull();
@@ -112,6 +117,14 @@ describe("ін'єкція", () => {
 
   it("AC-DOCAI-08: звичайний лист — без нотатки ін'єкції", () => {
     expect(looksLikeInjection("The kitchen tap in apartment 12 has been dripping for three days.")).toBe(false);
+    // Звичайні фрази орендаря, схожі на ін'єкцію лише словами (code-review 16.11).
+    expect(looksLikeInjection("Please don't ignore my request, the building rules say heating must work.")).toBe(false);
+    expect(looksLikeInjection("I hope you are now aware of the leak.")).toBe(false);
+  });
+
+  it("AC-DOCAI-08: нотатку моделі зі словом «instructions» не про ін'єкцію не прибираємо", () => {
+    const p = finalizeDraft(draft({ phone: "555-0106", notes: ["Tenant left instructions to call before visiting."] }), text);
+    expect(p.notes).toEqual(["Tenant left instructions to call before visiting.", INJECTION_NOTE]);
   });
 
   it("AC-DOCAI-08: довгий документ обрізано до межі довжини", () => {
