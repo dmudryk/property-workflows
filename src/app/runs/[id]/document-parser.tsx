@@ -266,6 +266,46 @@ function ValuesForm({
   );
 }
 
+// Стан із попереднього рендеру (React: «adjusting state when a prop changes»).
+
+// Номер відповіді, з якої форма значень почалася заново: лише нова пропозиція чи відмова. Помилка («порожній текст»)
+// і «недоступний» лишають значення, які людина вже ввела вручну (AC-DOCAI-10; code-review 16.11).
+function useFormSeq(state: ProposeState, proposeSeq: number) {
+  const [formSeq, setFormSeq] = useState(0);
+  const resets = state.status === "proposed" || state.status === "refused";
+  if (resets && proposeSeq !== formSeq) setFormSeq(proposeSeq);
+  return formSeq;
+}
+
+// Номер пропозиції, яку вже збережено: після успішного «Save values» форма порожня, а не знову з пропозиції моделі
+// (UAT на проді 16.11: після збереження urgent форма знову показувала «not urgent» моделі).
+function useConsumedProposal(save: SaveState, proposeSeq: number) {
+  const [consumed, setConsumed] = useState({ savedSeq: 0, proposeSeq: 0 });
+  if (save.savedSeq !== consumed.savedSeq) setConsumed({ savedSeq: save.savedSeq, proposeSeq });
+  return consumed.proposeSeq;
+}
+
+// Повідомлення збереження — лише про спробу після останньої відповіді «Propose values» (code-review 16.11).
+function useCurrentSave(save: SaveState, proposeSeq: number): SaveState {
+  const [saveAt, setSaveAt] = useState({ seq: 0, proposeSeq: 0 });
+  if (save.seq !== saveAt.seq) setSaveAt({ seq: save.seq, proposeSeq });
+  return saveAt.proposeSeq === proposeSeq ? save : { ...save, status: "idle" };
+}
+
+const seqOf = (state: ProposeState) => ("seq" in state ? state.seq : 0);
+const valuesFrom = (proposal: Proposal | null): Values => (proposal ? fromProposal(proposal) : EMPTY);
+
+// Відмова (AC-DOCAI-07), «недоступний» (AC-DOCAI-10) чи помилка дії — повідомлення над формою.
+function ProposeMessage({ state }: { state: ProposeState }) {
+  if (state.status !== "refused" && state.status !== "unavailable" && state.status !== "error") return null;
+  const error = state.status === "error";
+  return (
+    <Alert variant={error ? "destructive" : "default"} data-testid="docai-message">
+      <AlertDescription className={error ? "text-destructive" : "text-foreground"}>{state.message}</AlertDescription>
+    </Alert>
+  );
+}
+
 export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
   const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
@@ -273,26 +313,14 @@ export function DocumentParser({ runId }: { runId: string }) {
   // Текст документа — керований: React 19 після дії форми очищає некеровані поля, а людина звіряє пропозицію з
   // оригіналом і при «недоступний» переносить значення з нього вручну (code-review 16.11).
   const [text, setText] = useState("");
-  const proposeSeq = "seq" in proposeState ? proposeState.seq : 0;
-  // Стан із попереднього рендеру (React: «adjusting state when a prop changes»):
-  //  - formSeq — форма починається заново лише з новою пропозицією чи відмовою; помилка («порожній текст») і
-  //    «недоступний» лишають значення, які людина вже ввела вручну (AC-DOCAI-10; code-review 16.11);
-  //  - consumed — збережена пропозиція «використана»: після успішного «Save values» форма порожня, а не знову з
-  //    пропозиції моделі (UAT на проді 16.11: після збереження urgent форма знову показувала «not urgent»);
-  //  - saveAt — повідомлення збереження стосується лише спроби після останньої відповіді «Propose values».
-  const [formSeq, setFormSeq] = useState(0);
-  if ((proposeState.status === "proposed" || proposeState.status === "refused") && proposeSeq !== formSeq) setFormSeq(proposeSeq);
-  const [consumed, setConsumed] = useState({ savedSeq: 0, proposeSeq: 0 });
-  if (saveState.savedSeq !== consumed.savedSeq) setConsumed({ savedSeq: saveState.savedSeq, proposeSeq });
-  const [saveAt, setSaveAt] = useState({ seq: 0, proposeSeq: 0 });
-  if (saveState.seq !== saveAt.seq) setSaveAt({ seq: saveState.seq, proposeSeq });
-  const shownSave: SaveState = saveAt.proposeSeq === proposeSeq ? saveState : { ...saveState, status: "idle" };
+  const proposeSeq = seqOf(proposeState);
+  const formSeq = useFormSeq(proposeState, proposeSeq);
+  const consumedSeq = useConsumedProposal(saveState, proposeSeq);
+  const shownSave = useCurrentSave(saveState, proposeSeq);
 
-  const proposed = proposeState.status === "proposed" && proposeSeq > consumed.proposeSeq;
-  const initial = proposed ? fromProposal(proposeState.proposal) : EMPTY;
+  const proposal = proposeState.status === "proposed" && proposeSeq > consumedSeq ? proposeState.proposal : null;
   // Після помилки збереження ключ не змінюється: введене лишається для повторної спроби (рев'ю CodeRabbit #55).
   const formKey = `${formSeq}-${saveState.savedSeq}`;
-  const message = proposeState.status === "refused" || proposeState.status === "unavailable" || proposeState.status === "error" ? proposeState : null;
 
   return (
     <Card data-testid="document-parser" className="bg-background">
@@ -323,13 +351,16 @@ export function DocumentParser({ runId }: { runId: string }) {
           </SubmitButton>
         </form>
 
-        {message ? (
-          <Alert variant={message.status === "error" ? "destructive" : "default"} data-testid="docai-message">
-            <AlertDescription className={message.status === "error" ? "text-destructive" : "text-foreground"}>{message.message}</AlertDescription>
-          </Alert>
-        ) : null}
+        <ProposeMessage state={proposeState} />
 
-        <ValuesForm key={formKey} runId={runId} initial={initial} proposed={proposed} saveAction={saveAction} saveState={shownSave} />
+        <ValuesForm
+          key={formKey}
+          runId={runId}
+          initial={valuesFrom(proposal)}
+          proposed={proposal !== null}
+          saveAction={saveAction}
+          saveState={shownSave}
+        />
 
         <p aria-live="polite" data-testid="docai-saved" className="text-sm">
           {shownSave.status === "saved" ? "Values saved" : ""}
