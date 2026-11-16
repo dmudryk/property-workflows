@@ -10,6 +10,7 @@ import { runStatusKind, taskStatusKind } from "@/lib/status";
 import { templateVersionLabel } from "@/lib/templates/format";
 import { markDone } from "../actions";
 import { RUN_ERRORS, messageFor } from "../messages";
+import { loadRunDocuments, RunDocuments } from "./run-documents";
 import { RunTasks, type RunTaskView } from "./run-tasks";
 
 // Сторінка запуску: прогрес «N of M done» (AC-TASK-05), задачі групами за секціями (AC-TASK-12) з email виконавця
@@ -68,6 +69,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
     canMark: actor ? canMarkDone(actor, { managerId: managerId ?? "" }, { assigneeId: t.assignee_id }) : false,
     completesRun: completes.get(t.id),
   }));
+
+  const documents = await loadRunDocuments(supabase, actor, run.id, managerId);
 
   const confirmable = (taskId: string) =>
     vendor ? tasks.some((t) => t.id === taskId && t.completesRun) : needsConfirmation(tasks, taskId);
@@ -134,6 +137,8 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   return (
     <main className="flex flex-col gap-6">
       <RunTasks runId={run.id} tasks={tasks} header={header} notices={notices} vendor={vendor} />
+      {/* AI-розбір документа — лише адміністратору й менеджеру запуску (AC-DOCAI-11); вендору managerId = null. */}
+      <RunDocuments runId={run.id} documents={documents} authorLabel={(id) => staffLabel(people.get(id))} />
     </main>
   );
 }

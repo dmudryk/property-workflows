@@ -46,6 +46,10 @@ const vendorFunctions = vi.hoisted(() => ({
   },
 }));
 
+// Сторінка запуску імпортує дії AI-розбору, а ті — обгортку моделі з `server-only` (у Vitest немає серверного
+// оточення Next.js). Вендору блок розбору не показується, модель тут не викликається.
+vi.mock("server-only", () => ({}));
+
 vi.mock("@/lib/supabase/server", () => {
   // Ланцюжок запиту supabase-js: фільтри не змінюють рядків; await — усі рядки, maybeSingle — перший.
   const query = (rows: unknown[]) => {
