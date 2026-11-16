@@ -48,17 +48,12 @@ test(
       page,
       {
         clause: 'A sees "This document is not a maintenance request or an estimate." and no proposed value',
-        visible: ["«This document is not a maintenance request or an estimate.»", "empty Phone and Description fields"],
-        hidden: [
-          "no notes block (it would appear above Document type; checked: docai-notes is absent)",
-          "Document type shows the form default, not a proposed value",
-          "nothing about this document is saved in the run",
-        ],
+        visible: ["«This document is not a maintenance request or an estimate.»", "no form with proposed values under it"],
+        hidden: ["no notes block (checked: docai-notes is absent)", "nothing about this document is saved in the run"],
       },
       async () => {
         await expect(page.getByTestId("docai-message")).toHaveText("This document is not a maintenance request or an estimate.");
-        await expect(page.getByTestId("docai-phone")).toHaveValue("");
-        await expect(page.getByTestId("docai-description")).toHaveValue("");
+        await expect(page.getByTestId("docai-values")).toHaveCount(0);
         await expect(page.getByTestId("docai-notes")).toHaveCount(0);
         expect(await documentsCount(run.id)).toBe(before);
       },

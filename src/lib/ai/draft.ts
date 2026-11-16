@@ -46,7 +46,7 @@ export async function proposeDraft(input: DraftInput, model: LanguageModel, opts
   }
 }
 
-// Відповідь моделі + правила коду (document-rules.ts) → пропозиція, яку бачить людина (AC-DOCAI-01…08).
+// Відповідь моделі + правила коду (document-rules.ts) → пропозиція, яку бачить людина (AC-DOCAI-01, 02, 06–10).
 export async function proposeDocument(input: DraftInput, model: LanguageModel, opts: DraftOptions = {}): Promise<ProposalResult> {
   const result = await proposeDraft(input, model, opts);
   return result.ok ? { ok: true, proposal: finalizeDraft(result.draft, input.text), modelId: result.modelId } : result;
@@ -71,7 +71,7 @@ export function classifyError(error: unknown): Failure {
   return { ok: false, reason: "provider_error", message: cause instanceof Error ? cause.message : String(cause) };
 }
 
-// AC-DOCAI-10: будь-який збій помічника — один текст і ручна форма; людина бачить стан, а не стек помилки.
+// AC-DOCAI-13: будь-який збій помічника — один текст і ручна форма; людина бачить стан, а не стек помилки.
 export const USER_MESSAGES: Record<FailureReason, string> = {
   invalid_output: UNAVAILABLE_MESSAGE,
   rate_limited: UNAVAILABLE_MESSAGE,

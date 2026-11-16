@@ -54,12 +54,12 @@ test(
     await thenStep(
       page,
       {
-        clause: "the run page shows the saved document with phone 555-0101 and urgency urgent",
-        visible: ["«Saved documents» with phone 555-0101 and urgency «urgent»"],
+        clause: "the run page shows one saved record: Maintenance request, phone 555-0101, urgency urgent, A's email and the time",
+        visible: ["«Saved documents» with Document type «Maintenance request», phone 555-0101, urgency «urgent», A's email and the date and time"],
         hidden: [
           "in the database: exactly one saved document of this run, by A, with urgency urgent",
           "before «Save values» the run had no saved values (checked in «Дано»)",
-          "after saving, the form above is empty again (the saved proposal is not shown as a new one)",
+          "after saving, the block above is empty again (the saved proposal is not shown as a new one)",
         ],
       },
       async () => {
@@ -67,7 +67,10 @@ test(
         await expect(saved).toHaveCount(1);
         await expect(saved.getByTestId("saved-phone")).toHaveText("555-0101");
         await expect(saved.getByTestId("saved-urgency")).toHaveText("urgent");
-        await expect(page.getByTestId("docai-phone")).toHaveValue("");
+        await expect(saved.getByTestId("saved-kind")).toHaveText("Maintenance request");
+        await expect(saved.getByTestId("saved-author")).toHaveText(A.email);
+        await expect(saved.getByTestId("saved-at")).toHaveText(/^\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}$/);
+        await expect(page.getByTestId("docai-values")).toHaveCount(0);
         // Кадр «Тоді» — це видима частина екрана: збережений документ — під формою.
         await page.getByTestId("saved-documents").scrollIntoViewIfNeeded();
         expect(await savedDocuments(run.id)).toEqual([

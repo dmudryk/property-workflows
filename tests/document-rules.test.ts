@@ -9,7 +9,9 @@ import {
   REFUSAL_MESSAGE,
   SaveValuesSchema,
   totalWarning,
+  TWO_PROBLEMS_NOTE,
 } from "@/lib/ai/document-rules";
+import { KIND_LABELS } from "@/lib/runs/documents";
 import { MAX_DOCUMENT_CHARS, wrapDocument } from "@/lib/ai/prompts/draft";
 import { scoreFields } from "@/lib/ai/scorer";
 import type { Draft } from "@/lib/ai/schema";
@@ -102,6 +104,33 @@ describe("відмова", () => {
     const p = finalizeDraft(draft({ status: "refused", phone: "555-0101", category: "other", notes: ["x"] }), "menu 555-0101");
     expect(p).toMatchObject({ status: "refused", phone: null, category: null, urgency: null, lineItems: [], notes: [] });
     expect(p.message).toBe(REFUSAL_MESSAGE);
+  });
+});
+
+describe("дві проблеми", () => {
+  const text = "Two things: the bathroom fan is very loud, and the sink in the kitchen is blocked and water stays in it. 555-0104";
+
+  it("AC-DOCAI-07: нотатку моделі про дві проблеми замінює дослівна «the email has two problems»", () => {
+    expect(TWO_PROBLEMS_NOTE).toBe("the email has two problems");
+    const p = finalizeDraft(draft({ phone: "555-0104", category: "plumbing", notes: ["The document has two problems."] }), text);
+    expect(p.notes).toEqual(["the email has two problems"]);
+  });
+
+  it("AC-DOCAI-07: інші слова моделі про кілька проблем — та сама дослівна нотатка, один раз", () => {
+    const p = finalizeDraft(draft({ notes: ["Two separate issues reported.", "multiple problems in one email"] }), text);
+    expect(p.notes).toEqual([TWO_PROBLEMS_NOTE]);
+  });
+
+  it("AC-DOCAI-07: нотатки про інше лишаються як є, а без нотатки моделі код її не вигадує", () => {
+    expect(finalizeDraft(draft({ notes: ["possible gas leak"] }), "gas").notes).toEqual(["possible gas leak"]);
+    expect(finalizeDraft(draft({ notes: ["Two keys are under the mat."] }), "keys").notes).toEqual(["Two keys are under the mat."]);
+    expect(finalizeDraft(draft({ notes: [] }), text).notes).toEqual([]);
+  });
+});
+
+describe("тип документа", () => {
+  it("AC-DOCAI-02: кошторис — Document type «Estimate», заявка — «Maintenance request»", () => {
+    expect(KIND_LABELS).toEqual({ request: "Maintenance request", estimate: "Estimate" });
   });
 });
 

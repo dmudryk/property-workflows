@@ -189,6 +189,22 @@ describe("vendor-access", () => {
     expect(html).not.toContain('data-testid="template-version"');
   });
 
+  it("AC-DOCAI-14: вендор — виконавець задач 3 і 4 у запуску «Apartment 12, move-in» — не бачить блоку «Parse a document»", async () => {
+    db.tables.runs = [
+      { id: RUN_ID, case_name: "Apartment 12, move-in", template_name: "Tenant move-in", template_version: 1, status: "in_progress", manager_id: "manager-a" },
+    ];
+    db.tables.run_tasks = OWN_TASKS;
+    db.rpc.completes_run = false;
+
+    const html = renderToStaticMarkup(await RunPage({ params: params(RUN_ID), searchParams: noSearch }));
+
+    // Сторінка запуску вендора справжня (його задачі на місці), а блоку розбору й збережених документів немає.
+    expect(html).toContain("Your tasks: 0 of 2 done");
+    expect(html).not.toContain("Parse a document");
+    expect(html).not.toContain('data-testid="document-parser"');
+    expect(html).not.toContain('data-testid="saved-documents"');
+  });
+
   it("AC-VENDOR-12: рядок «Apartment 12, move-in» у списку вендора — випадок, статус і «Your tasks: 0 of 2 done», без назви шаблону «Tenant move-in»", async () => {
     db.tables.runs = [
       {

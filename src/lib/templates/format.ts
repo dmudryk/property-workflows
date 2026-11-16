@@ -15,6 +15,15 @@ export function formatKyivDateTime(value: string | Date): string {
   return `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
 }
 
+// Дата й час збереженого документа запуску — за Києвом, як у прикладі PM «12 Nov 2026, 10:15» (AC-DOCAI-04). Місяць —
+// з власного списку, а не з Intl: ICU різних версій пише вересень то «Sep», то «Sept».
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatKyivRecordDateTime(value: string | Date): string {
+  const parts = Object.fromEntries(kyiv.formatToParts(new Date(value)).map((p) => [p.type, p.value]));
+  return `${Number(parts.day)} ${MONTHS[Number(parts.month) - 1]} ${parts.year}, ${parts.hour}:${parts.minute}`;
+}
+
 // «Template version N» на сторінці запуску (AC-EDITOR-06).
 export function templateVersionLabel(version: number): string {
   return `Template version ${version}`;

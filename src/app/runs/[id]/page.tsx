@@ -137,7 +137,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/runs
   return (
     <main className="flex flex-col gap-6">
       <RunTasks runId={run.id} tasks={tasks} header={header} notices={notices} vendor={vendor} />
-      {/* AI-розбір документа — лише адміністратору й менеджеру запуску (AC-DOCAI-11); вендору managerId = null. */}
+      {/* AI-розбір документа — лише адміністратору й менеджеру запуску (AC-DOCAI-14, AC-DOCAI-15); вендору managerId = null. */}
       <RunDocuments runId={run.id} documents={documents} authorLabel={(id) => staffLabel(people.get(id))} />
     </main>
   );

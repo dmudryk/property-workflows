@@ -1,7 +1,8 @@
 import type { Category, DocumentKind, LineItem, Urgency } from "@/lib/ai/schema";
 import type { Actor } from "./rules";
 
-// Хто розбирає документ і зберігає значення в запуску: адміністратор або менеджер запуску (AC-DOCAI-11).
+// Хто розбирає документ і зберігає значення в запуску: адміністратор або менеджер запуску (AC-DOCAI-14, AC-DOCAI-15,
+// AC-DOCAI-16).
 // Та сама межа в базі — private.can_manage_run (міграція …_run_documents.sql); тут — щоб сторінка не показувала блок
 // і дія не кликала модель для того, кому база однаково відмовить.
 export function canParseDocuments(actor: Actor | null, managerId: string | null): boolean {
@@ -12,8 +13,39 @@ export function canParseDocuments(actor: Actor | null, managerId: string | null)
 
 export const KIND_LABELS: Record<DocumentKind, string> = {
   request: "Maintenance request",
-  estimate: "Vendor estimate",
+  estimate: "Estimate", // AC-DOCAI-02
 };
+
+// Значення форми блоку «Parse a document»: рядки полів введення, як їх бачить і виправляє людина.
+export type DocumentFormItem = { description: string; quantity: string; unitPrice: string };
+export type DocumentFormValues = {
+  kind: DocumentKind | null;
+  phone: string;
+  description: string;
+  category: Category | null;
+  urgency: Urgency | null;
+  lineItems: DocumentFormItem[];
+  statedTotal: string;
+  notes: string[];
+};
+
+// Порожня форма ручного введення: і Document type не вибрано (AC-DOCAI-13).
+export const EMPTY_FORM_VALUES: DocumentFormValues = {
+  kind: null,
+  phone: "",
+  description: "",
+  category: null,
+  urgency: null,
+  lineItems: [],
+  statedTotal: "",
+  notes: [],
+};
+
+// Вибір «Document type»: два значення PM і «Not set», поки тип не вибрано (AC-DOCAI-13).
+export const KIND_OPTIONS: { value: DocumentKind | null; label: string }[] = [
+  { value: null, label: "Not set" },
+  ...(["request", "estimate"] as const).map((k) => ({ value: k, label: KIND_LABELS[k] })),
+];
 
 // Збережений документ запуску (public.run_documents), як його показує сторінка.
 export type SavedDocument = {
@@ -65,7 +97,10 @@ export function toSavedDocument(row: Row): SavedDocument {
 
 export const money = (n: number) => n.toFixed(2);
 
-export const MSG_EMPTY_DOCUMENT = "Paste the text of a document first.";
+// Тексти блоку — дослівно з AC вимоги PM (openspec/specs/document-parsing/spec.md).
+export const MSG_EMPTY_DOCUMENT = "Paste the text of a document"; // AC-DOCAI-11
+export const MSG_TEXT_FILES_ONLY = "Only plain text files (.txt) are accepted"; // AC-DOCAI-12
+export const MSG_READING = "Reading the document…"; // AC-DOCAI-03
 export const MSG_SAVE_FAILED = "The values could not be saved. Try again.";
 export const MSG_DOCUMENTS_LOAD_FAILED = "Saved documents could not be loaded. Reload the page to try again.";
 
@@ -80,6 +115,28 @@ const FIELD_LABELS: Record<string, string> = {
   statedTotal: "Total",
   notes: "Notes",
 };
+
+// AC-DOCAI-12: кнопка «Upload a text file» приймає лише простий текстовий файл .txt (PDF, фото, скани, Word — поза
+// межами, solomchaak/property-workflows-spec#58). Тип, якщо браузер його знає, теж має бути текстовим: «.txt» із
+// типом зображення — не текст.
+export function isPlainTextFile(file: { name: string; type: string }): boolean {
+  return /\.txt$/i.test(file.name.trim()) && (file.type === "" || file.type.startsWith("text/plain"));
+}
+
+export type ProposeStatus = "idle" | "proposed" | "refused" | "unavailable" | "error";
+
+// Що показує блок під полем тексту. Поки AI читає — лише «Reading the document…» і жодного значення (AC-DOCAI-03).
+// Значення — після пропозиції або порожні для ручного введення, коли помічник недоступний (AC-DOCAI-13); після відмови
+// (AC-DOCAI-09) чи помилки (порожній текст, AC-DOCAI-11; «Not enough rights», AC-DOCAI-16) — лише повідомлення.
+// closed — пропозицію відкинуто (AC-DOCAI-05), збережено (AC-DOCAI-04) чи завантажено інший файл: блок знову порожній.
+export function documentBlockView({ status, pending, closed }: { status: ProposeStatus; pending: boolean; closed: boolean }) {
+  const open = !pending && !closed;
+  return {
+    reading: pending,
+    message: open && (status === "refused" || status === "unavailable" || status === "error"),
+    values: open && (status === "proposed" || status === "unavailable"),
+  };
+}
 
 export function invalidFieldMessage(path: readonly PropertyKey[]): string {
   const [field, index, sub] = path;

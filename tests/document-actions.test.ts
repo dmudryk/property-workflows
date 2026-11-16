@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { UNAVAILABLE_MESSAGE } from "@/lib/ai/document-rules";
 import { requestDocumentDraft, saveDocumentValues, type SaveState } from "@/app/runs/[id]/document-actions";
-import { loadRunDocuments } from "@/app/runs/[id]/run-documents";
+import { renderToStaticMarkup } from "react-dom/server";
+import { loadRunDocuments, RunDocuments } from "@/app/runs/[id]/run-documents";
 
 // Дії AI-розбору документа — справжні requestDocumentDraft / saveDocumentValues, справжній requireActor() і справжня
 // обгортка моделі (src/lib/ai/openrouter.ts). Замокано лише клієнт Supabase (роль у profiles, менеджер запуску в runs,
@@ -131,6 +132,28 @@ afterEach(() => {
 });
 
 describe("document-parsing: дії", () => {
+  it("AC-DOCAI-01: лист про кран — Document type «Maintenance request», Phone «555-0101», plumbing, not urgent, нічого не збережено", async () => {
+    const result = await requestDocumentDraft({ status: "idle" }, proposeForm());
+
+    expect(result).toMatchObject({
+      status: "proposed",
+      proposal: { kind: "request", phone: "555-0101", category: "plumbing", urgency: "not urgent", notes: [] },
+    });
+    expect(state.rpc).toEqual([]);
+  });
+
+  it("AC-DOCAI-11: порожнє поле чи лише пробіли — «Paste the text of a document», модель не викликано, значень немає", async () => {
+    for (const text of ["", "   \n\t  "]) {
+      expect(await requestDocumentDraft({ status: "idle" }, proposeForm(text))).toEqual({
+        status: "error",
+        message: "Paste the text of a document",
+        seq: 1,
+      });
+    }
+    expect(modelCalls).toEqual([]);
+    expect(state.rpc).toEqual([]);
+  });
+
   it("AC-DOCAI-04: «Propose values» лише повертає пропозицію у форму — у базу нічого не записано", async () => {
     const result = await requestDocumentDraft({ status: "idle" }, proposeForm());
 
@@ -226,6 +249,18 @@ describe("document-parsing: дії", () => {
     expect(await loadRunDocuments(failing, { id: "vendor-v", role: "vendor" }, RUN_ID, null)).toBeNull();
   });
 
+  it("AC-DOCAI-15: менеджер B — виконавець задачі в запуску менеджера A — не бачить блоку «Parse a document»", async () => {
+    const supabase = {
+      from: () => {
+        throw new Error("збережені документи для B не читаємо");
+      },
+    } as unknown as Parameters<typeof loadRunDocuments>[0];
+    const documents = await loadRunDocuments(supabase, { id: "manager-b", role: "manager" }, RUN_ID, MANAGER_A);
+
+    expect(documents).toBeNull();
+    expect(renderToStaticMarkup(RunDocuments({ runId: RUN_ID, documents, authorLabel: () => "—" }))).toBe("");
+  });
+
   it("AC-DOCAI-16: виконавець B (не менеджер запуску) — «Not enough rights», модель не викликано, нічого не записано", async () => {
     state.userId = "manager-b";
 
@@ -253,9 +288,10 @@ describe("document-parsing: дії", () => {
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "proposed" });
   });
 
-  it("AC-DOCAI-13: ключа немає — «The assistant is not available right now. Enter the values yourself.», без сторінки помилки", async () => {
+  it("AC-DOCAI-13: ключа немає — «The assistant is not available now. Fill in the values yourself.», без сторінки помилки", async () => {
     vi.stubEnv("OPENROUTER_API_KEY", " "); // пробіл = ключа немає (trim)
 
+    expect(UNAVAILABLE_MESSAGE).toBe("The assistant is not available now. Fill in the values yourself.");
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "unavailable", message: UNAVAILABLE_MESSAGE });
   });
 

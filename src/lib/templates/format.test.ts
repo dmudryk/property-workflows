@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countLabel, formatKyivDateTime, templateVersionLabel, versionLabel } from "./format";
+import { countLabel, formatKyivDateTime, formatKyivRecordDateTime, templateVersionLabel, versionLabel } from "./format";
 
 describe("шаблон: кількість у чипах", () => {
   it("однина для 1, множина для решти", () => {
@@ -22,5 +22,13 @@ describe("template-editor: версії", () => {
     expect(templateVersionLabel(1)).toBe("Template version 1");
     expect(versionLabel(2)).toBe("Version 2");
     expect(versionLabel(null)).toBe("—");
+  });
+});
+
+describe("formatKyivRecordDateTime", () => {
+  it("дата збереженого документа — за Києвом, «12 Nov 2026, 10:15»", () => {
+    expect(formatKyivRecordDateTime("2026-11-12T08:15:00Z")).toBe("12 Nov 2026, 10:15");
+    // Літній час, перехід через північ і вересень — завжди «Sep».
+    expect(formatKyivRecordDateTime("2026-09-03T21:05:00Z")).toBe("4 Sep 2026, 00:05");
   });
 });

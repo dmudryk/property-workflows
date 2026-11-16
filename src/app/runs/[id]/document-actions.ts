@@ -32,7 +32,7 @@ export type SaveState = { status: "idle" | "saved" | "error"; seq: number; saved
 
 type Session = Awaited<ReturnType<typeof requireActor>>;
 
-// Адміністратор або менеджер запуску (AC-DOCAI-11). Запуск читаємо під сесією користувача (RLS): вендору таблицю
+// Адміністратор або менеджер запуску (AC-DOCAI-16). Запуск читаємо під сесією користувача (RLS): вендору таблицю
 // runs закрито (ADR 0005), тож для нього запуску немає — відмова.
 async function mayParse({ supabase, actor }: Session, runId: string): Promise<boolean> {
   if (!actor || !runId) return false;
@@ -58,7 +58,7 @@ export async function requestDocumentDraft(prev: ProposeState, formData: FormDat
   const text = String(formData.get("text") ?? "");
   if (!text.trim()) return { status: "error", message: MSG_EMPTY_DOCUMENT, seq };
 
-  // Без ключа (немає, порожній, пробіли) — стан «недоступний», а не сторінка помилки (AC-DOCAI-10).
+  // Без ключа (немає, порожній, пробіли) — стан «недоступний», а не сторінка помилки (AC-DOCAI-13).
   const model = productModel();
   if (!model) return { status: "unavailable", message: UNAVAILABLE_MESSAGE, seq };
 
@@ -68,7 +68,7 @@ export async function requestDocumentDraft(prev: ProposeState, formData: FormDat
   return { status: "proposed", proposal: result.proposal, seq };
 }
 
-// Значення з форми: JSON → повторна перевірка на сервері (переліки, кількість > 0, довжини; AC-DOCAI-09).
+// Значення з форми: JSON → повторна перевірка на сервері (переліки, кількість > 0, довжини; AC-DOCAI-04).
 function parseValues(formData: FormData): { values: SaveValues } | { error: string } {
   let raw: unknown;
   try {
@@ -90,13 +90,13 @@ export async function saveDocumentValues(prev: SaveState, formData: FormData): P
   if ("error" in checked) return failed(checked.error);
   const { values } = checked;
 
-  // Попередження суми рахує код за значеннями, які людина зберігає (AC-DOCAI-06), а не те, що бачила модель.
+  // Попередження суми рахує код за значеннями, які людина зберігає (AC-DOCAI-08), а не те, що бачила модель.
   const warning = totalWarning(values.lineItems, values.statedTotal);
   // Місце для попередження лишаємо завжди: звичайні нотатки обрізаємо ДО нього (рев'ю CodeRabbit #55).
   const ordinary = values.notes.filter((n) => !n.startsWith("items add up to")).slice(0, warning ? 5 : 6);
   const notes = warning ? [...ordinary, warning] : ordinary;
 
-  // Запис — функцією бази під сесією користувача; права вирішує база (private.save_run_document, AC-DOCAI-11).
+  // Запис — функцією бази під сесією користувача; права вирішує база (private.save_run_document, AC-DOCAI-16).
   const { error } = await session.supabase.rpc("save_run_document", {
     p_run_id: runId,
     p_kind: values.kind,
