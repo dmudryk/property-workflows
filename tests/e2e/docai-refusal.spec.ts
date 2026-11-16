@@ -1,4 +1,4 @@
-// AC-DOCAI-07 — документ не заявка й не кошторис (GC-09, меню ресторану): «This document is not a maintenance request
+// AC-DOCAI-09 — документ не заявка й не кошторис (GC-09, меню ресторану): «This document is not a maintenance request
 // or an estimate.» і жодного запропонованого значення. Без запису в базу: менеджер запуску A, запуск
 // «Apartment 12, move-in» зі світу UAT (vendor-world.setup.ts). Один запит до моделі.
 import { expect, test } from "@playwright/test";
@@ -23,8 +23,8 @@ async function documentsCount(runId: string) {
 }
 
 test(
-  "AC-DOCAI-07: меню ресторану — «This document is not a maintenance request or an estimate.», жодних значень",
-  { tag: ["@uat"], annotation: { type: "ac", description: "AC-DOCAI-07" } },
+  "AC-DOCAI-09: меню ресторану — «This document is not a maintenance request or an estimate.», жодних значень",
+  { tag: ["@uat"], annotation: { type: "ac", description: "AC-DOCAI-09" } },
   async ({ page }) => {
     const world = readWorld();
     const A = world.users.a;

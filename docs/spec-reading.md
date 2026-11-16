@@ -164,3 +164,35 @@ AI document parsing», без мітки `requirement`, тож у `requirements/
 
 `spec-review`: блокер «AC не з вимог PM» свідомо лишено (тимчасові AC, правило курсу); виправлено — у вимогу AC-DOCAI-01
 дописано одну форму телефону з GC-03; нових питань до PM немає.
+
+## Відповіді PM 2026-11-16 (зріз 4)
+
+PM опублікував вимогу зрізу 4 з критеріями AC-DOCAI-01…16
+([solomchaak/property-workflows-spec#59](https://github.com/solomchaak/property-workflows-spec/issues/59), знімок
+`/requirements-sync` 2026-11-16) і відповів на питання solomchaak/property-workflows-spec#52–#58. Тимчасові AC розробника
+замінено AC PM з тим самим префіксом (#55). Відповіді на мої Q1–Q5:
+
+| # | Відповідь PM | Що стало в специфікації |
+|---|---|---|
+| Q1 | [solomchaak/property-workflows-spec#55](https://github.com/solomchaak/property-workflows-spec/issues/55), A: щонайменше 8 з 10 golden cases, кейси 9 і 10 — завжди; вимога з AC опублікована | поріг — у Assumptions зміни; AC-DOCAI-01…16 PM |
+| Q2 | [solomchaak/property-workflows-spec#52](https://github.com/solomchaak/property-workflows-spec/issues/52), A: «The assistant is not available now. Fill in the values yourself.», Document type і значення порожні й редаговані | AC-DOCAI-13 |
+| Q3 | [solomchaak/property-workflows-spec#53](https://github.com/solomchaak/property-workflows-spec/issues/53), A: блок «Parse a document» на сторінці запуску, менеджер запуску й адміністратор; редактор шаблонів не змінюється | AC-DOCAI-14, AC-DOCAI-15, AC-DOCAI-16 |
+| Q4 | [solomchaak/property-workflows-spec#54](https://github.com/solomchaak/property-workflows-spec/issues/54), A: нотатка «the email has two problems»; значення — запис запуску з типом, значеннями, email і часом | AC-DOCAI-04, AC-DOCAI-07 |
+| Q5 | [solomchaak/property-workflows-spec#56](https://github.com/solomchaak/property-workflows-spec/issues/56), A: опис — за змістом; решта полів — точно | Assumptions зміни |
+
+Решта рішень: #57 — збережені значення більше нічого не змінюють (Non-goals); #58 — вставлений текст і файл .txt, інші
+файли — «Only plain text files (.txt) are accepted» (AC-DOCAI-12).
+
+Переклад — зміна специфікації `clarify-ws10-docai`: MODIFIED AC-DOCAI-01; дев'ять вимог, сценарій яких дістав інший
+ID, — REMOVED і ADDED під новою назвою (OpenSpec не перейменовує сценарій у MODIFIED); ADDED AC-DOCAI-03, 05, 11, 12,
+16; REMOVED «Ризик для безпеки» (тимчасовий AC-DOCAI-04 — у PM такого AC немає, газ лишається golden case 6). Назви
+тестів перенумеровано окремим комітом. Рядки AC, які код уже виконує й тести доводять, — «реалізовано»; решта —
+«відкладено (чекає реалізації)» до задачі реалізації.
+
+`spec-review` (незалежний прогін): блокер — шаблон попередження суми в реченні вимоги (у PM точний текст лише в AC-DOCAI-08)
+— виправлено; додано припущення розробника (що означає «помічник недоступний», межа тексту 8 000 символів), точну
+Migration для газу, «не брати з інших документів чи з даних застосунку», «за Києвом». Нове питання до PM — Q1 у
+Open questions зміни: адміністратор, який у чужому запуску лише виконавець, — пункти 2 і 3 «Користувачі й ролі» вимоги
+PM суперечать одне одному; до відповіді адміністратор бачить блок у будь-якому запуску. Свідомо не ставлю: «чи
+приймається AC, якщо його golden case не пройшов» (поріг #55 стосується eval, тест AC перевіряє поведінку блоку на
+фіксованій відповіді AI) і «нотатка для трьох проблем» (текст нотатки PM задав дослівно в #54; три проблеми — поза AC).

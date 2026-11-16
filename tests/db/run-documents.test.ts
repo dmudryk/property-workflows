@@ -57,7 +57,7 @@ const documentsOf = (userId: string) =>
 const allDocuments = () => t.asService("select id from public.run_documents where run_id = $1", [RUN]);
 
 describe("document-parsing у базі", () => {
-  it("AC-DOCAI-09: виправлене значення збережено лише після «Save values» — до того в запуску нічого", async () => {
+  it("AC-DOCAI-04: виправлене значення збережено лише після «Save values» — до того в запуску нічого", async () => {
     expect(await allDocuments()).toEqual([]);
 
     const [{ id }] = await t.asUser<{ id: string }>(MANAGER_A, SAVE, [RUN, ...tapValues("urgent")]);
@@ -68,20 +68,20 @@ describe("document-parsing у базі", () => {
     ]);
   }, 60_000);
 
-  it("AC-DOCAI-09: напряму в таблицю не записати — лише функцією після дії людини", async () => {
+  it("AC-DOCAI-04: напряму в таблицю не записати — лише функцією після дії людини", async () => {
     await expect(
       t.asUser(MANAGER_A, "insert into public.run_documents (run_id, kind, created_by) values ($1, 'request', $2)", [RUN, MANAGER_A]),
     ).rejects.toThrow(/permission denied/);
     expect(await allDocuments()).toEqual([]);
   }, 60_000);
 
-  it("AC-DOCAI-11: виконавець B і вендор V зберегти не можуть — «Not enough rights», значень немає", async () => {
+  it("AC-DOCAI-16: виконавець B і вендор V зберегти не можуть — «Not enough rights», значень немає", async () => {
     await expect(t.asUser(MANAGER_B, SAVE, [RUN, ...tapValues()])).rejects.toThrow(/Not enough rights/);
     await expect(t.asUser(VENDOR, SAVE, [RUN, ...tapValues()])).rejects.toThrow(/Not enough rights/);
     expect(await allDocuments()).toEqual([]);
   }, 60_000);
 
-  it("AC-DOCAI-11: збережені менеджером A значення не бачать ні B, ні V; адміністратор бачить і зберігає", async () => {
+  it("AC-DOCAI-16: збережені менеджером A значення не бачать ні B, ні V; адміністратор бачить і зберігає", async () => {
     await t.asUser(MANAGER_A, SAVE, [RUN, ...tapValues()]);
     expect(await documentsOf(MANAGER_B)).toEqual([]);
     expect(await documentsOf(VENDOR)).toEqual([]);
@@ -90,12 +90,12 @@ describe("document-parsing у базі", () => {
     expect((await documentsOf(ADMIN)).map((d) => d.urgency).sort()).toEqual(["not urgent", "urgent"]);
   }, 60_000);
 
-  it("AC-DOCAI-11: відвідувач без входу не викликає функцію збереження", async () => {
+  it("AC-DOCAI-16: відвідувач без входу не викликає функцію збереження", async () => {
     await expect(t.asAnon(SAVE, [RUN, ...tapValues()])).rejects.toThrow(/permission denied/);
     expect(await allDocuments()).toEqual([]);
   }, 60_000);
 
-  it("AC-DOCAI-09: база ще раз перевіряє значення — категорія поза переліком, кількість 0 і позиція без ціни відхилено", async () => {
+  it("AC-DOCAI-04: база ще раз перевіряє значення — категорія поза переліком, кількість 0 і позиція без ціни відхилено", async () => {
     const [kind, phone, description, , urgency] = tapValues();
     await expect(t.asUser(MANAGER_A, SAVE, [RUN, kind, phone, description, "dragons", urgency, "[]", null, "{}"])).rejects.toThrow(
       /run_documents_category_check/,

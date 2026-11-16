@@ -1,4 +1,4 @@
-// AC-DOCAI-09 — людина підтверджує перед збереженням: менеджер запуску A вставляє лист про кран, що капає (GC-01),
+// AC-DOCAI-04 — людина підтверджує перед збереженням: менеджер запуску A вставляє лист про кран, що капає (GC-01),
 // отримує пропозицію, змінює urgency на urgent і натискає «Save values»; до цього в запуску немає збережених значень.
 // Пише в базу (@writes): A — синтетичний менеджер uat-…-a, запуск «Apartment 12, move-in» зі світу UAT
 // (vendor-world.setup.ts); документ прибирає teardown (OWNED_ROWS: run_documents.created_by). Один запит до моделі.
@@ -24,8 +24,8 @@ async function savedDocuments(runId: string) {
 }
 
 test(
-  "AC-DOCAI-09: виправлене значення збережено лише після «Save values» — до того в запуску нічого",
-  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-DOCAI-09" } },
+  "AC-DOCAI-04: виправлене значення збережено лише після «Save values» — до того в запуску нічого",
+  { tag: ["@uat", "@writes"], annotation: { type: "ac", description: "AC-DOCAI-04" } },
   async ({ page }) => {
     const world = readWorld();
     const A = world.users.a;
