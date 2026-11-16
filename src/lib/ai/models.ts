@@ -13,9 +13,15 @@ export const PRODUCT_MODELS = [
   "google/gemma-4-26b-a4b-it:free",
 ] as const;
 
-// Суддя для живого eval — інша родина, ніж основна модель продукту (не оцінює відповіді своєї родини).
-// Якщо відповідь дала резервна Gemma, суддя тієї ж родини: колонка modelId у звіті це показує.
-export const JUDGE_MODEL = "google/gemma-4-31b-it:free";
+// Суддя для живого eval — інша родина, ніж моделі продукту (не оцінює відповіді своєї родини), і лише моделі зі
+// строгою схемою (SO у `npm run ai:models`). Теж ланцюжком: 16.11 перший прогін зупинився на 429 від постачальника
+// Gemma-судді (денний ліміт акаунта при цьому був 0 із 50) — один суддя без резерву обриває весь прогін.
+export const JUDGE_MODELS = [
+  "inclusionai/ling-3.2-flash:free",
+  "baidu/ernie-5.5-flash-preview:free",
+  "particle-ai/particle-1:free",
+] as const;
+export const JUDGE_MODEL = JUDGE_MODELS[0];
 
 // Фабрики приймають ключ параметром і НЕ читають process.env: так їх можна імпортувати в eval-скрипті.
 // У коді застосунку модель бере лише src/lib/ai/openrouter.ts (server-only).
@@ -32,5 +38,5 @@ export function makeProductModel(apiKey: string | undefined) {
 
 export function makeJudgeModel(apiKey: string | undefined) {
   const openrouter = createOpenRouter({ apiKey, appName: "Stepline document parsing eval" });
-  return openrouter.chat(JUDGE_MODEL);
+  return openrouter.chat(JUDGE_MODEL, { models: [...JUDGE_MODELS] });
 }

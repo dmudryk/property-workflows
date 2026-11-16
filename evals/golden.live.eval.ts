@@ -3,7 +3,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { finalizeDraft } from "@/lib/ai/document-rules";
 import { classifyError, proposeDraft } from "@/lib/ai/draft";
-import { JUDGE_MODEL, PRODUCT_MODELS, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
+import { JUDGE_MODELS, PRODUCT_MODELS, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
 import { DraftSchema } from "@/lib/ai/schema";
 import { freeText, judgeSummary, passRate, scoreFields, type GoldenCase } from "@/lib/ai/scorer";
@@ -18,7 +18,9 @@ import casesJson from "../tests/fixtures/golden/cases.json";
 //   RECORD=1  — успішні відповіді дописати в tests/fixtures/golden/recorded.json (для офлайн-реплею в CI).
 // PowerShell: $env:RECORD="1"; npm run eval   (а потім Remove-Item Env:RECORD)
 
-const cases = casesJson as GoldenCase[];
+//   CASES=GC-10 — лише вказані кейси (через кому): дозапустити кейс, що не вклався в таймаут, не витрачаючи ліміт на решту.
+const ONLY = (process.env.CASES ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const cases = (casesJson as GoldenCase[]).filter((c) => ONLY.length === 0 || ONLY.includes(c.id));
 const key = process.env.OPENROUTER_API_KEY;
 const RECORD = process.env.RECORD === "1";
 const RUNS = Math.max(1, Number(process.env.RUNS ?? 1) || 1);
@@ -131,8 +133,8 @@ function writeReport() {
   const lines = [
     `# Живий прогін golden cases — ${new Date().toISOString()}`,
     "",
-    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя: \`${JUDGE_MODEL}\``,
-    `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}`,
+    `- Промпт: \`${DRAFT_PROMPT_VERSION}\`; ланцюжок моделей: ${PRODUCT_MODELS.map((m) => `\`${m}\``).join(" → ")}; суддя (ланцюжок): ${JUDGE_MODELS.map((m) => `\`${m}\``).join(" → ")}`,
+    `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}${ONLY.length ? ` (лише ${ONLY.join(", ")} — CASES)` : ""}`,
     `- **Частка успіху: ${total.passed}/${total.total} (${Math.round(total.rate * 100)}%)** — з кейсів, що отримали відповідь`,
     `- Не запущено (NOT RUN): ${notRun.length}${stoppedAt ? ` — ліміт 429, зупинено на: ${stoppedAt}` : ""}`,
     "",

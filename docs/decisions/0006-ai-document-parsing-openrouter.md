@@ -33,8 +33,10 @@
   відкидання телефону, якого немає в документі; сума кошторису й текст попередження; нотатка ін'єкції; відмова без
   значень. Ті самі правила й повторна валідація zod — перед записом.
 - Ланцюжок моделей (лише `:free`): `nvidia/nemotron-3.5-super-vl:free` (строга схема) →
-  `google/gemma-4-31b-it:free` → `google/gemma-4-26b-a4b-it:free`; суддя живого eval — `google/gemma-4-31b-it:free`
-  (інша родина, ніж перша модель). `maxRetries` 1 у застосунку, 0 у живому eval.
+  `google/gemma-4-31b-it:free` → `google/gemma-4-26b-a4b-it:free`; суддя живого eval — теж ланцюжок моделей інших
+  родин зі строгою схемою: `inclusionai/ling-3.2-flash:free` → `baidu/ernie-5.5-flash-preview:free` →
+  `particle-ai/particle-1:free` (перший прогін 16.11 з одним суддею Gemma обірвав 429 постачальника, хоча денний ліміт
+  був 0 із 50). `maxRetries` 1 у застосунку, 0 у живому eval.
 - Людина в контурі: Server Action пропозиції нічого не пише; запис — окрема дія «Save values» через функцію бази
   `save_run_document` (ADR 0001) під сесією користувача. Обидві дії спершу перевіряють `getClaims()` і роль.
 - Перевірка якості: 10 golden cases PM (solomchaak/property-workflows-spec#40). Офлайн-реплей записаних відповідей

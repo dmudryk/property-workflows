@@ -13,7 +13,8 @@ export default defineConfig({
     environment: "node",
     include: ["evals/**/*.eval.ts"],
     fileParallelism: false, // по одному запиту: безкоштовний тариф — 20 запитів/хв
-    testTimeout: 120_000,
+    // Модель до 90 с (timeoutMs у прогоні) + суддя: 120 с не вистачало (16.11 GC-03 і GC-10 обірвано на 120 с).
+    testTimeout: 240_000,
     hookTimeout: 30_000,
     expect: { requireAssertions: true },
   },

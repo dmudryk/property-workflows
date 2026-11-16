@@ -17,13 +17,13 @@ AC-DOCAI-10; `db-deploy` зелений.
 - [x] 2.2 Server Actions (design.md, D5); тести дій.
 - [x] 2.3 Блок «Parse a document» і «Saved documents» (design.md, D1, D2); `docs/conformance.md`.
 
-## 3. Живий eval (PR «Реалізація» `task/docai-eval`)
+## 3. Живий eval (PR «Реалізація» `task/ai-kit`, разом із задачами 1 і 2)
 
 Done when: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-03, AC-DOCAI-04, AC-DOCAI-05, AC-DOCAI-06, AC-DOCAI-07, AC-DOCAI-08 —
 живий прогін golden cases GC-01…GC-10 у звіті `evals/reports/<дата>.md` з моделлю на кожен кейс і pass rate;
 `recorded.json` без заглушок; кожен FAIL пояснено.
 
-- [ ] 3.1 `RECORD=1 npm run eval` (вручну) і звіт.
+- [x] 3.1 `RECORD=1 npm run eval` (вручну) і звіт.
 
 ## 4. Прод і UAT (PR «Реалізація» `task/docai-uat`)
 
