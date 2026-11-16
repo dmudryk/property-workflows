@@ -18,6 +18,9 @@
   // Якщо у вас є shadcn/ui: компоненти дизайн-системи навмисно експортують усі частини. Немає теки — рядок нічого не робить.
   "ignoreExports": [{ "file": "src/components/ui/**", "exports": ["*"] }],
   "ignoreExportsUsedInFile": true,
+  // Типи бази — у форматі генератора Supabase (Row / Insert / Update на кожну таблицю), а не код, який ми пишемо:
+  // три майже однакові блоки на таблицю — це формат, а не дублювання для рефакторингу.
+  "duplicates": { "ignore": ["src/lib/supabase/database.types.ts"] },
   "rules": {
     // Кожен експорт "use server" — публічний POST-ендпойнт: мертвий — прибрати.
     "unused-server-actions": "error",
@@ -41,7 +44,12 @@
       "scripts/smoke.mjs",
       "scripts/zip-accounts.mjs",
       "scripts/mutation-check.mjs",
-      "scripts/coverage-summary.mjs"
+      "scripts/coverage-summary.mjs",
+      // Набір курсу WS10 (koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature): живий eval і скрипти
+      // ai:models / ai:quota запускає людина вручну, не CI; їхню будову (звіт, NOT RUN, ліміт) задає курс.
+      "evals/**",
+      "scripts/free-models.mjs",
+      "scripts/quota.mjs"
     ],
     "thresholdOverrides": [
       { "files": ["tests/**"], "maxUnitSize": 500, "reason": "describe()-блоки довгі за задумом" }

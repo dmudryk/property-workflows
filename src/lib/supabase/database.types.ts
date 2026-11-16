@@ -219,6 +219,66 @@ export type Database = {
           },
         ];
       };
+      run_documents: {
+        Row: {
+          id: string;
+          run_id: string;
+          kind: string;
+          phone: string | null;
+          description: string | null;
+          category: string | null;
+          urgency: string | null;
+          line_items: Json;
+          stated_total: number | null;
+          notes: string[];
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          run_id: string;
+          kind: string;
+          phone?: string | null;
+          description?: string | null;
+          category?: string | null;
+          urgency?: string | null;
+          line_items?: Json;
+          stated_total?: number | null;
+          notes?: string[];
+          created_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          run_id?: string;
+          kind?: string;
+          phone?: string | null;
+          description?: string | null;
+          category?: string | null;
+          urgency?: string | null;
+          line_items?: Json;
+          stated_total?: number | null;
+          notes?: string[];
+          created_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "run_documents_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "runs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "run_documents_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -231,6 +291,20 @@ export type Database = {
       mark_task_done: {
         Args: { p_task_id: string };
         Returns: undefined;
+      };
+      save_run_document: {
+        Args: {
+          p_run_id: string;
+          p_kind: string;
+          p_phone: string | null;
+          p_description: string | null;
+          p_category: string | null;
+          p_urgency: string | null;
+          p_line_items: Json;
+          p_stated_total: number | null;
+          p_notes: string[];
+        };
+        Returns: string;
       };
       completes_run: {
         Args: { p_task_id: string };
