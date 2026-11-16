@@ -263,7 +263,13 @@ export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
   const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
 
-  const proposed = proposeState.status === "proposed";
+  // Збережена пропозиція «використана»: після успішного «Save values» форма починається порожньою, а не знову з
+  // пропозиції моделі (UAT на проді 16.11: після збереження urgent форма знову показувала «not urgent» моделі).
+  // Номер пропозиції на момент збереження — стан із попереднього рендеру (React: «adjusting state when a prop changes»).
+  const proposeSeq = "seq" in proposeState ? proposeState.seq : 0;
+  const [consumed, setConsumed] = useState({ savedSeq: 0, proposeSeq: 0 });
+  if (saveState.savedSeq !== consumed.savedSeq) setConsumed({ savedSeq: saveState.savedSeq, proposeSeq });
+  const proposed = proposeState.status === "proposed" && proposeSeq > consumed.proposeSeq;
   const initial = proposed ? fromProposal(proposeState.proposal) : EMPTY;
   // Нова пропозиція, відмова, «недоступний» чи збереження — форма починається заново з нових значень.
   // Після помилки збереження ключ не змінюється: введене лишається для повторної спроби (рев'ю CodeRabbit #55).

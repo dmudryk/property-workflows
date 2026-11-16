@@ -59,6 +59,7 @@ test(
         hidden: [
           "in the database: exactly one saved document of this run, by A, with urgency urgent",
           "before «Save values» the run had no saved values (checked in «Дано»)",
+          "after saving, the form above is empty again (the saved proposal is not shown as a new one)",
         ],
       },
       async () => {
@@ -66,6 +67,9 @@ test(
         await expect(saved).toHaveCount(1);
         await expect(saved.getByTestId("saved-phone")).toHaveText("555-0101");
         await expect(saved.getByTestId("saved-urgency")).toHaveText("urgent");
+        await expect(page.getByTestId("docai-phone")).toHaveValue("");
+        // Кадр «Тоді» — це видима частина екрана: збережений документ — під формою.
+        await page.getByTestId("saved-documents").scrollIntoViewIfNeeded();
         expect(await savedDocuments(run.id)).toEqual([
           { phone: "555-0101", urgency: "urgent", category: expect.any(String), created_by: A.id },
         ]);
