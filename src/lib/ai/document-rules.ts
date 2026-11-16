@@ -61,8 +61,10 @@ export function normalizePhone(raw: string | null, documentText: string): string
   if (digits.length < 7) return null;
   if (!digitGroups(documentText).some((g) => g.includes(digits))) return null;
   if (digits.length === 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  return digits;
+  // Код країни 1 перед десятьма цифрами — той самий номер: одна форма ddd-ddd-dddd (code-review 16.11).
+  const national = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+  if (national.length === 10) return `${national.slice(0, 3)}-${national.slice(3, 6)}-${national.slice(6)}`;
+  return national;
 }
 
 const cents = (n: number) => Math.round(n * 100);
@@ -77,10 +79,13 @@ export function totalWarning(items: LineItem[], statedTotal: number | null): str
 }
 
 // AC-DOCAI-08: явна інструкція для AI в тексті — нотатку додає код, навіть якщо модель прапорця не поставила.
+// Вузько, щоб не ловити звичайний текст орендаря («please don't ignore my request, the building rules…»,
+// «I hope you are now aware»): лише звернення до самого AI (code-review 16.11).
 const INJECTION_PATTERNS = [
-  /\b(ignore|disregard|forget)\b[^.!?]{0,40}\b(instructions?|rules|prompt)\b/i,
-  /\bsystem prompt\b/i,
-  /\byou are now\b/i,
+  /\b(ignore|disregard|forget)\b[^.!?]{0,20}\b(previous|prior|above|earlier)\s+(instructions?|rules|prompts?)\b/i,
+  /\b(ignore|disregard)\s+(all\s+|your\s+|these\s+)?instructions\b/i,
+  /\b(system|your)\s+prompt\b/i,
+  /\byou are now (an?|the|my)\s+(ai|assistant|bot|model|system)\b/i,
 ];
 
 export function looksLikeInjection(text: string): boolean {
@@ -112,7 +117,10 @@ export function finalizeDraft(draft: Draft, documentText: string): Proposal {
   const injection = draft.injectionIgnored || looksLikeInjection(documentText);
   const modelNotes = (draft.notes ?? []).map((n) => n.trim()).filter(Boolean);
   // Власну нотатку моделі про інструкції замінює дослівна нотатка AC-DOCAI-08.
-  const notes = injection ? [...modelNotes.filter((n) => !/instruction/i.test(n)), INJECTION_NOTE] : modelNotes;
+  // Прибираємо лише власну нотатку моделі саме про проігноровані інструкції, а не будь-яку зі словом «instruction»
+  // («tenant left instructions to call before visiting» лишається; code-review 16.11).
+  const aboutIgnored = (n: string) => /instruction/i.test(n) && /(ignor|disregard|not follow|did not follow)/i.test(n);
+  const notes = injection ? [...modelNotes.filter((n) => !aboutIgnored(n)), INJECTION_NOTE] : modelNotes;
   const warning = totalWarning(lineItems, draft.statedTotal);
 
   return {

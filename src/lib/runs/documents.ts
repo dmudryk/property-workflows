@@ -68,3 +68,26 @@ export const money = (n: number) => n.toFixed(2);
 export const MSG_EMPTY_DOCUMENT = "Paste the text of a document first.";
 export const MSG_SAVE_FAILED = "The values could not be saved. Try again.";
 export const MSG_DOCUMENTS_LOAD_FAILED = "Saved documents could not be loaded. Reload the page to try again.";
+
+// Значення людини не пройшло повторну перевірку на сервері — повідомлення називає поле, а не «спробуйте ще раз»:
+// повтор із тим самим значенням не допоможе (code-review 16.11).
+const FIELD_LABELS: Record<string, string> = {
+  kind: "Document type",
+  phone: "Phone",
+  description: "Description",
+  category: "Category",
+  urgency: "Urgency",
+  statedTotal: "Total",
+  notes: "Notes",
+};
+
+export function invalidFieldMessage(path: readonly PropertyKey[]): string {
+  const [field, index, sub] = path;
+  if (field === "lineItems" && typeof index === "number") {
+    const n = index + 1;
+    if (sub === "quantity") return `Item ${n}: enter a quantity above 0.`;
+    if (sub === "unitPrice") return `Item ${n}: enter a unit price of 0 or more.`;
+    return `Item ${n}: enter a name.`;
+  }
+  return `Check the value of ${FIELD_LABELS[String(field)] ?? "the form"}.`;
+}

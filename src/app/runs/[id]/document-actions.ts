@@ -18,7 +18,7 @@ import {
 } from "@/lib/ai/document-rules";
 import { productModel } from "@/lib/ai/openrouter";
 import { requireActor } from "@/lib/auth/actor";
-import { canParseDocuments, MSG_EMPTY_DOCUMENT, MSG_SAVE_FAILED } from "@/lib/runs/documents";
+import { canParseDocuments, invalidFieldMessage, MSG_EMPTY_DOCUMENT, MSG_SAVE_FAILED } from "@/lib/runs/documents";
 import { MSG_NOT_ENOUGH_RIGHTS } from "@/lib/templates/content";
 
 export type ProposeState =
@@ -77,7 +77,7 @@ function parseValues(formData: FormData): { values: SaveValues } | { error: stri
     return { error: MSG_SAVE_FAILED };
   }
   const parsed = SaveValuesSchema.safeParse(raw);
-  if (!parsed.success) return { error: MSG_SAVE_FAILED };
+  if (!parsed.success) return { error: invalidFieldMessage(parsed.error.issues[0]?.path ?? []) };
   return hasAnyValue(parsed.data) ? { values: parsed.data } : { error: EMPTY_VALUES_ERROR };
 }
 

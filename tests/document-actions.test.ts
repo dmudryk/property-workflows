@@ -154,7 +154,17 @@ describe("document-parsing: дії", () => {
   it("AC-DOCAI-09: значення не за схемою від клієнта не зберігаємо", async () => {
     const result = await saveDocumentValues(SAVE_IDLE, saveForm({ ...tapValues, category: "dragons" }));
 
-    expect(result).toMatchObject({ status: "error" });
+    expect(result).toMatchObject({ status: "error", message: "Check the value of Category." });
+    expect(state.rpc).toEqual([]);
+  });
+
+  it("AC-DOCAI-09: позиція без ціни — повідомлення називає позицію й поле, нічого не збережено", async () => {
+    const result = await saveDocumentValues(
+      SAVE_IDLE,
+      saveForm({ ...tapValues, kind: "estimate", category: null, urgency: null, lineItems: [{ description: "Labour", quantity: 1, unitPrice: null }], statedTotal: 60 }),
+    );
+
+    expect(result).toMatchObject({ status: "error", message: "Item 1: enter a unit price of 0 or more." });
     expect(state.rpc).toEqual([]);
   });
 

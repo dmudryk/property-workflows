@@ -44,14 +44,18 @@ const EMPTY: Values = {
   notes: [],
 };
 
+// Числа документа показуємо як є: 85 → «85.00», але 0.125 лишається 0.125 — без округлення, яке змінило б значення
+// документа й дало хибне попередження суми (AC-DOCAI-05, AC-DOCAI-06; code-review 16.11).
+const asWritten = (n: number) => (Number.isInteger(n * 100) ? n.toFixed(2) : String(n));
+
 const fromProposal = (p: Proposal): Values => ({
   kind: p.kind ?? "request",
   phone: p.phone ?? "",
   description: p.description ?? "",
   category: p.category,
   urgency: p.urgency,
-  lineItems: p.lineItems.map((i) => ({ description: i.description, quantity: String(i.quantity), unitPrice: i.unitPrice.toFixed(2) })),
-  statedTotal: p.statedTotal === null ? "" : p.statedTotal.toFixed(2),
+  lineItems: p.lineItems.map((i) => ({ description: i.description, quantity: String(i.quantity), unitPrice: asWritten(i.unitPrice) })),
+  statedTotal: p.statedTotal === null ? "" : asWritten(p.statedTotal),
   notes: p.notes,
 });
 
@@ -59,7 +63,8 @@ const KIND_ITEMS: FormSelectItem[] = (Object.keys(KIND_LABELS) as DocumentKind[]
 const CATEGORY_ITEMS: FormSelectItem[] = [{ value: null, label: "Not set" }, ...CATEGORIES.map((c) => ({ value: c, label: c }))];
 const URGENCY_ITEMS: FormSelectItem[] = [{ value: null, label: "Not set" }, ...URGENCIES.map((u) => ({ value: u, label: u }))];
 
-const toNumber = (s: string) => (s.trim() === "" ? null : Number(s));
+// Порожнє — null; десяткова кома («1,5») — як крапка.
+const toNumber = (s: string) => (s.trim() === "" ? null : Number(s.trim().replace(",", ".")));
 
 // Значення форми → JSON для saveDocumentValues; сервер перевіряє їх ще раз (SaveValuesSchema).
 function payload(v: Values): string {
@@ -81,10 +86,12 @@ function payload(v: Values): string {
 // Попередження суми — за поточними значеннями, як їх виправила людина (AC-DOCAI-06).
 function liveWarning(v: Values): string | null {
   if (v.kind !== "estimate") return null;
-  const items = v.lineItems.map((i) => ({ description: i.description, quantity: Number(i.quantity), unitPrice: Number(i.unitPrice) }));
+  // Незаповнена кількість чи ціна — не 0: поки позиція неповна, суму не рахуємо (code-review 16.11).
+  const items = v.lineItems.map((i) => ({ description: i.description, quantity: toNumber(i.quantity), unitPrice: toNumber(i.unitPrice) }));
   const total = toNumber(v.statedTotal);
-  if (items.some((i) => !Number.isFinite(i.quantity) || !Number.isFinite(i.unitPrice)) || (total !== null && !Number.isFinite(total))) return null;
-  return totalWarning(items, total);
+  const complete = items.every((i) => Number.isFinite(i.quantity) && Number.isFinite(i.unitPrice));
+  if (!complete || (total !== null && !Number.isFinite(total))) return null;
+  return totalWarning(items as { description: string; quantity: number; unitPrice: number }[], total);
 }
 
 function NotFound({ field, show }: { field: string; show: boolean }) {
@@ -263,17 +270,28 @@ export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
   const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
 
-  // Збережена пропозиція «використана»: після успішного «Save values» форма починається порожньою, а не знову з
-  // пропозиції моделі (UAT на проді 16.11: після збереження urgent форма знову показувала «not urgent» моделі).
-  // Номер пропозиції на момент збереження — стан із попереднього рендеру (React: «adjusting state when a prop changes»).
+  // Текст документа — керований: React 19 після дії форми очищає некеровані поля, а людина звіряє пропозицію з
+  // оригіналом і при «недоступний» переносить значення з нього вручну (code-review 16.11).
+  const [text, setText] = useState("");
   const proposeSeq = "seq" in proposeState ? proposeState.seq : 0;
+  // Стан із попереднього рендеру (React: «adjusting state when a prop changes»):
+  //  - formSeq — форма починається заново лише з новою пропозицією чи відмовою; помилка («порожній текст») і
+  //    «недоступний» лишають значення, які людина вже ввела вручну (AC-DOCAI-10; code-review 16.11);
+  //  - consumed — збережена пропозиція «використана»: після успішного «Save values» форма порожня, а не знову з
+  //    пропозиції моделі (UAT на проді 16.11: після збереження urgent форма знову показувала «not urgent»);
+  //  - saveAt — повідомлення збереження стосується лише спроби після останньої відповіді «Propose values».
+  const [formSeq, setFormSeq] = useState(0);
+  if ((proposeState.status === "proposed" || proposeState.status === "refused") && proposeSeq !== formSeq) setFormSeq(proposeSeq);
   const [consumed, setConsumed] = useState({ savedSeq: 0, proposeSeq: 0 });
   if (saveState.savedSeq !== consumed.savedSeq) setConsumed({ savedSeq: saveState.savedSeq, proposeSeq });
+  const [saveAt, setSaveAt] = useState({ seq: 0, proposeSeq: 0 });
+  if (saveState.seq !== saveAt.seq) setSaveAt({ seq: saveState.seq, proposeSeq });
+  const shownSave: SaveState = saveAt.proposeSeq === proposeSeq ? saveState : { ...saveState, status: "idle" };
+
   const proposed = proposeState.status === "proposed" && proposeSeq > consumed.proposeSeq;
   const initial = proposed ? fromProposal(proposeState.proposal) : EMPTY;
-  // Нова пропозиція, відмова, «недоступний» чи збереження — форма починається заново з нових значень.
   // Після помилки збереження ключ не змінюється: введене лишається для повторної спроби (рев'ю CodeRabbit #55).
-  const formKey = `${"seq" in proposeState ? proposeState.seq : 0}-${saveState.savedSeq}`;
+  const formKey = `${formSeq}-${saveState.savedSeq}`;
   const message = proposeState.status === "refused" || proposeState.status === "unavailable" || proposeState.status === "error" ? proposeState : null;
 
   return (
@@ -290,7 +308,15 @@ export function DocumentParser({ runId }: { runId: string }) {
           <input type="hidden" name="run_id" value={runId} />
           <div className="flex flex-col gap-2">
             <Label htmlFor="docai-text">Document text</Label>
-            <Textarea id="docai-text" data-testid="docai-text" name="text" rows={5} maxLength={8000} />
+            <Textarea
+              id="docai-text"
+              data-testid="docai-text"
+              name="text"
+              rows={5}
+              maxLength={8000}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+            />
           </div>
           <SubmitButton data-testid="docai-propose" variant="outline" pendingLabel="Proposing values…" className="self-start">
             Propose values
@@ -303,10 +329,10 @@ export function DocumentParser({ runId }: { runId: string }) {
           </Alert>
         ) : null}
 
-        <ValuesForm key={formKey} runId={runId} initial={initial} proposed={proposed} saveAction={saveAction} saveState={saveState} />
+        <ValuesForm key={formKey} runId={runId} initial={initial} proposed={proposed} saveAction={saveAction} saveState={shownSave} />
 
         <p aria-live="polite" data-testid="docai-saved" className="text-sm">
-          {saveState.status === "saved" ? "Values saved" : ""}
+          {shownSave.status === "saved" ? "Values saved" : ""}
         </p>
       </CardContent>
     </Card>
