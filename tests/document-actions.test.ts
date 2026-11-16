@@ -131,7 +131,7 @@ afterEach(() => {
 });
 
 describe("document-parsing: дії", () => {
-  it("AC-DOCAI-09: «Propose values» лише повертає пропозицію у форму — у базу нічого не записано", async () => {
+  it("AC-DOCAI-04: «Propose values» лише повертає пропозицію у форму — у базу нічого не записано", async () => {
     const result = await requestDocumentDraft({ status: "idle" }, proposeForm());
 
     expect(result).toMatchObject({ status: "proposed", proposal: { phone: "555-0101", category: "plumbing", urgency: "not urgent" } });
@@ -139,7 +139,7 @@ describe("document-parsing: дії", () => {
     expect(state.rpc).toEqual([]);
   });
 
-  it("AC-DOCAI-09: «Save values» зберігає значення, як їх виправила людина, — urgency urgent", async () => {
+  it("AC-DOCAI-04: «Save values» зберігає значення, як їх виправила людина, — urgency urgent", async () => {
     const result = await saveDocumentValues(SAVE_IDLE, saveForm(tapValues));
 
     expect(result).toMatchObject({ status: "saved" });
@@ -151,14 +151,14 @@ describe("document-parsing: дії", () => {
     ]);
   });
 
-  it("AC-DOCAI-09: значення не за схемою від клієнта не зберігаємо", async () => {
+  it("AC-DOCAI-04: значення не за схемою від клієнта не зберігаємо", async () => {
     const result = await saveDocumentValues(SAVE_IDLE, saveForm({ ...tapValues, category: "dragons" }));
 
     expect(result).toMatchObject({ status: "error", message: "Check the value of Category." });
     expect(state.rpc).toEqual([]);
   });
 
-  it("AC-DOCAI-09: позиція без ціни — повідомлення називає позицію й поле, нічого не збережено", async () => {
+  it("AC-DOCAI-04: позиція без ціни — повідомлення називає позицію й поле, нічого не збережено", async () => {
     const result = await saveDocumentValues(
       SAVE_IDLE,
       saveForm({ ...tapValues, kind: "estimate", category: null, urgency: null, lineItems: [{ description: "Labour", quantity: 1, unitPrice: null }], statedTotal: 60 }),
@@ -168,7 +168,7 @@ describe("document-parsing: дії", () => {
     expect(state.rpc).toEqual([]);
   });
 
-  it("AC-DOCAI-06: попередження суми рахує сервер за значеннями, які зберігає людина", async () => {
+  it("AC-DOCAI-08: попередження суми рахує сервер за значеннями, які зберігає людина", async () => {
     const items = [
       { description: "Inspection", quantity: 1, unitPrice: 90 },
       { description: "Replace valve", quantity: 1, unitPrice: 70 },
@@ -187,7 +187,7 @@ describe("document-parsing: дії", () => {
     ]);
   });
 
-  it("AC-DOCAI-06: шість нотаток людини не витісняють попередження суми — воно збережене", async () => {
+  it("AC-DOCAI-08: шість нотаток людини не витісняють попередження суми — воно збережене", async () => {
     const items = [
       { description: "Inspection", quantity: 1, unitPrice: 90 },
       { description: "Labour", quantity: 1, unitPrice: 60 },
@@ -198,7 +198,7 @@ describe("document-parsing: дії", () => {
     expect(state.rpc[0].args.p_notes).toEqual(["n1", "n2", "n3", "n4", "n5", "items add up to 150.00, the stated total is 200.00"]);
   });
 
-  it("AC-DOCAI-09: після невдалого збереження номер останнього успішного не змінюється — форма лишає введене", async () => {
+  it("AC-DOCAI-04: після невдалого збереження номер останнього успішного не змінюється — форма лишає введене", async () => {
     state.rpcError = { code: "XX000", message: "boom" };
     const saved: SaveState = { status: "saved", seq: 1, savedSeq: 1 };
 
@@ -210,7 +210,7 @@ describe("document-parsing: дії", () => {
     });
   });
 
-  it("AC-DOCAI-09: збій читання збережених документів — окремий стан, а не порожній список", async () => {
+  it("AC-DOCAI-04: збій читання збережених документів — окремий стан, а не порожній список", async () => {
     const failing = {
       from: () => {
         const q = {
@@ -226,7 +226,7 @@ describe("document-parsing: дії", () => {
     expect(await loadRunDocuments(failing, { id: "vendor-v", role: "vendor" }, RUN_ID, null)).toBeNull();
   });
 
-  it("AC-DOCAI-11: виконавець B (не менеджер запуску) — «Not enough rights», модель не викликано, нічого не записано", async () => {
+  it("AC-DOCAI-16: виконавець B (не менеджер запуску) — «Not enough rights», модель не викликано, нічого не записано", async () => {
     state.userId = "manager-b";
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "error", message: "Not enough rights" });
@@ -235,7 +235,7 @@ describe("document-parsing: дії", () => {
     expect(state.rpc).toEqual([]);
   });
 
-  it("AC-DOCAI-11: вендор — «Not enough rights», модель не викликано, нічого не записано", async () => {
+  it("AC-DOCAI-16: вендор — «Not enough rights», модель не викликано, нічого не записано", async () => {
     state.userId = "vendor-v";
     state.role = "vendor";
     state.runManager = null; // таблицю runs вендору закрито (ADR 0005)
@@ -246,34 +246,34 @@ describe("document-parsing: дії", () => {
     expect(state.rpc).toEqual([]);
   });
 
-  it("AC-DOCAI-11: адміністратор чужого запуску розбирає документ", async () => {
+  it("адміністратор чужого запуску розбирає документ (роль за Users & roles вимоги PM)", async () => {
     state.userId = "admin";
     state.role = "admin";
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "proposed" });
   });
 
-  it("AC-DOCAI-10: ключа немає — «The assistant is not available right now. Enter the values yourself.», без сторінки помилки", async () => {
+  it("AC-DOCAI-13: ключа немає — «The assistant is not available right now. Enter the values yourself.», без сторінки помилки", async () => {
     vi.stubEnv("OPENROUTER_API_KEY", " "); // пробіл = ключа немає (trim)
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "unavailable", message: UNAVAILABLE_MESSAGE });
   });
 
-  it("AC-DOCAI-10: денний ліміт вичерпано (429) — той самий текст, без повторів у циклі", async () => {
+  it("AC-DOCAI-13: денний ліміт вичерпано (429) — той самий текст, без повторів у циклі", async () => {
     answerWith("", 429);
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "unavailable", message: UNAVAILABLE_MESSAGE });
     expect(modelCalls.length).toBeLessThanOrEqual(2); // maxRetries 1
   });
 
-  it("AC-DOCAI-10: помічник недоступний — значення вводять вручну й зберігають «Save values»", async () => {
+  it("AC-DOCAI-13: помічник недоступний — значення вводять вручну й зберігають «Save values»", async () => {
     answerWith("not json at all");
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm())).toMatchObject({ status: "unavailable", message: UNAVAILABLE_MESSAGE });
     expect(await saveDocumentValues(SAVE_IDLE, saveForm(tapValues))).toMatchObject({ status: "saved" });
   });
 
-  it("AC-DOCAI-07: документ не заявка й не кошторис — текст відмови, жодних значень", async () => {
+  it("AC-DOCAI-09: документ не заявка й не кошторис — текст відмови, жодних значень", async () => {
     answerWith(JSON.stringify({ ...JSON.parse(tapAnswer), status: "refused" }));
 
     expect(await requestDocumentDraft({ status: "idle" }, proposeForm("Tonight's menu: tomato soup 6.50"))).toEqual({

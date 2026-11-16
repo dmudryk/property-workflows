@@ -261,7 +261,7 @@ describe("vendor-access", () => {
     const runId = await launchAsA("Apartment 12, move-in", { 3: VENDOR, 4: VENDOR });
     await t.asUser(MANAGER_A, "select public.mark_task_done($1)", [(await tasksAsService(runId))[0].id]);
     await t.asUser(ADMIN, "select public.save_template_draft($1, current_content) from public.templates where id = $1", [TENANT_MOVE_IN]);
-    // Документ, який менеджер запуску зберіг у запуску вендора (зріз 4, AC-DOCAI-11): вендор його теж не бачить.
+    // Документ, який менеджер запуску зберіг у запуску вендора (зріз 4, AC-DOCAI-14): вендор його теж не бачить.
     await t.asUser(MANAGER_A, "select public.save_run_document($1, 'request', '555-0101', 'Tap drips', 'plumbing', 'not urgent', '[]'::jsonb, null, '{}'::text[])", [runId]);
     const tables = await t.asService<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' order by table_name",
