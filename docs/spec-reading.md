@@ -142,3 +142,25 @@ PM відповів на всі питання зрізу 3 (solomchaak/property
 Переклад — зміна специфікації `clarify-ws8-vendor` (ADDED 9 AC, MODIFIED AC-VENDOR-07 і AC-VENDOR-08, ID AC PM без
 змін). Рядки нових і змінених AC у `docs/conformance.md` — «відкладено (чекає реалізації)» до задач реалізації.
 `spec-review`: блокерів 0; нових питань до PM немає.
+
+## Зріз 4 — AI-розбір документа (2026-11-16)
+
+`/requirements-sync` 2026-11-16 — «Вимоги актуальні»: issue «Вимога» з AC для зрізу 4 у PM немає. Є лише
+[solomchaak/property-workflows-spec#40](https://github.com/solomchaak/property-workflows-spec/issues/40) («Golden cases:
+AI document parsing», без мітки `requirement`, тож у `requirements/` його немає) і рядок roadmap WS10 у
+`requirements/product.md`. За правилом курсу WS10 «Якщо вимоги зрізу 4 ще немає» специфікацію `add-ws10-docai`
+складено з тимчасовими AC розробника AC-DOCAI-01…11; golden cases GC-01…GC-10 — дослівно з #40.
+
+Неоднозначності за таксономією — і всі вже питання колег у репо PM, тож дублікатів не створюю (відповідей PM станом на
+16.11.2026 немає):
+
+| # | Категорія | Що неясно | Питання PM | Тимчасове рішення розробника |
+|---|---|---|---|---|
+| Q1 | Сигнали завершеності | поріг приймання 10 golden cases; чи буде вимога з AC | [#55](https://github.com/solomchaak/property-workflows-spec/issues/55) | звіт eval з pass rate, без порогу в AC |
+| Q2 | Граничні випадки й збої | текст і поведінка, коли помічник недоступний | [#52](https://github.com/solomchaak/property-workflows-spec/issues/52) | «The assistant is not available right now. Enter the values yourself.» і ручна форма (AC-DOCAI-10) |
+| Q3 | Ролі й доступ | хто користується розбором і де: крок шаблону чи блок запуску | [#53](https://github.com/solomchaak/property-workflows-spec/issues/53) | блок на сторінці запуску, менеджер запуску й адміністратор (AC-DOCAI-11) |
+| Q4 | Домен і модель даних | текст нотатки про дві проблеми; де зберігаються підтверджені значення | [#54](https://github.com/solomchaak/property-workflows-spec/issues/54) | нотатка вільним текстом; значення — у запуску (AC-DOCAI-03, AC-DOCAI-09) |
+| Q5 | Сигнали завершеності | опис у лапках — дослівно чи за змістом | [#56](https://github.com/solomchaak/property-workflows-spec/issues/56) | за змістом (rubric, суддя в живому eval); точно — phone, category, urgency, позиції, total |
+
+`spec-review`: блокер «AC не з вимог PM» свідомо лишено (тимчасові AC, правило курсу); виправлено — у вимогу AC-DOCAI-01
+дописано одну форму телефону з GC-03; нових питань до PM немає.
