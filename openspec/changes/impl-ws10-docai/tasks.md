@@ -19,8 +19,9 @@ AC-DOCAI-10; `db-deploy` зелений.
 
 ## 3. Живий eval (PR «Реалізація» `task/docai-eval`)
 
-Done when: звіт `evals/reports/<дата>.md` з моделлю на кожен кейс і pass rate; `recorded.json` без заглушок; кожен FAIL
-пояснено.
+Done when: AC-DOCAI-01, AC-DOCAI-02, AC-DOCAI-03, AC-DOCAI-04, AC-DOCAI-05, AC-DOCAI-06, AC-DOCAI-07, AC-DOCAI-08 —
+живий прогін golden cases GC-01…GC-10 у звіті `evals/reports/<дата>.md` з моделлю на кожен кейс і pass rate;
+`recorded.json` без заглушок; кожен FAIL пояснено.
 
 - [ ] 3.1 `RECORD=1 npm run eval` (вручну) і звіт.
 
