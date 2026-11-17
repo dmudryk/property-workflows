@@ -16,7 +16,7 @@ AC-DOCAI-14, AC-DOCAI-15 — «реалізовано» в `docs/conformance.md`
 Done when: живий eval на проді за порогом PM — «ПРОЙДЕНО»; звіт UAT на проді з PASS на кожен AC задачі 1; archive
 `impl-clarify-ws10-docai`.
 
-- [ ] 2.1 Живий eval (`npm run eval`, 10 кейсів) після деплою; звіт у `evals/reports/`.
-- [ ] 2.2 Специфікації Playwright на AC-DOCAI-03, AC-DOCAI-05, AC-DOCAI-11, AC-DOCAI-12 і оновлені AC-DOCAI-04,
+- [x] 2.1 Живий eval (`npm run eval`, 10 кейсів) після деплою; звіт у `evals/reports/`.
+- [x] 2.2 Специфікації Playwright на AC-DOCAI-03, AC-DOCAI-05, AC-DOCAI-11, AC-DOCAI-12 і оновлені AC-DOCAI-04,
   AC-DOCAI-09; прогін на проді, звіт і відео.
-- [ ] 2.3 archive `impl-clarify-ws10-docai`.
+- [x] 2.3 archive `impl-clarify-ws10-docai`.

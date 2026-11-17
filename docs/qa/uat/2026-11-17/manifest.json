@@ -1,0 +1,287 @@
+{
+  "kind": "uat",
+  "generatedAt": "2026-11-17T00:36:11.504Z",
+  "baseURL": "https://property-workflows-bravo16.vercel.app",
+  "deployedSha": "0d0e186f5eff3f6a54a42288d56939aafc36d817",
+  "testsCommit": "0d0e186f5eff3f6a54a42288d56939aafc36d817",
+  "reviewer": {
+    "model": "claude-haiku-5-5",
+    "disputes": "claude-sonnet-5-5"
+  },
+  "note": "Відео й траси не в git (test-results/ локально, артефакт CI). check-recordings конвеєра WS9 вимагає відео на диску — для нього цей manifest треба доповнити.",
+  "results": [
+    {
+      "id": "AC-DOCAI-03",
+      "proof": "AC-DOCAI-03",
+      "title": "AC-DOCAI-03: поки AI читає — «Reading the document…», «Propose values» вимкнена, жодного значення",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-03-then-1.png",
+      "video": "test-results/artifacts/docai-reading-AC-DOCAI-03--8807f-»-вимкнена-жодного-значення-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-reading-AC-DOCAI-03--8807f-»-вимкнена-жодного-значення-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "Під текстовим полем видно «Reading the document…». Кнопка «Propose values» сіра, зі спінером, тобто вимкнена. Нижче є блок «Saved documents» із раніше збереженим документом — це окремий блок, не пропозиція значень."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Reading the document…",
+          "onPage": true
+        },
+        {
+          "quote": "Propose values",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 10909,
+      "reviewCostUsd": 0.03395,
+      "reviewWallMs": 20154
+    },
+    {
+      "id": "AC-DOCAI-04",
+      "proof": "AC-DOCAI-04",
+      "title": "AC-DOCAI-04: виправлене значення збережено лише після «Save values» — до того в запуску нічого",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-04-then-1.png",
+      "video": "test-results/artifacts/docai-confirm-before-save--69c41--—-до-того-в-запуску-нічого-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-confirm-before-save--69c41--—-до-того-в-запуску-нічого-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі в блоці «Saved documents» видно один запис із Document type «Maintenance request», Phone «555-0101», Category «plumbing», Urgency «urgent», email uat-261117003327-a@example.test і датою/часом «17 Nov 2026, 02:34», а поруч напис «Values saved». Текст пропозиції ще видно в полі «Document text» над блоком, але критерій вимагає порожнього блоку пропозицій після збереження — це перевіряють автоматичні перевірки, тому тут не оцінюю."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Saved documents",
+          "onPage": true
+        },
+        {
+          "quote": "Document type",
+          "onPage": true
+        },
+        {
+          "quote": "Maintenance request",
+          "onPage": true
+        },
+        {
+          "quote": "Phone",
+          "onPage": true
+        },
+        {
+          "quote": "555-0101",
+          "onPage": true
+        },
+        {
+          "quote": "Category",
+          "onPage": true
+        },
+        {
+          "quote": "plumbing",
+          "onPage": true
+        },
+        {
+          "quote": "Urgency",
+          "onPage": true
+        },
+        {
+          "quote": "urgent",
+          "onPage": true
+        },
+        {
+          "quote": "Maintenance request · uat-261117003327-a@example.test · 17 Nov 2026, 02:34",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 16818,
+      "reviewCostUsd": 0.00286,
+      "reviewWallMs": 13187
+    },
+    {
+      "id": "AC-DOCAI-05",
+      "proof": "AC-DOCAI-05",
+      "title": "AC-DOCAI-05: «Discard» — блок знову порожній, збереженого запису немає",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-05-then-1.png",
+      "video": "test-results/artifacts/docai-discard-AC-DOCAI-05--37a3a-ій-збереженого-запису-немає-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-discard-AC-DOCAI-05--37a3a-ій-збереженого-запису-немає-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі блок «Parse a document» з порожнім полем «Document text» і кнопками «Upload a text file» та «Propose values». Під блоком більше немає ні форми зі значеннями, ні картки «Saved documents»; сторінка закінчується блоком."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Document text",
+          "onPage": true
+        },
+        {
+          "quote": "Upload a text file",
+          "onPage": true
+        },
+        {
+          "quote": "Propose values",
+          "onPage": true
+        },
+        {
+          "quote": "Parse a document",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 11330,
+      "reviewCostUsd": 0.0355,
+      "reviewWallMs": 22965
+    },
+    {
+      "id": "AC-DOCAI-09",
+      "proof": "AC-DOCAI-09",
+      "title": "AC-DOCAI-09: меню ресторану — «This document is not a maintenance request or an estimate.», жодних значень",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-09-then-1.png",
+      "video": "test-results/artifacts/docai-refusal-AC-DOCAI-09--ff62e-n-estimate-»-жодних-значень-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-refusal-AC-DOCAI-09--ff62e-n-estimate-»-жодних-значень-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі в блоці «Parse a document» текст збігається посимвольно з критерієм: «This document is not a maintenance request or an estimate.». Під цим повідомленням немає жодної форми з пропонованими значеннями — одразу йде розділ «Saved documents» з раніше збереженим документом, а не результатом цього запуску. Частина про відсутність пропозиції підтверджена відсутністю елементів на кадрі, тому цитата порожня."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "This document is not a maintenance request or an estimate.",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 10650,
+      "reviewCostUsd": 0.00243,
+      "reviewWallMs": 10702
+    },
+    {
+      "id": "AC-DOCAI-11",
+      "proof": "AC-DOCAI-11",
+      "title": "AC-DOCAI-11: порожнє поле чи лише пробіли — «Paste the text of a document», жодного значення",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-11-then-1.png",
+      "video": "test-results/artifacts/docai-empty-text-AC-DOCAI--6e8d9--document»-жодного-значення-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-empty-text-AC-DOCAI--6e8d9--document»-жодного-значення-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "У блоці «Parse a document» під кнопками видно повідомлення «Paste the text of a document», форми із запропонованими значеннями немає. Нижче є розділ «Saved documents» із раніше збереженим документом, але це не пропозиція значень."
+      },
+      "agentModel": "claude-sonnet-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "NEEDS-HUMAN",
+        "claude-sonnet-5-5": "PASS"
+      },
+      "escalated": true,
+      "quotesVerified": [
+        {
+          "quote": "Paste the text of a document",
+          "onPage": true
+        },
+        {
+          "quote": "Paste the text of a document",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 8194,
+      "reviewCostUsd": 0.03394,
+      "reviewWallMs": 22958
+    },
+    {
+      "id": "AC-DOCAI-12",
+      "proof": "AC-DOCAI-12",
+      "title": "AC-DOCAI-12: «photo.png» кнопкою «Upload a text file» — «Only plain text files (.txt) are accepted», жодного значення",
+      "screenshot": "docs/qa/uat/2026-11-17/frames/AC-DOCAI-12-then-1.png",
+      "video": "test-results/artifacts/docai-text-file-only-AC-DO-1f6b7--accepted»-жодного-значення-chromium/video.webm",
+      "trace": "test-results/artifacts/docai-text-file-only-AC-DO-1f6b7--accepted»-жодного-значення-chromium/trace.zip",
+      "asserted": true,
+      "vision": {
+        "met": true,
+        "readable": true,
+        "notes": "На кадрі в блоці «Parse a document» видно точний текст помилки «Only plain text files (.txt) are accepted» червоним кольором, а поле «Document text» порожнє. Форми з запропонованими значеннями під блоком не видно; нижче є розділ «Saved documents» з раніше збереженим документом, але це не пропозиція, а вже збережений запис. Частина «a plain .txt file afterwards is read into the text box» не з кадрів, тому не оцінювалась."
+      },
+      "agentModel": "claude-haiku-5-5",
+      "agentVerdicts": {
+        "claude-haiku-5-5": "PASS",
+        "claude-sonnet-5-5": null
+      },
+      "escalated": false,
+      "quotesVerified": [
+        {
+          "quote": "Only plain text files (.txt) are accepted",
+          "onPage": true
+        },
+        {
+          "quote": "Document text",
+          "onPage": true
+        },
+        {
+          "quote": "Parse a document",
+          "onPage": true
+        }
+      ],
+      "verdict": "PASS",
+      "factoryGate": "PASS",
+      "rule": "R6: перевірки, агент і цитати збігаються",
+      "playwrightMs": 6021,
+      "reviewCostUsd": 0.00237,
+      "reviewWallMs": 10262
+    }
+  ],
+  "negativeControls": [],
+  "cleanup": {
+    "at": "2026-11-17T00:35:26.924Z",
+    "deleted": [
+      "uat-261117003327-b@example.test",
+      "uat-261117003327-v16@example.test",
+      "uat-261117003327-v13@example.test",
+      "uat-261117003327-v11@example.test",
+      "uat-261117003327-w@example.test",
+      "uat-261117003327-v5@example.test",
+      "uat-261117003327-v1@example.test",
+      "uat-261117003327-v@example.test",
+      "uat-261117003327-a@example.test"
+    ],
+    "remaining": [],
+    "leftoverRequests": 0
+  }
+}
