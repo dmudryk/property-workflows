@@ -6,7 +6,7 @@ import { classifyError, proposeDraft } from "@/lib/ai/draft";
 import { JUDGE_MODELS, PRODUCT_MODELS, makeJudgeModel, makeProductModel } from "@/lib/ai/models";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
 import { DraftSchema } from "@/lib/ai/schema";
-import { freeText, judgeSummary, passRate, scoreFields, type GoldenCase } from "@/lib/ai/scorer";
+import { ACCEPTANCE, acceptanceVerdict, freeText, judgeSummary, passRate, scoreFields, type GoldenCase } from "@/lib/ai/scorer";
 import casesJson from "../tests/fixtures/golden/cases.json";
 
 // Взято з koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature/evals/golden.live.eval.ts (ADR 0006).
@@ -130,6 +130,15 @@ function writeReport() {
   const byModel = new Map<string, Row[]>();
   for (const r of ran) byModel.set(r.modelId, [...(byModel.get(r.modelId) ?? []), r]);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  // Поріг PM — на кожен прогін окремо й лише на повному наборі з 10 кейсів (#55).
+  const verdictWord = { passed: "ПРОЙДЕНО", failed: "НЕ ПРОЙДЕНО", undetermined: "НЕ ВИЗНАЧЕНО" } as const;
+  const verdictLines = Array.from({ length: RUNS }, (_, i) => {
+    const v = acceptanceVerdict(rows.filter((r) => r.run === i + 1), cases.map((c) => c.id));
+    const extra = [v.failedMust.length ? `не пройшли обов'язкові: ${v.failedMust.join(", ")}` : "", v.missing.length ? `без відповіді: ${v.missing.join(", ")}` : ""]
+      .filter(Boolean)
+      .join("; ");
+    return `- Прогін ${i + 1}: **${verdictWord[v.status]}** — ${v.passed}/${ACCEPTANCE.of}${extra ? ` (${extra})` : ""}`;
+  });
   const lines = [
     `# Живий прогін golden cases — ${new Date().toISOString()}`,
     "",
@@ -137,6 +146,8 @@ function writeReport() {
     `- Прогонів: ${RUNS}; кейсів у прогоні: ${cases.length}${ONLY.length ? ` (лише ${ONLY.join(", ")} — CASES)` : ""}`,
     `- **Частка успіху: ${total.passed}/${total.total} (${Math.round(total.rate * 100)}%)** — з кейсів, що отримали відповідь`,
     `- Не запущено (NOT RUN): ${notRun.length}${stoppedAt ? ` — ліміт 429, зупинено на: ${stoppedAt}` : ""}`,
+    `- Поріг PM (solomchaak/property-workflows-spec#55): щонайменше ${ACCEPTANCE.min} з ${ACCEPTANCE.of}, ${ACCEPTANCE.mustPass.join(" і ")} — завжди`,
+    ...verdictLines,
     "",
     "| Модель, що відповіла | Пройшло | Усього |",
     "|---|---|---|",

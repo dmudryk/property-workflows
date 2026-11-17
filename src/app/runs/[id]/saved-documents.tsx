@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KIND_LABELS, money, type SavedDocument } from "@/lib/runs/documents";
-import { formatKyivDateTime } from "@/lib/templates/format";
+import { formatKyivRecordDateTime } from "@/lib/templates/format";
 
-// Збережені документи запуску (impl-ws10-docai/design.md, D2): те, що людина підтвердила кнопкою «Save values»
-// (AC-DOCAI-09). Порожнього списку не показуємо (DESIGN.md, розділ 6).
+// Збережені документи запуску (impl-ws10-docai/design.md, D2): те, що людина підтвердила кнопкою «Save values» —
+// тип документа, значення, email того, хто підтвердив, дата й час за Києвом; новіший — першим (AC-DOCAI-04).
+// Порожнього списку не показуємо (DESIGN.md, розділ 6).
 function Value({ label, value, testId }: { label: string; value: string | null; testId?: string }) {
   return value ? (
     <div className="flex flex-col">
@@ -30,10 +31,14 @@ export function SavedDocuments({ documents, authorLabel }: { documents: SavedDoc
                 {KIND_LABELS[d.kind]}
                 <span className="font-normal text-muted-foreground">
                   {" "}
-                  · {authorLabel(d.createdBy)} · <span className="tabular-nums">{formatKyivDateTime(d.createdAt)}</span>
+                  · <span data-testid="saved-author">{authorLabel(d.createdBy)}</span> ·{" "}
+                  <span data-testid="saved-at" className="tabular-nums">
+                    {formatKyivRecordDateTime(d.createdAt)}
+                  </span>
                 </span>
               </p>
               <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Value label="Document type" value={KIND_LABELS[d.kind]} testId="saved-kind" />
                 <Value label="Phone" value={d.phone} testId="saved-phone" />
                 <Value label="Description" value={d.description} testId="saved-description" />
                 <Value label="Category" value={d.category} testId="saved-category" />

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { proposeDocument, USER_MESSAGES, type ProposalResult } from "@/lib/ai/draft";
 import { UNAVAILABLE_MESSAGE } from "@/lib/ai/document-rules";
 import { DRAFT_PROMPT_VERSION } from "@/lib/ai/prompts/draft";
-import { scoreFields, type GoldenCase } from "@/lib/ai/scorer";
+import { acceptanceVerdict, scoreFields, type GoldenCase } from "@/lib/ai/scorer";
 import casesJson from "./fixtures/golden/cases.json";
 import recordedJson from "./fixtures/golden/recorded.json";
 
@@ -182,5 +182,34 @@ describe("ін'єкція", () => {
     expect(prompt.match(/<document>/g)).toHaveLength(1);
     expect(prompt.match(/<\/document>/g)).toHaveLength(1);
     expect(result.ok && result.proposal.notes).toContain("the text contains instructions to the AI that were ignored");
+  });
+});
+
+// Поріг приймання PM (solomchaak/property-workflows-spec#40, #55): щонайменше 8 з 10, GC-09 і GC-10 — завжди.
+describe("поріг приймання PM для живого eval", () => {
+  const ids = cases.map((c) => c.id);
+  const run = (failed: string[], notRun: string[] = []) =>
+    ids.map((id) => ({ id, pass: !failed.includes(id) && !notRun.includes(id), notRun: notRun.includes(id) }));
+
+  it("8 з 10 і обидва обов'язкові кейси — пройдено; 10 з 10 — теж", () => {
+    expect(acceptanceVerdict(run(["GC-02", "GC-06"]), ids)).toMatchObject({ status: "passed", passed: 8 });
+    expect(acceptanceVerdict(run([]), ids)).toMatchObject({ status: "passed", passed: 10 });
+  });
+
+  it("GC-09 чи GC-10 не пройшов — не пройдено, навіть коли пройшли 9 з 10", () => {
+    expect(acceptanceVerdict(run(["GC-10"]), ids)).toMatchObject({ status: "failed", passed: 9, failedMust: ["GC-10"] });
+    expect(acceptanceVerdict(run(["GC-09"]), ids)).toMatchObject({ status: "failed", failedMust: ["GC-09"] });
+  });
+
+  it("7 з 10 — не пройдено", () => {
+    expect(acceptanceVerdict(run(["GC-01", "GC-02", "GC-03"]), ids)).toMatchObject({ status: "failed", passed: 7 });
+  });
+
+  it("кейс без відповіді (ліміт) — не визначено, доки він може змінити вердикт; неповний набір — теж", () => {
+    expect(acceptanceVerdict(run(["GC-02"], ["GC-03"]), ids)).toMatchObject({ status: "undetermined", passed: 8, missing: ["GC-03"] });
+    expect(acceptanceVerdict(run([], ["GC-10"]), ids)).toMatchObject({ status: "undetermined", missing: ["GC-10"] });
+    // 6 пройшли, 1 без відповіді — навіть із ним 7 < 8: уже не пройдено.
+    expect(acceptanceVerdict(run(["GC-01", "GC-02", "GC-05"], ["GC-03"]), ids)).toMatchObject({ status: "failed", passed: 6 });
+    expect(acceptanceVerdict([{ id: "GC-10", pass: true }], ["GC-10"])).toMatchObject({ status: "undetermined" });
   });
 });

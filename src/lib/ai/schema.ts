@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-// Схема відповіді моделі для AI-розбору документа (openspec/specs/document-parsing, AC-DOCAI-01…08).
+// Схема відповіді моделі для AI-розбору документа (openspec/specs/document-parsing, AC-DOCAI-01, 02, 06–10).
 // Взято за зразком koldovsky/2026-quitcode-10-ai-features-hw/materials/ai-feature/src/lib/ai/schema.ts.
-// Стани від моделі: ok — значення можна показати людині; refused — документ не заявка й не кошторис (AC-DOCAI-07).
-// Ін'єкція — не відмова: значення за даними + прапорець injectionIgnored (AC-DOCAI-08, кейс PM GC-10).
+// Стани від моделі: ok — значення можна показати людині; refused — документ не заявка й не кошторис (AC-DOCAI-09).
+// Ін'єкція — не відмова: значення за даними + прапорець injectionIgnored (AC-DOCAI-10, кейс PM GC-10).
 // Кожне поле обов'язкове, «невідоме» = null (не .optional()): strict json_schema вимагає всі властивості в required.
 
 // Переліки — з правил golden cases PM (solomchaak/property-workflows-spec#40).

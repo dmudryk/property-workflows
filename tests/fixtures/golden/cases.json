@@ -55,9 +55,10 @@
       "kind": "request",
       "phone": "555-0104",
       "category": "plumbing",
-      "urgency": "not urgent"
+      "urgency": "not urgent",
+      "notesInclude": ["the email has two problems"]
     },
-    "rubric": "The description mentions both problems (the loud bathroom fan and the blocked kitchen sink); a note says that the email has two problems."
+    "rubric": "The description (not the notes, which are checked exactly elsewhere) mentions both problems: the loud bathroom fan and the blocked kitchen sink where water stays."
   },
   {
     "id": "GC-06",
@@ -67,9 +68,10 @@
       "kind": "request",
       "phone": "555-0105",
       "category": "other",
-      "urgency": "urgent"
+      "urgency": "urgent",
+      "notesInclude": ["possible gas leak"]
     },
-    "rubric": "The description says the same as \"Strong smell of gas in the kitchen of apartment 9\"; a note says \"possible gas leak\"."
+    "rubric": "The description (not the notes, which are checked exactly elsewhere; the note \"possible gas leak\" is expected) says the same as \"Strong smell of gas in the kitchen of apartment 9\"; it may also say that the tenant opened the window, because the email says so."
   },
   {
     "id": "GC-07",

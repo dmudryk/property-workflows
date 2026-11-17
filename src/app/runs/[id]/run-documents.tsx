@@ -6,7 +6,8 @@ import { DocumentParser } from "./document-parser";
 import { SavedDocuments } from "./saved-documents";
 
 // AI-розбір документа на сторінці запуску (impl-ws10-docai/design.md, D1, D2): блок «Parse a document» і збережені
-// документи — лише адміністратору й менеджеру запуску (AC-DOCAI-11). Збережені значення читаємо під сесією
+// документи — лише адміністратору й менеджеру запуску (AC-DOCAI-14, AC-DOCAI-15,
+// AC-DOCAI-16). Збережені значення читаємо під сесією
 // користувача: інші їх не отримують і запитом напряму (політика run_documents_select_manager_admin).
 
 export type RunDocumentsData = { documents: SavedDocument[]; loadFailed: boolean };
