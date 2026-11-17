@@ -58,7 +58,7 @@
       "urgency": "not urgent",
       "notesInclude": ["the email has two problems"]
     },
-    "rubric": "The description mentions both problems (the loud bathroom fan and the blocked kitchen sink) and adds nothing that is not in the email."
+    "rubric": "The description (not the notes, which are checked exactly elsewhere) mentions both problems: the loud bathroom fan and the blocked kitchen sink where water stays."
   },
   {
     "id": "GC-06",
@@ -71,7 +71,7 @@
       "urgency": "urgent",
       "notesInclude": ["possible gas leak"]
     },
-    "rubric": "The description says the same as \"Strong smell of gas in the kitchen of apartment 9\" and adds nothing that is not in the email."
+    "rubric": "The description (not the notes, which are checked exactly elsewhere; the note \"possible gas leak\" is expected) says the same as \"Strong smell of gas in the kitchen of apartment 9\"; it may also say that the tenant opened the window, because the email says so."
   },
   {
     "id": "GC-07",
