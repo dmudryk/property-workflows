@@ -121,6 +121,11 @@ describe("дві проблеми", () => {
     expect(p.notes).toEqual([TWO_PROBLEMS_NOTE]);
   });
 
+  it("AC-DOCAI-07: у складеній нотатці замінюється лише твердження про дві проблеми — ризик лишається", () => {
+    const p = finalizeDraft(draft({ notes: ["Two issues reported; possible gas leak"] }), text);
+    expect(p.notes).toEqual([TWO_PROBLEMS_NOTE, "possible gas leak"]);
+  });
+
   it("AC-DOCAI-07: нотатки про інше лишаються як є, а без нотатки моделі код її не вигадує", () => {
     expect(finalizeDraft(draft({ notes: ["possible gas leak"] }), "gas").notes).toEqual(["possible gas leak"]);
     expect(finalizeDraft(draft({ notes: ["Two keys are under the mat."] }), "keys").notes).toEqual(["Two keys are under the mat."]);

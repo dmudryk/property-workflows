@@ -2,6 +2,7 @@
 
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { FormSelect, type FormSelectItem } from "@/components/form-select";
 import { SubmitButton } from "@/components/submit-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -257,12 +258,20 @@ function ValuesForm({
         <SubmitButton data-testid="docai-save" pendingLabel="Saving values…">
           Save values
         </SubmitButton>
-        {/* AC-DOCAI-05: «Discard» — блок знову порожній, нічого не збережено. */}
-        <Button type="button" variant="outline" data-testid="docai-discard" onClick={onDiscard}>
-          Discard
-        </Button>
+        <DiscardButton onDiscard={onDiscard} />
       </div>
     </form>
+  );
+}
+
+// AC-DOCAI-05: «Discard» — блок знову порожній, нічого не збережено. Поки триває «Save values», кнопка вимкнена: інакше
+// форма очистилася б, а запис однаково зберігся б (рев'ю CodeRabbit #60).
+function DiscardButton({ onDiscard }: { onDiscard: () => void }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="button" variant="outline" data-testid="docai-discard" disabled={pending} onClick={onDiscard}>
+      Discard
+    </Button>
   );
 }
 
@@ -318,20 +327,9 @@ function BlockStatus({ reading, message }: { reading: boolean; message: BlockTex
 // Файл може бути великим: читаємо лише початок, а сервер однаково обрізає документ до MAX_DOCUMENT_CHARS.
 const FILE_READ_LIMIT = 64_000;
 
-// AC-DOCAI-12: «Upload a text file» — лише простий текстовий файл; його текст іде в поле тексту, звідки його розбирають
-// як вставлений.
-function UploadTextFile({ disabled, onText, onError }: { disabled: boolean; onText: (text: string) => void; onError: (message: string) => void }) {
+// AC-DOCAI-12: «Upload a text file» — вибір файлу; перевіряє й читає його DocumentParser.
+function UploadTextFile({ disabled, onPick }: { disabled: boolean; onPick: (file: File) => void }) {
   const input = useRef<HTMLInputElement>(null);
-
-  async function onFile(file: File | undefined) {
-    if (!file) return;
-    if (!isPlainTextFile(file)) {
-      onError(MSG_TEXT_FILES_ONLY);
-      return;
-    }
-    onText(await file.slice(0, FILE_READ_LIMIT).text());
-  }
-
   return (
     <>
       <input
@@ -341,7 +339,8 @@ function UploadTextFile({ disabled, onText, onError }: { disabled: boolean; onTe
         hidden
         data-testid="docai-file"
         onChange={(e) => {
-          void onFile(e.target.files?.[0]);
+          const file = e.target.files?.[0];
+          if (file) onPick(file);
           e.target.value = "";
         }}
       />
@@ -358,20 +357,20 @@ function ProposeForm({
   runId,
   text,
   proposing,
+  readingFile,
   action,
   onTextChange,
   onSubmit,
-  onFileText,
-  onFileError,
+  onPick,
 }: {
   runId: string;
   text: string;
   proposing: boolean;
+  readingFile: boolean;
   action: (formData: FormData) => void;
   onTextChange: (text: string) => void;
   onSubmit: () => void;
-  onFileText: (text: string) => void;
-  onFileError: (message: string) => void;
+  onPick: (file: File) => void;
 }) {
   return (
     <form action={action} onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -389,9 +388,9 @@ function ProposeForm({
         />
       </div>
       <div className="flex flex-wrap gap-3">
-        <UploadTextFile disabled={proposing} onText={onFileText} onError={onFileError} />
-        {/* AC-DOCAI-03: поки AI читає, кнопка лишається «Propose values», але вимкнена. */}
-        <SubmitButton data-testid="docai-propose" variant="outline" pendingLabel="Propose values">
+        <UploadTextFile disabled={proposing} onPick={onPick} />
+        {/* AC-DOCAI-03: поки AI читає, кнопка лишається «Propose values», але вимкнена; і поки читається файл. */}
+        <SubmitButton data-testid="docai-propose" variant="outline" pendingLabel="Propose values" disabled={readingFile}>
           Propose values
         </SubmitButton>
       </div>
@@ -399,37 +398,61 @@ function ProposeForm({
   );
 }
 
+// Текст файлу або null, коли браузер не зміг його прочитати.
+async function readText(file: File): Promise<string | null> {
+  try {
+    return await file.slice(0, FILE_READ_LIMIT).text();
+  } catch {
+    return null;
+  }
+}
+
 export function DocumentParser({ runId }: { runId: string }) {
   const [proposeState, proposeAction, proposing] = useActionState<ProposeState, FormData>(requestDocumentDraft, { status: "idle" });
   const [saveState, saveAction] = useActionState<SaveState, FormData>(saveDocumentValues, { status: "idle", seq: 0, savedSeq: 0 });
   const [text, setText] = useState("");
   const [fileError, setFileError] = useState<string | null>(null);
-  // Номер відповіді, після якої блок закрито: «Discard» чи новий файл. Нова відповідь «Propose values» його відкриває.
-  const [closedSeq, setClosedSeq] = useState(0);
+  // Блок закрито «Discard» чи новим файлом; наступне «Propose values» його відкриває.
+  const [closed, setClosed] = useState(false);
+  const [readingFile, setReadingFile] = useState(false);
+  // Номер читання файлу: новіший файл чи «Propose values» роблять незавершене читання застарілим — його результат
+  // ігноруємо, щоб не поставити текст старого файлу поруч із новішою пропозицією (рев'ю CodeRabbit #60).
+  const readSeq = useRef(0);
 
   const proposeSeq = seqOf(proposeState);
   const consumedSeq = useConsumedProposal(saveState, proposeSeq);
   const shownSave = useCurrentSave(saveState, proposeSeq);
-  const view = documentBlockView({
-    status: proposeState.status,
-    pending: proposing,
-    closed: proposeSeq <= Math.max(closedSeq, consumedSeq),
-  });
+  const view = documentBlockView({ status: proposeState.status, pending: proposing, closed: closed || proposeSeq <= consumedSeq });
   const proposal = proposalOf(proposeState, view.values);
 
-  function fileText(content: string) {
-    setClosedSeq(proposeSeq);
+  async function pickFile(file: File) {
+    const mine = ++readSeq.current;
+    setClosed(true);
+    if (!isPlainTextFile(file)) {
+      setReadingFile(false);
+      setFileError(MSG_TEXT_FILES_ONLY);
+      return;
+    }
     setFileError(null);
-    setText(content);
+    setReadingFile(true);
+    const content = await readText(file);
+    if (readSeq.current !== mine) return;
+    setReadingFile(false);
+    if (content === null) setFileError(MSG_TEXT_FILES_ONLY);
+    else setText(content);
   }
-  function fileRejected(message: string) {
-    setClosedSeq(proposeSeq);
-    setFileError(message);
+  function submitted() {
+    readSeq.current += 1;
+    setReadingFile(false);
+    setFileError(null);
+    setClosed(false);
   }
   function discard() {
+    readSeq.current += 1;
+    setReadingFile(false);
     setText("");
     setFileError(null);
-    setClosedSeq(proposeSeq);
+    setClosed(true);
   }
 
   return (
@@ -446,11 +469,11 @@ export function DocumentParser({ runId }: { runId: string }) {
           runId={runId}
           text={text}
           proposing={proposing}
+          readingFile={readingFile}
           action={proposeAction}
           onTextChange={setText}
-          onSubmit={() => setFileError(null)}
-          onFileText={fileText}
-          onFileError={fileRejected}
+          onSubmit={submitted}
+          onPick={(file) => void pickFile(file)}
         />
         <BlockStatus reading={view.reading} message={messageFor(proposeState, view.message, fileError, proposing)} />
         {view.values && !fileError ? (

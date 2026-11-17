@@ -102,6 +102,23 @@ export function aboutMultipleProblems(note: string): boolean {
   return MULTIPLE_PROBLEMS.test(note);
 }
 
+// Замінюємо лише твердження про кількість проблем, а не всю нотатку: у складеній «Two issues reported; possible gas
+// leak» ризик лишається окремою нотаткою (рев'ю CodeRabbit #60). Дослівна нотатка — один раз, на місці першої такої.
+export function withTwoProblemsNote(notes: string[]): string[] {
+  if (!notes.some(aboutMultipleProblems)) return notes;
+  const out: string[] = [];
+  for (const note of notes) {
+    if (!aboutMultipleProblems(note)) {
+      out.push(note);
+      continue;
+    }
+    for (const part of note.split(/[.;!?]+/).map((p) => p.trim()).filter(Boolean)) {
+      out.push(aboutMultipleProblems(part) ? TWO_PROBLEMS_NOTE : part);
+    }
+  }
+  return [...new Set(out)];
+}
+
 function cleanText(s: string | null, max: number): string | null {
   const t = (s ?? "").trim().slice(0, max);
   return t ? t : null;
@@ -125,11 +142,7 @@ export function finalizeDraft(draft: Draft, documentText: string): Proposal {
 
   const lineItems = draft.lineItems ?? [];
   const injection = draft.injectionIgnored || looksLikeInjection(documentText);
-  const trimmed = (draft.notes ?? []).map((n) => n.trim()).filter(Boolean);
-  // Нотатку про кілька проблем — дослівною AC-DOCAI-07, один раз і на тому місці, де її поставила модель.
-  const modelNotes = trimmed.some(aboutMultipleProblems)
-    ? [...new Set(trimmed.map((n) => (aboutMultipleProblems(n) ? TWO_PROBLEMS_NOTE : n)))]
-    : trimmed;
+  const modelNotes = withTwoProblemsNote((draft.notes ?? []).map((n) => n.trim()).filter(Boolean));
   // Власну нотатку моделі про інструкції замінює дослівна нотатка AC-DOCAI-10.
   // Прибираємо лише власну нотатку моделі саме про проігноровані інструкції, а не будь-яку зі словом «instruction»
   // («tenant left instructions to call before visiting» лишається; code-review 16.11).
