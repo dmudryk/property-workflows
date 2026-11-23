@@ -92,11 +92,11 @@ async function main() {
   } else if (health.reason === "paused") {
     fail.push(`"/api/health": Supabase призупинено — Dashboard → Resume project (безкоштовний проєкт засинає після 7 днів без достатньої активності бази)`);
   } else if (health.reason === "invalid-api-key") {
-    fail.push(`"/api/health": ключ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY у Vercel не приймається — звірте змінні цього середовища і зробіть Redeploy`);
+    // Postmortem 2026-11-23-staging-bad-key: хибне значення прийшло з перевизначення лише для гілки staging.
+    fail.push(`"/api/health": ключ ${health.suspect ?? "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"} у Vercel не приймається — звірте змінні цього середовища, зокрема перевизначення лише для гілки (Preview → гілка), і зробіть Redeploy`);
   } else if (health.db !== "ok") {
-    fail.push(
-      `"/api/health": HTTP ${health.status}, db=${health.db ?? "?"}${health.reason ? ` (${health.reason})` : ""} — Supabase недоступний чи NEXT_PUBLIC_SUPABASE_URL у Vercel не той?`,
-    );
+    const suspect = health.suspect ? ` — звірте ${health.suspect} у Vercel для цього середовища` : " — Supabase недоступний чи NEXT_PUBLIC_SUPABASE_URL у Vercel не той?";
+    fail.push(`"/api/health": HTTP ${health.status}, db=${health.db ?? "?"}${health.reason ? ` (${health.reason})` : ""}${suspect}`);
   }
   if (expectSha && health?.sha === "local") {
     fail.push(`"/api/health": sha=local — у Vercel увімкніть Settings → Environment Variables → «Automatically expose System Environment Variables» і зробіть Redeploy`);

@@ -1,5 +1,6 @@
 // D0: чи відповіла база на запит /api/health. Чиста функція — щоб перевірити всі гілки тестом без мережі.
 // Запит — публічним ключем до таблиці без доступу для anon: «немає прав» (42501) теж означає, що Postgres живий.
+import type { LogSchema } from "@/lib/log";
 
 /** Код SQLSTATE Postgres, напр. 42501 «permission denied»: запит дійшов до бази. */
 const SQLSTATE = /^[0-9A-Z]{5}$/;
@@ -34,6 +35,27 @@ export function supabaseRefFromUrl(url: string | undefined): string | null {
     return null;
   }
 }
+
+// Дія з postmortem docs/incidents/2026-11-23-staging-bad-key.md: збій бази на staging було видно лише як
+// reason у /api/health, а runtime-журнал деплою лишився порожнім. Тепер health називає змінну, яку звірити (лише
+// НАЗВУ, ніколи значення), і пише в журнал один рядок health.check — smoke і черговий бачать, куди дивитися.
+
+/** Яку змінну середовища звірити за причиною збою бази. Лише назва; null — причина не в змінній (пауза, 5xx). */
+export function suspectVariable(reason: string): string | null {
+  if (reason === "invalid-api-key") return "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY";
+  // status-0 — мережа не дійшла до Supabase (хибна адреса); exception — клієнт не створився (адреси немає).
+  if (reason === "status-0" || reason === "exception") return "NEXT_PUBLIC_SUPABASE_URL";
+  return null;
+}
+
+/** Поля рядка health.check у журналі — лише ці, кожне вузького формату (src/lib/log.ts). */
+export const HEALTH_LOG_SCHEMA = {
+  db: ["ok", "down"],
+  reason: "token",
+  suspect: "token",
+  appEnv: "token",
+  supabaseRef: "token",
+} as const satisfies LogSchema;
 
 export type HealthMeta = { appEnv: string | null; supabaseRef: string | null };
 
