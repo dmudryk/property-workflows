@@ -29,6 +29,21 @@ updates:
     ignore:
       - dependency-name: supabase
         update-types: ["version-update:semver-major"]
+      # @vitest/eslint-plugin 1.6.28 (patch!) підняв peer typescript до >=6.0.0, а в нас TypeScript 5.9 і
+      # typescript-eslint 8 (<6.1.0): `npm install` на Vercel падає з ERESOLVE, хоча `npm ci` у CI зелений.
+      # Знайдено в груповому PR Dependabot #67 (23.11.2026). Прибрати цей рядок разом із переходом на TypeScript 6
+      # окремим PR з ADR (AGENTS.md: TypeScript 7 / ESLint 10 шаблон не перевіряв).
+      - dependency-name: "@vitest/eslint-plugin"
+        versions: [">=1.6.28"]
+      # Мажорні версії, яких шаблон курсу не перевіряв (AGENTS.md, «Стек і версії — не оновлювати без ADR»):
+      # TypeScript 7 і ESLint 10 (PR Dependabot #69 і #68); @types/node — під Node 24.x з engines, а не новіший (#70).
+      # Перехід на кожну — окремим PR з ADR; тоді прибрати відповідний рядок.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
