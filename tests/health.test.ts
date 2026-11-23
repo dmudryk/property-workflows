@@ -87,7 +87,7 @@ describe("suspectVariable (/api/health: яку змінну звірити)", ()
 });
 
 describe("GET /api/health", () => {
-  const KEY = "sb_publishable_drill_marker_value";
+  const KEY = "synthetic-health-test-marker";
   let error: ReturnType<typeof vi.spyOn>;
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://pqptodzkewlakfzumoos.supabase.co");
