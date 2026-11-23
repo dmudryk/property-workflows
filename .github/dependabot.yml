@@ -35,6 +35,15 @@ updates:
       # окремим PR з ADR (AGENTS.md: TypeScript 7 / ESLint 10 шаблон не перевіряв).
       - dependency-name: "@vitest/eslint-plugin"
         versions: [">=1.6.28"]
+      # Мажорні версії, яких шаблон курсу не перевіряв (AGENTS.md, «Стек і версії — не оновлювати без ADR»):
+      # TypeScript 7 і ESLint 10 (PR Dependabot #69 і #68); @types/node — під Node 24.x з engines, а не новіший (#70).
+      # Перехід на кожну — окремим PR з ADR; тоді прибрати відповідний рядок.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
 
   - package-ecosystem: github-actions
