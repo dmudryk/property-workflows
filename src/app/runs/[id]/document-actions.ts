@@ -16,6 +16,7 @@ import {
   type Proposal,
   type SaveValues,
 } from "@/lib/ai/document-rules";
+import { PRODUCT_MODELS } from "@/lib/ai/models";
 import { productModel } from "@/lib/ai/openrouter";
 import { requireActor } from "@/lib/auth/actor";
 import { canParseDocuments, invalidFieldMessage, MSG_EMPTY_DOCUMENT, MSG_SAVE_FAILED } from "@/lib/runs/documents";
@@ -62,7 +63,11 @@ export async function requestDocumentDraft(prev: ProposeState, formData: FormDat
   const model = productModel();
   if (!model) return { status: "unavailable", message: UNAVAILABLE_MESSAGE, seq };
 
-  const result = await proposeDocument({ text }, model);
+  // WS11: один рядок llm.call у журналі Vercel на виклик — без тексту документа (src/lib/ai/llm-log.ts).
+  // route — шаблон маршруту, не адреса з id запуску.
+  const result = await proposeDocument({ text }, model, {
+    log: { requestId: crypto.randomUUID(), route: "/runs/[id]", primaryModel: PRODUCT_MODELS[0] },
+  });
   if (!result.ok) return { status: "unavailable", message: USER_MESSAGES[result.reason], seq };
   if (result.proposal.status === "refused") return { status: "refused", message: result.proposal.message ?? "", seq };
   return { status: "proposed", proposal: result.proposal, seq };
