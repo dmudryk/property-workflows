@@ -104,12 +104,22 @@ jobs:
           host=$(printf '%s' "$ALERT_URL" | sed -E 's#^[A-Za-z]+://##; s#/.*$##')
           text=$(printf 'ЧЕРВОНИЙ SMOKE\nРепо: %s\nWorkflow: %s, job: %s\nСередовище: %s\nАдреса: %s\nКоміт: %s\nПрогін: %s' \
             "$GITHUB_REPOSITORY" "$ALERT_WORKFLOW" "$ALERT_JOB" "$ALERT_ENV" "${host:-не задано}" "${ALERT_SHA:0:7}" "$RUN_URL")
-          if curl -sS --fail --max-time 15 -o /dev/null "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${text}" 2>/dev/null; then
+          # Прихований пробіл чи перенесення рядка у вставленому секреті — часта причина відмови; значень не друкуємо.
+          case "${TELEGRAM_BOT_TOKEN}${TELEGRAM_CHAT_ID}" in
+            *[[:space:]]*) echo "::warning title=alert::У TELEGRAM_BOT_TOKEN чи TELEGRAM_CHAT_ID є пробіл або перенесення рядка — збережіть секрет заново." ;;
+          esac
+          # Відповідь Telegram — у файл, не в журнал: у журнал ідуть лише HTTP-код і поле description (у ньому немає
+          # ні токена, ні chat id), щоб з алерту, який не дійшов, було видно причину.
+          code=$(curl -sS --max-time 15 -o "$RUNNER_TEMP/telegram.json" -w '%{http_code}' \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${text}" 2>/dev/null) || code="000"
+          if [ "$code" = "200" ]; then
             echo "Алерт надіслано в Telegram."
           else
-            echo "::warning title=alert::Telegram не прийняв повідомлення — перевірте токен бота, chat id і чи бот доданий у чат."
+            desc=$(jq -r '.description // empty' "$RUNNER_TEMP/telegram.json" 2>/dev/null | tr -cd '[:alnum:][:space:]:._-' | head -c 160)
+            echo "::warning title=alert::Telegram не прийняв повідомлення (HTTP ${code}${desc:+: $desc}) — перевірте токен бота, chat id (повністю, з мінусом) і чи бот у групі."
           fi
+          rm -f "$RUNNER_TEMP/telegram.json"
 
   deploy:
     # НОВЕ у WS11: кожен НЕпродовий деплой (preview з PR і гілка staging) — за адресою саме цього деплою
@@ -170,9 +180,19 @@ jobs:
           text=$(printf 'ЧЕРВОНИЙ SMOKE\nРепо: %s\nWorkflow: %s, job: %s\nСередовище: %s%s\nАдреса: %s\nКоміт: %s\nПрогін: %s' \
             "$GITHUB_REPOSITORY" "$ALERT_WORKFLOW" "$ALERT_JOB" "$ALERT_ENV" "${ALERT_BRANCH:+ (гілка $ALERT_BRANCH)}" \
             "${host:-не задано}" "${ALERT_SHA:0:7}" "$RUN_URL")
-          if curl -sS --fail --max-time 15 -o /dev/null "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${text}" 2>/dev/null; then
+          # Прихований пробіл чи перенесення рядка у вставленому секреті — часта причина відмови; значень не друкуємо.
+          case "${TELEGRAM_BOT_TOKEN}${TELEGRAM_CHAT_ID}" in
+            *[[:space:]]*) echo "::warning title=alert::У TELEGRAM_BOT_TOKEN чи TELEGRAM_CHAT_ID є пробіл або перенесення рядка — збережіть секрет заново." ;;
+          esac
+          # Відповідь Telegram — у файл, не в журнал: у журнал ідуть лише HTTP-код і поле description (у ньому немає
+          # ні токена, ні chat id), щоб з алерту, який не дійшов, було видно причину.
+          code=$(curl -sS --max-time 15 -o "$RUNNER_TEMP/telegram.json" -w '%{http_code}' \
+              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" --data-urlencode "text=${text}" 2>/dev/null) || code="000"
+          if [ "$code" = "200" ]; then
             echo "Алерт надіслано в Telegram."
           else
-            echo "::warning title=alert::Telegram не прийняв повідомлення — перевірте токен бота, chat id і чи бот доданий у чат."
+            desc=$(jq -r '.description // empty' "$RUNNER_TEMP/telegram.json" 2>/dev/null | tr -cd '[:alnum:][:space:]:._-' | head -c 160)
+            echo "::warning title=alert::Telegram не прийняв повідомлення (HTTP ${code}${desc:+: $desc}) — перевірте токен бота, chat id (повністю, з мінусом) і чи бот у групі."
           fi
+          rm -f "$RUNNER_TEMP/telegram.json"
